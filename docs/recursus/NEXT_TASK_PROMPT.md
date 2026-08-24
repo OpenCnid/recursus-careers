@@ -1,8 +1,8 @@
 # Codex kickoff prompt for RC-3 minimal Recursus execution bridge
 
-Status: staged for the milestone after RC-2 acceptance. The current RC-2 implementation has one validated provider-free dry run and twelve validated actual Claude Code attempts, but RC-2 remains `in progress` until the exact implementation commit passes final review and required CI. Do not start RC-3 while the roadmap still marks RC-2 `in progress`.
+Status: RC-3 is `next`. RC-2 is accepted through PR #2 with one validated provider-free dry run and twelve validated actual Claude Code attempts. The concrete Recursus, DSH, and direct-provider-adapter revisions and entrypoints must still pass the acceptance gate below before RC-3 starts.
 
-Copy the prompt below into a new Codex task only after the RC-2 pull request is merged and the roadmap marks RC-2 `accepted` and RC-3 `next`.
+Copy the prompt below into a new Codex task from the accepted merged `main` revision after confirming every acceptance gate below.
 
 ```text
 Work in this repository:

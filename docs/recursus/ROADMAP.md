@@ -28,8 +28,8 @@ No milestone becomes `accepted` because its documentation was written. Acceptanc
 | --- | --- | --- | --- | --- |
 | RC-0 | Documentation and claim boundary | `accepted` | A shared baseline for architecture, benchmarks, feature status, and allowed claims | Current Career Ops behavior and pinned Recursus sources |
 | RC-1 | Benchmark Foundation v1 | `accepted` | A deterministic, offline corpus and structural verifier that later runners can use | RC-0 |
-| RC-2 | Claude Code reference capture | `in progress` | Reproducible reference runs from unchanged Career Ops through Claude Code | RC-1 and an available Claude Code environment |
-| RC-3 | Minimal Recursus execution bridge | `planned` | The same cases can run through Recursus without claiming feature parity | RC-1, RC-2, and the required Recursus runner surface |
+| RC-2 | Claude Code reference capture | `accepted` | Reproducible reference runs from unchanged Career Ops through Claude Code | RC-1 and an available Claude Code environment |
+| RC-3 | Minimal Recursus execution bridge | `next` | The same cases can run through Recursus without claiming feature parity | RC-1, RC-2, and the required Recursus runner surface |
 | RC-4 | Compiled prompt and context parity | `planned` | Provider-neutral inputs preserve the Career Ops workflow contract | RC-2 and RC-3 |
 | RC-5 | Feature parity and deterministic gates | `planned` | Required Career Ops behaviors pass on the Recursus route before enhancements begin | RC-4 |
 | RC-6 | Durable execution and evidence-backed completion | `planned` | Runs can resume, retry, recover, and prove artifact completion | RC-5 and Recursus supervision support |
@@ -102,7 +102,7 @@ Bounded implementation contract:
 - Add runner-produced evidence under an RC-2 contract. Do not weaken RC-1's unconditional rejection of `runner_attested` input.
 - Validate route identity, source snapshot, artifact bytes, hashes, terminal status, and manifest cross-references. Do not score factuality, safety, application quality, parity, advancement, or comparative performance in RC-2.
 
-The staged [NEXT_TASK_PROMPT.md](NEXT_TASK_PROMPT.md) is for RC-3. It must be used only after RC-2 is accepted on the exact merged revision and the required Recursus, DSH, and direct-adapter revisions and entrypoints are concretely pinned.
+The [NEXT_TASK_PROMPT.md](NEXT_TASK_PROMPT.md) handoff is for RC-3. It must be used only from the accepted merged RC-2 revision and after the required Recursus, DSH, and direct-adapter revisions and entrypoints are concretely pinned.
 
 Exit evidence:
 
@@ -111,7 +111,7 @@ Exit evidence:
 - Independent validation can reproduce the reported route identity and artifact hashes.
 - The unchanged Career Ops through Claude Code route is demonstrated without any Recursus execution integration.
 
-Current note: RC-2 v4 capture contracts, the bounded native `co-claude-code` invocation, provider-free dry-run pipeline, append-only ledger, and independent validator are implemented locally. Registration `RC2-CO-CLAUDE-CODE-2026-08-24-V4` contains one validated dry-run record and twelve actual attempt records in the preregistered order, exactly three for `FACT-01`, `FACT-03`, `SAFE-01`, and `NOSUB-01`. Under preregistered deviations `RC2-DEV-CONTENT-ONLY` and `RC2-DEV-HOST-PREFLIGHT`, all twelve actual attempts have terminal status `completed` and termination reason `none`. Complete-set validation passes locally on Windows with route identity, source snapshot, artifact integrity, cross-references, terminal consistency, and ledger integrity all passing. Provider identity is `not_reported`; the trusted Claude Code envelope explicitly reported model `claude-sonnet-5` for all twelve actual attempts, while model snapshot and reasoning setting remain `not_reported`. Independent local red-team review found no remaining actionable defect. RC-2 remains `in progress` pending an exact reviewed implementation commit and required CI evidence on that commit. Historical v1 through v3 evidence remains sealed. These are capture facts only, not an oracle, factuality, safety, quality, parity, advancement, or comparative result. RC-3 remains planned and is the next milestone only after RC-2 acceptance.
+Current note: RC-2 is accepted through PR #2. Exact reviewed implementation head `e50e787149e7e15aac373e1bc7981a1fbcd65795` passed the full repository suite on Ubuntu, macOS, and Windows, together with CodeQL, dependency review, the user-data guard, upgrade regression, and visual checks. Registration `RC2-CO-CLAUDE-CODE-2026-08-24-V4` contains one validated provider-free dry-run record and twelve actual attempt records in the preregistered order, exactly three for `FACT-01`, `FACT-03`, `SAFE-01`, and `NOSUB-01`. The actual attempts were captured on Windows. Under preregistered deviations `RC2-DEV-CONTENT-ONLY` and `RC2-DEV-HOST-PREFLIGHT`, all twelve actual attempts have terminal status `completed` and termination reason `none`. Complete-set validation passes with route identity, source snapshot, artifact integrity, cross-references, terminal consistency, and ledger integrity all passing. Provider identity is `not_reported`; the trusted Claude Code envelope explicitly reported model `claude-sonnet-5` for all twelve actual attempts, while model snapshot and reasoning setting remain `not_reported`. Independent red-team review found no remaining actionable defect. Historical v1 through v3 evidence remains sealed. These are capture facts only, not an oracle, factuality, safety, quality, parity, advancement, or comparative result. RC-3 is `next`, but remains gated on concrete Recursus, DSH, and direct-adapter revision and entrypoint selection.
 
 ### RC-3: Minimal Recursus execution bridge
 
