@@ -1163,6 +1163,11 @@ test('all verifier commands invoke zero network, browser, provider, plugin, tele
     object[name] = deny(label);
   };
 
+  // Load the verifier before patching runtime-wide built-ins. Node 24 uses
+  // diagnostics_channel while loading modules, which is not verifier activity.
+  const freshLibrary = await import(`${LIB_URL}?denial-instrumented=1`);
+  const freshCli = await import(`${pathToFileURL(join(ROOT, 'verify-recursus-benchmark.mjs')).href}?denial-instrumented=1`);
+
   const originalFetch = globalThis.fetch;
   globalThis.fetch = deny('fetch');
   for (const name of ['lookup', 'resolve', 'resolve4', 'resolve6', 'reverse']) patchMethod(dns, name, `dns.${name}`);
@@ -1188,8 +1193,6 @@ test('all verifier commands invoke zero network, browser, provider, plugin, tele
 
   const seedParent = tempRoot('recursus-denial-seed-');
   try {
-    const freshLibrary = await import(`${LIB_URL}?denial-instrumented=1`);
-    const freshCli = await import(`${pathToFileURL(join(ROOT, 'verify-recursus-benchmark.mjs')).href}?denial-instrumented=1`);
     const cliHelp = captureIo();
     assert.equal(await freshCli.main(['--help'], { io: cliHelp.io, repoRoot: ROOT, env }), 0);
     const calls = [
@@ -1200,7 +1203,8 @@ test('all verifier commands invoke zero network, browser, provider, plugin, tele
     ];
     for (const args of calls) {
       const io = captureIo();
-      assert.equal(await freshLibrary.main(args, { io: io.io, repoRoot: ROOT, env }), 0, `${args[0]} succeeds under denial instrumentation`);
+      const exitCode = await freshLibrary.main(args, { io: io.io, repoRoot: ROOT, env });
+      assert.equal(exitCode, 0, `${args[0]} succeeds under denial instrumentation; stderr=${JSON.stringify(io.output().stderr)}`);
       assert.equal(io.output().stderr, '');
     }
     assert.deepEqual([...counter.entries()], []);
