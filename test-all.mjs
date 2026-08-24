@@ -106,6 +106,13 @@ const readTextLF = (path) => normalizeEol(readFile(path));
 // standalone *.test.mjs files are never picked up.
 const TESTS_DIR = join(ROOT, 'tests');
 
+// Most discovered suites fit the shared 30-second child budget. The RC-2
+// reference validator intentionally performs repeated byte-level evidence-tree
+// reconciliation and needs a larger, still-bounded allowance on Windows CI.
+const DISCOVERED_TEST_TIMEOUTS_MS = new Map([
+  ['recursus/reference-capture.test.mjs', 120_000],
+]);
+
 function discoverTests(dir) {
   const out = [];
   const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
@@ -130,6 +137,7 @@ async function runDiscovered(filter = null) {
   }
   for (const f of files) {
     const rel = f.slice(ROOT.length + 1);
+    const testRel = f.slice(TESTS_DIR.length + 1).replace(/\\/g, '/');
     const src = readFileSync(f, 'utf-8');
     // Discovered suites run IN-PROCESS and share this suite's counters. A
     // process.exit() inside one would terminate test-all mid-run with a forged
@@ -152,7 +160,8 @@ async function runDiscovered(filter = null) {
     // counters. Importing them is what loses the result, so this cannot be
     // fixed in finish(); it has to happen where the suite is invoked.
     if (/from ['"]node:test['"]/.test(src)) {
-      const out = run(NODE, ['--test', f]);
+      const timeout = DISCOVERED_TEST_TIMEOUTS_MS.get(testRel);
+      const out = run(NODE, ['--test', f], timeout === undefined ? {} : { timeout });
       if (out === null) {
         const detail = lastRunFailure();
         fail(`${rel} — node:test suite failed (exit ${detail?.status ?? '?'})`);
