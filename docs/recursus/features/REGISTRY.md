@@ -14,7 +14,7 @@ This registry is the initial truth table for Recursus Careers. It should change 
 | Application tracker and integrity scripts | `career-ops` | inherited | Yes | No | unverified | Canonical files and status rules remain authoritative |
 | Interview, follow-up, reply, and offer workflows | `career-ops` | inherited | Yes | No | unverified | Do not relabel inherited workflows as Recursus inventions |
 | Company and contact research | `career-ops` | inherited | Yes | No | unverified | Recursus target is durable cross-role reuse, not basic research |
-| Career Ops through Claude Code CLI | `career-ops` | inherited | Yes | No | RC-2 v4 has one dry run and twelve actual attempts; no Recursus benchmark | All twelve actual attempts completed the capture contract; no oracle or comparative evaluation was run |
+| Career Ops through Claude Code CLI | `career-ops` | inherited | Yes | No | RC-2 v4 has one dry run and twelve actual attempts; no Recursus benchmark | All twelve actual attempts completed the capture contract under two preregistered deviations; no oracle or comparative evaluation was run |
 | Career Ops through OpenAI Codex CLI | `career-ops` | inherited | Yes | No | no Recursus benchmark | Existing compatibility route, not the preferred Recursus transport |
 | Local web UI and TUI | `career-ops` | inherited | Yes | No | unverified | The web UI remains an upstream alpha surface |
 
