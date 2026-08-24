@@ -161,6 +161,7 @@ These files contain system logic, scripts, templates, and instructions that impr
 | `.antigravitycli/skills/*` | Skill definitions (Antigravity CLI) |
 | `.grok/skills/*` | Skill definitions (Grok Build CLI) |
 | `docs/*` | Documentation |
+| `evals/recursus/*` | Versioned synthetic Recursus corpus, capture contracts, and publishable synthetic evidence |
 | `VERSION` | Current version number |
 | `DATA_CONTRACT.md` | This file |
 | `writing-samples/README.md` | System-owned onboarding documentation for the writing-samples directory |

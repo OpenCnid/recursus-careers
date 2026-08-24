@@ -2,7 +2,7 @@
 
 Status: working roadmap
 
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-24
 
 This roadmap turns the Recursus Careers design into a sequence of testable repository changes. It is ordered by evidence dependency, not by how exciting a feature sounds. Each milestone must leave behind artifacts that the next milestone can inspect.
 
@@ -28,7 +28,7 @@ No milestone becomes `accepted` because its documentation was written. Acceptanc
 | --- | --- | --- | --- | --- |
 | RC-0 | Documentation and claim boundary | `accepted` | A shared baseline for architecture, benchmarks, feature status, and allowed claims | Current Career Ops behavior and pinned Recursus sources |
 | RC-1 | Benchmark Foundation v1 | `accepted` | A deterministic, offline corpus and structural verifier that later runners can use | RC-0 |
-| RC-2 | Claude Code reference capture | `next` | Reproducible reference runs from unchanged Career Ops through Claude Code | RC-1 and an available Claude Code environment |
+| RC-2 | Claude Code reference capture | `in progress` | Reproducible reference runs from unchanged Career Ops through Claude Code | RC-1 and an available Claude Code environment |
 | RC-3 | Minimal Recursus execution bridge | `planned` | The same cases can run through Recursus without claiming feature parity | RC-1 and the required Recursus runner surface |
 | RC-4 | Compiled prompt and context parity | `planned` | Provider-neutral inputs preserve the Career Ops workflow contract | RC-2 and RC-3 |
 | RC-5 | Feature parity and deterministic gates | `planned` | Required Career Ops behaviors pass on the Recursus route before enhancements begin | RC-4 |
@@ -81,7 +81,7 @@ Exit evidence:
 
 A local implementation may be handed off as complete work without being marked `accepted`. RC-1 becomes `accepted` only after its exact commit passes the required Windows and supported-CI checks.
 
-Current note: RC-1 is accepted through PR #1. Exact implementation head `634fc30` passed the full repository suite on Ubuntu, macOS, and Windows, together with CodeQL, dependency review, user-data guard, upgrade regression, and visual checks. RC-2 is the next bounded task.
+Current note: RC-1 is accepted through PR #1. Exact implementation head `634fc30` passed the full repository suite on Ubuntu, macOS, and Windows, together with CodeQL, dependency review, user-data guard, upgrade regression, and visual checks. RC-2 started from merged RC-1 revision `d2f2ad66133fa749e3b9b427b0de3dcad68d1295`.
 
 ### RC-2: Claude Code reference capture
 
@@ -110,6 +110,8 @@ Exit evidence:
 - Raw artifacts and normalized manifests are retained without exposing secrets.
 - Independent validation can reproduce the reported route identity and artifact hashes.
 - The unchanged Career Ops through Claude Code route is demonstrated without any Recursus execution integration.
+
+Current note: RC-2 v4 capture contracts, the bounded native `co-claude-code` invocation, provider-free dry-run pipeline, append-only ledger, and independent validator are implemented locally. Registration `RC2-CO-CLAUDE-CODE-2026-08-24-V4` contains one validated dry-run record and twelve actual attempt records in the preregistered order, exactly three for `FACT-01`, `FACT-03`, `SAFE-01`, and `NOSUB-01`. All twelve actual attempts have terminal status `completed` and termination reason `none`. Complete-set validation passes locally on Windows with route identity, source snapshot, artifact integrity, cross-references, terminal consistency, and ledger integrity all passing. Provider identity is `not_reported`; the trusted Claude Code envelope explicitly reported model `claude-sonnet-5` for all twelve actual attempts, while model snapshot and reasoning setting remain `not_reported`. Independent local red-team review found no remaining actionable defect. RC-2 remains `in progress` pending an exact reviewed implementation commit, exact identity evidence, and required CI evidence on that commit. Historical v1 through v3 evidence remains sealed. These are capture facts only, not an oracle, factuality, safety, quality, parity, advancement, or comparative result. RC-3 remains planned and is the next milestone only after RC-2 acceptance.
 
 ### RC-3: Minimal Recursus execution bridge
 

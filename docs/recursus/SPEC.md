@@ -617,6 +617,6 @@ The foundation is valuable because it prevents later runs from changing the ques
 
 This specification remains the binding RC-1 contract. RC-2 MUST reuse the accepted corpus and verifier without weakening RC-1's structural, oracle, path, attestation, or non-claim boundaries.
 
-RC-2 starts only after this exact implementation revision has the required Windows and supported-CI evidence and the roadmap marks RC-1 `accepted`. The next task is Claude Code reference capture under the bounded contract in [ROADMAP.md](ROADMAP.md#rc-2-claude-code-reference-capture) and the copy-ready [NEXT_TASK_PROMPT.md](NEXT_TASK_PROMPT.md).
+RC-2 started only after this exact implementation revision had the required Windows and supported-CI evidence and the roadmap marked RC-1 `accepted`. Its current local v4 implementation, complete twelve-attempt set, and historical v1 through v3 records are recorded in [ROADMAP.md](ROADMAP.md#rc-2-claude-code-reference-capture). RC-2 remains `in progress` until the exact implementation commit has the required review and CI evidence. The [next-task prompt](NEXT_TASK_PROMPT.md) gates RC-3 on that acceptance.
 
 RC-2 may create runner-produced reference evidence, but it MUST NOT reinterpret RC-1 structural validation as model, harness, workflow, factuality, safety, quality, parity, advancement, or comparative evidence. It also MUST NOT start the Recursus execution bridge defined for RC-3.

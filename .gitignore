@@ -148,6 +148,9 @@ plan/
 # patterns above (cv.md, portals.yml).
 !test-fixtures/**
 
+# Publishable fictional Recursus fixtures and evidence are system-layer data.
+!evals/recursus/**/cv.md
+
 # Profile intake sources (master CV / LinkedIn export / diplomas / references
 # — user PII, never commit). Ship only the system-owned scaffold. #1723
 documents/*

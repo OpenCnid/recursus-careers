@@ -4,7 +4,7 @@ This directory defines how Recursus Careers will extend the Career Ops workflow,
 
 ## Current status
 
-The Career Ops application and execution routes remain unchanged from commit `bde5de661afbb72977a190e543ded24a72c9c86e`. RC-1, the offline [Benchmark Foundation v1](../../evals/recursus/README.md), is accepted through PR #1 with the root [structural verifier](../../verify-recursus-benchmark.mjs). This does not integrate a Recursus execution route. The documents in this directory describe the intended integration and its acceptance criteria. They do not claim that the planned Recursus runtime behavior is already available. The [feature registry](features/REGISTRY.md) is the canonical current-status record.
+The Career Ops application and execution routes remain unchanged from commit `bde5de661afbb72977a190e543ded24a72c9c86e`. RC-1, the offline [Benchmark Foundation v1](../../evals/recursus/README.md), is accepted through PR #1 with the root [structural verifier](../../verify-recursus-benchmark.mjs). The current RC-2 [v4 reference-capture registration](../../evals/recursus/rc2-claude-code-reference-v4/registration.json) is implemented locally from merged RC-1 revision `d2f2ad66133fa749e3b9b427b0de3dcad68d1295`. Its evidence contains one completed provider-free dry run and twelve actual attempts, exactly three for each registered scenario. All twelve actual attempts have terminal status `completed` and termination reason `none`; provider identity is `not_reported`, and the trusted runner envelope explicitly reported model `claude-sonnet-5`. Complete-set validation passes locally on Windows. Historical v1 through v3 evidence remains sealed. This does not integrate a Recursus execution route. The documents in this directory describe the intended integration and its acceptance criteria. They do not claim that the planned Recursus runtime behavior is already available. The [feature registry](features/REGISTRY.md) is the canonical current-status record.
 
 The primary reference is **Career Ops through the Claude Code CLI**. Career Ops through the OpenAI Codex CLI is an existing compatibility route. The preferred future Recursus Careers configuration uses the Recursus and DSH runtime with the direct `openai-codex` provider adapter. It does not use the Codex CLI runner. The exact model is recorded separately, and the product is not defined by one runner, provider, or model.
 
@@ -29,7 +29,7 @@ Supporting documents:
 
 - [Recursus Careers roadmap](ROADMAP.md)
 - [Benchmark Foundation v1 specification](SPEC.md)
-- [Codex kickoff prompt for the next task](NEXT_TASK_PROMPT.md)
+- [Codex kickoff prompt for the next milestone after acceptance](NEXT_TASK_PROMPT.md)
 - [Benchmark protocol](benchmarks/PROTOCOL.md)
 - [Scenario catalog](benchmarks/SCENARIO_CATALOG.md)
 - [Metrics and advancement rules](benchmarks/METRICS_AND_PROMOTION.md)
@@ -55,7 +55,7 @@ An implementation label never substitutes for evidence. A component capability i
 
 ## Claim boundary
 
-Until the benchmark protocol is executed, use language such as:
+Until the comparative benchmark protocol is executed, use language such as:
 
 - "designed to improve"
 - "intended difference"
@@ -65,5 +65,7 @@ Until the benchmark protocol is executed, use language such as:
 Do not describe Recursus Careers as better, safer, provider-neutral in behavior, or more efficient without the named evidence required by [Metrics and advancement](benchmarks/METRICS_AND_PROMOTION.md).
 
 RC-1 validates structure and fixture integrity only. No model or harness was executed. Oracle isolation was proven for the seeded file set, not for a future process with broader filesystem authority. No candidate-claim factuality or action safety was evaluated. No comparison with Career Ops through Claude Code or Codex was performed. No result supports a claim that Recursus Careers is better, safer, faster, cheaper, or feature complete.
+
+RC-2 records single-route process and artifact facts only. No output was compared with evaluator-only oracle material. No candidate-claim factuality, action safety, application quality, CAQ, human-review score, feature parity, advancement, comparative performance, or hiring outcome was calculated. Provider or model identity is never inferred from the Claude Code runner name. A provider response, process exit, or model statement is not verified completion. Hashes establish byte identity only. Dry-run determinism covers the local capture pipeline, not provider behavior. Raw Claude stream envelopes are not retained, so the independent validator cannot later reparse terminal, model, or usage observations. `workspace_unchanged` covers only the monitored isolated workspace. Provider-only egress is a configured policy, not packet-level proof, and `provider_request: not_observed` is not proof that no provider request occurred.
 
 These pages explain product behavior and evaluation. Binding agent rules still belong in `AGENTS.md`, the selected mode files, or another instruction surface the active harness loads automatically.

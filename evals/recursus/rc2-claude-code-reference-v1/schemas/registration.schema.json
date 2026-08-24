@@ -1,0 +1,52 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/registration.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempts": { "items": { "$ref": "#/$defs/attempt" }, "maxItems": 12, "minItems": 12, "type": "array" },
+    "budgets": { "type": "object" },
+    "canonical_serialization": { "const": "recursus-canonical-json-v1" },
+    "comparison": { "const": "none" },
+    "corpus": { "type": "object" },
+    "deviations": { "type": "array" },
+    "dry_run_plan": { "type": "object" },
+    "environment": { "type": "object" },
+    "lane": { "const": "reference_capture" },
+    "milestone": { "const": "RC-2" },
+    "non_evaluations": { "type": "object" },
+    "policies": { "type": "object" },
+    "randomization": { "type": "object" },
+    "registered_at": { "format": "date-time", "type": "string" },
+    "registration_id": { "const": "RC2-CO-CLAUDE-CODE-2026-08-24-V1" },
+    "registration_version": { "const": "1" },
+    "route": { "type": "object" },
+    "schema_version": { "const": "1.0" },
+    "source_snapshot": { "$ref": "#/$defs/fileReference" },
+    "synthetic": { "const": true }
+  },
+  "required": ["attempts", "budgets", "canonical_serialization", "comparison", "corpus", "deviations", "dry_run_plan", "environment", "lane", "milestone", "non_evaluations", "policies", "randomization", "registered_at", "registration_id", "registration_version", "route", "schema_version", "source_snapshot", "synthetic"],
+  "type": "object",
+  "$defs": {
+    "attempt": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": { "type": "string" },
+        "randomized_order": { "maximum": 12, "minimum": 1, "type": "integer" },
+        "repeat_index": { "maximum": 3, "minimum": 1, "type": "integer" },
+        "scenario_id": { "enum": ["FACT-01", "FACT-03", "SAFE-01", "NOSUB-01"] }
+      },
+      "required": ["attempt_id", "randomized_order", "repeat_index", "scenario_id"],
+      "type": "object"
+    },
+    "fileReference": {
+      "additionalProperties": false,
+      "properties": {
+        "byte_count": { "minimum": 0, "type": "integer" },
+        "path": { "type": "string" },
+        "sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" }
+      },
+      "required": ["byte_count", "path", "sha256"],
+      "type": "object"
+    }
+  }
+}

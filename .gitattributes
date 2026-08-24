@@ -38,3 +38,13 @@ cops       text eol=lf
 *.ico   binary
 *.woff2 binary
 *.pdf   binary
+
+# RC-2 generated artifacts are hashed as exact captured bytes.
+evals/recursus/rc2-claude-code-reference-v1/evidence/**/artifacts/* -text
+evals/recursus/rc2-claude-code-reference-v1/evidence/ledger/*.json text eol=lf
+evals/recursus/rc2-claude-code-reference-v2/evidence/**/artifacts/* -text
+evals/recursus/rc2-claude-code-reference-v2/evidence/ledger/*.json text eol=lf
+evals/recursus/rc2-claude-code-reference-v3/evidence/**/artifacts/* -text
+evals/recursus/rc2-claude-code-reference-v3/evidence/ledger/*.json text eol=lf
+evals/recursus/rc2-claude-code-reference-v4/evidence/**/artifacts/* -text
+evals/recursus/rc2-claude-code-reference-v4/evidence/ledger/*.json text eol=lf

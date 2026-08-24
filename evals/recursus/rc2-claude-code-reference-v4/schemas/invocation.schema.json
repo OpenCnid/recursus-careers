@@ -1,0 +1,37 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/v4/invocation.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "allowed_tools": { "items": { "type": "string" }, "type": "array" },
+    "argv": { "items": { "type": "string" }, "type": "array" },
+    "argv_sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" },
+    "attempt_id": { "type": "string" },
+    "attempt_kind": { "enum": ["dry_run", "actual"] },
+    "browser_policy": { "const": "disabled" },
+    "denied_tools": { "items": { "type": "string" }, "type": "array" },
+    "executable_identity": { "$ref": "#/$defs/runner" },
+    "invocation_id": { "pattern": "^INVOCATION-[A-Z0-9-]+$", "type": "string" },
+    "network_policy": { "enum": ["none", "provider_only"] },
+    "prompt_sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" },
+    "provider_request_policy": { "enum": ["not_made_by_design", "permitted_for_registered_route_only"] },
+    "registration_id": { "const": "RC2-CO-CLAUDE-CODE-2026-08-24-V4" },
+    "route_id": { "const": "co-claude-code" },
+    "schema_version": { "const": "1.0" },
+    "working_directory": { "const": "$ISOLATED_WORKSPACE" }
+  },
+  "required": ["allowed_tools", "argv", "argv_sha256", "attempt_id", "attempt_kind", "browser_policy", "denied_tools", "executable_identity", "invocation_id", "network_policy", "prompt_sha256", "provider_request_policy", "registration_id", "route_id", "schema_version", "working_directory"],
+  "type": "object",
+  "$defs": {
+    "runner": {
+      "additionalProperties": false,
+      "properties": {
+        "binary_sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" },
+        "id": { "const": "claude-code" },
+        "version": { "maxLength": 128, "pattern": "^[0-9]+(?:\\.[0-9]+){1,3}(?:[-+][0-9A-Za-z.-]+)?$", "type": "string" }
+      },
+      "required": ["binary_sha256", "id", "version"],
+      "type": "object"
+    }
+  }
+}

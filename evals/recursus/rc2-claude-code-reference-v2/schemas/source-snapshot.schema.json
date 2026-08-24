@@ -1,0 +1,43 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/v2/source-snapshot.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "corpus_catalog": { "$ref": "#/$defs/fileReference" },
+    "harness_bundle_sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" },
+    "harness_files": { "items": { "$ref": "#/$defs/fileReference" }, "minItems": 1, "type": "array" },
+    "instruction_bundle_sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" },
+    "instruction_files": { "items": { "$ref": "#/$defs/fileReference" }, "minItems": 1, "type": "array" },
+    "product_baseline_revision": { "pattern": "^[a-f0-9]{40}$", "type": "string" },
+    "rc1_revision": { "pattern": "^[a-f0-9]{40}$", "type": "string" },
+    "registration_id": { "const": "RC2-CO-CLAUDE-CODE-2026-08-24-V2" },
+    "repository": { "$ref": "#/$defs/repository" },
+    "schema_version": { "const": "1.0" },
+    "snapshot_id": { "const": "RC2-SOURCE-SNAPSHOT-02" },
+    "synthetic": { "const": true }
+  },
+  "required": ["corpus_catalog", "harness_bundle_sha256", "harness_files", "instruction_bundle_sha256", "instruction_files", "product_baseline_revision", "rc1_revision", "registration_id", "repository", "schema_version", "snapshot_id", "synthetic"],
+  "type": "object",
+  "$defs": {
+    "fileReference": {
+      "additionalProperties": false,
+      "properties": {
+        "byte_count": { "minimum": 0, "type": "integer" },
+        "path": { "type": "string" },
+        "sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" }
+      },
+      "required": ["byte_count", "path", "sha256"],
+      "type": "object"
+    },
+    "repository": {
+      "additionalProperties": false,
+      "properties": {
+        "revision": { "pattern": "^[a-f0-9]{40}$", "type": "string" },
+        "url": { "const": "https://github.com/santifer/career-ops" },
+        "working_tree_state": { "const": "uncommitted_rc2_implementation_files_hashed" }
+      },
+      "required": ["revision", "url", "working_tree_state"],
+      "type": "object"
+    }
+  }
+}

@@ -6,7 +6,9 @@
 
 The implemented RC-1 subset is [career-bench-v1](../../../evals/recursus/README.md), with the four structural cases `FACT-01`, `FACT-03`, `SAFE-01`, and `NOSUB-01`. Its catalog and schemas are the binding machine contracts for the local foundation.
 
-The larger package below remains planned for later milestones. It must not be read as implemented by RC-1.
+RC-2 captures only these same four cases through the registered `co-claude-code` route. It does not compare generated output with expected behavior, critical-failure definitions, or evaluator-only oracle content. RC-2 terminal states record capture facts under a separate contract and do not change RC-1 normalized-result semantics.
+
+The larger package below remains planned for later milestones. It must not be read as implemented by RC-1 or RC-2.
 
 The expanded executable corpus is expected to grow toward:
 
