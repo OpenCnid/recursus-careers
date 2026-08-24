@@ -1136,10 +1136,11 @@ test('read-only commands invoke no filesystem mutation surface', async () => {
 test('seed filesystem mutations stay under the explicit output directory', () => {
   const parent = tempRoot('recursus-fs-boundary-');
   const output = join(parent, 'workspace');
+  const containmentRoot = join(fs.realpathSync.native(parent), 'workspace');
   const originals = new Map();
   const observations = [];
   const within = (candidate) => {
-    const rel = relative(output, resolve(String(candidate)));
+    const rel = relative(containmentRoot, resolve(String(candidate)));
     return rel === '' || (rel !== '..' && !rel.startsWith(`..${sep}`));
   };
   for (const method of ['mkdirSync', 'rmSync', 'writeFileSync']) {
