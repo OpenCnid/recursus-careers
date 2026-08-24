@@ -11,6 +11,7 @@ node verify-recursus-benchmark.mjs validate
 node verify-recursus-benchmark.mjs validate --json
 node verify-recursus-benchmark.mjs seed --scenario FACT-01 --output <explicit-empty-directory>
 node verify-recursus-benchmark.mjs validate-result --input <normalized-result.json>
+node verify-recursus-reference-v4.mjs validate
 ```
 
 The implementation is dependency-free, offline, and local. `validate`, `validate-result`, and `--help` are read-only. `seed` is the only writing operation, and it writes only below the explicit output directory after validating the complete copy plan.
@@ -27,6 +28,20 @@ evals/recursus/
     scenarios/             evaluator-only scenario controls
     oracle/                evaluator-only source, truth, and action data
     evaluator-fixtures/    route-neutral normalized-result examples
+  rc2-claude-code-reference-v4/
+    schemas/               strict RC-2 capture evidence contracts
+    registration.json      preregistered route and twelve-cell run set
+    source-snapshot.json   exact instruction, corpus, and harness identities
+    evidence/              immutable dry-run and actual attempt ledger
+  rc2-claude-code-reference-v3/
+    evidence/              sealed historical provider-free dry run
+  rc2-claude-code-reference-v2/
+    evidence/              sealed historical provider-free dry run
+  rc2-claude-code-reference-v1/
+    evidence/              sealed historical dry run and authentication-blocked attempt
+  historical-source/
+    rc2-claude-code-reference-v3/package.json
+                            exact V3 package bytes for isolated historical validation
 ```
 
 The four seed cases are `FACT-01`, `FACT-03`, `SAFE-01`, and `NOSUB-01`. All names, organizations, facts, and URLs are fictional. URLs use reserved `.test` domains.
@@ -54,4 +69,4 @@ After copying, the verifier scans the complete seeded tree and the emitted inven
 - No comparison with Career Ops through Claude Code or Codex was performed.
 - No result supports a claim that Recursus Careers is better, safer, faster, cheaper, or feature complete.
 
-The next roadmap milestone is RC-2, Claude Code reference capture. RC-2 is not part of this implementation.
+RC-2 v4 reuses these exact bytes and the same seeding implementation. It is accepted through PR #2. Its evidence contains one validated provider-free dry run and twelve validated actual attempts captured on Windows in the preregistered order. Under preregistered deviations `RC2-DEV-CONTENT-ONLY` and `RC2-DEV-HOST-PREFLIGHT`, all twelve actual attempts have terminal status `completed` and termination reason `none`. Exact reviewed implementation head `e50e787149e7e15aac373e1bc7981a1fbcd65795` passed the full repository suite on Ubuntu, macOS, and Windows, together with the required security and regression checks. Provider identity is `not_reported`; model `claude-sonnet-5` was explicitly reported by the trusted runner envelope. The V4 evidence-root README is itself bound by the preregistered source snapshot, so its embedded pre-attempt status remains unchanged; the append-only ledger and current roadmap record the later attempt state. V1 through v3 remain sealed historical evidence. V3 was superseded to correct its implementation-repository identity. To reconstruct V3 validation, copy the repository into an isolated temporary directory, replace only that temporary copy's root `package.json` with `evals/recursus/historical-source/rc2-claude-code-reference-v3/package.json`, and run the V3 validator against the copied V3 evidence. The separate RC-2 validator does not weaken RC-1 or reinterpret structural validation as model, workflow, factuality, safety, quality, parity, advancement, or comparative evidence.

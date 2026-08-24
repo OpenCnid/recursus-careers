@@ -1,0 +1,24 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/ledger-entry.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_id": { "type": "string" },
+    "attempt_kind": { "enum": ["dry_run", "actual"] },
+    "entry_id": { "type": "string" },
+    "previous_entry_sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" },
+    "randomized_order": { "minimum": 0, "type": "integer" },
+    "recorded_at": { "format": "date-time", "type": "string" },
+    "registration_id": { "type": "string" },
+    "repeat_index": { "minimum": 0, "type": "integer" },
+    "route_id": { "const": "co-claude-code" },
+    "runner_manifest": { "type": "object" },
+    "scenario_id": { "enum": ["FACT-01", "FACT-03", "SAFE-01", "NOSUB-01"] },
+    "schema_version": { "const": "1.0" },
+    "sequence": { "minimum": 0, "type": "integer" },
+    "terminal_status": { "enum": ["unsupported", "blocked", "failed", "incomplete", "completed"] },
+    "termination_reason": { "type": "string" }
+  },
+  "required": ["attempt_id", "attempt_kind", "entry_id", "previous_entry_sha256", "randomized_order", "recorded_at", "registration_id", "repeat_index", "route_id", "runner_manifest", "scenario_id", "schema_version", "sequence", "terminal_status", "termination_reason"],
+  "type": "object"
+}

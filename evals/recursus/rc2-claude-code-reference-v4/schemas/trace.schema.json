@@ -1,0 +1,27 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/v4/trace.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_id": { "type": "string" },
+    "events": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "code": { "enum": ["ACTUAL_INVOCATION", "ACTUAL_NORMALIZED", "ACTUAL_WORKSPACE", "CAPTURE_CONTENT_SAFE", "DRY_FIXTURE", "DRY_INVOCATION", "DRY_NORMALIZED", "DRY_WORKSPACE", "OUTPUT_CAPTURED", "OUTPUT_MISSING", "RC1_SEED_VALID", "RUNNER_EXITED", "RUNNER_NOT_STARTED", "RUNNER_STARTED", "RUNNER_TIMEOUT", "SENSITIVE_CAPTURE_BLOCKED", "TOOL_BUDGET_EXCEEDED", "TOOL_BUDGET_WITHIN_LIMIT"] },
+          "event": { "enum": ["content_capture_allowed", "content_capture_blocked", "external_runner_exited", "external_runner_not_started", "external_runner_started", "external_runner_timed_out", "fixture_captured", "invocation_constructed", "normalization_completed", "output_captured", "output_missing", "seed_validated", "tool_budget_observed", "workspace_created"] },
+          "sequence": { "minimum": 1, "type": "integer" },
+          "value": { "type": ["string", "number", "boolean", "null"] }
+        },
+        "required": ["code", "event", "sequence", "value"],
+        "type": "object"
+      },
+      "maxItems": 32,
+      "type": "array"
+    },
+    "schema_version": { "const": "1.0" },
+    "trace_id": { "pattern": "^TRACE-[A-Z0-9-]+$", "type": "string" }
+  },
+  "required": ["attempt_id", "events", "schema_version", "trace_id"],
+  "type": "object"
+}

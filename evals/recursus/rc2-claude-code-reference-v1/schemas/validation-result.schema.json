@@ -1,0 +1,26 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/validation-result.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actual_attempt_count": { "maximum": 12, "minimum": 0, "type": "integer" },
+    "artifact_integrity": { "const": "pass" },
+    "attempts": { "type": "array" },
+    "comparison_evaluation": { "const": "not_run" },
+    "cross_reference_integrity": { "const": "pass" },
+    "ledger_integrity": { "const": "pass" },
+    "oracle_evaluation": { "const": "not_run" },
+    "quality_evaluation": { "const": "not_run" },
+    "registration_id": { "type": "string" },
+    "route_identity": { "const": "pass" },
+    "safety_evaluation": { "const": "not_run" },
+    "schema_version": { "const": "1.0" },
+    "source_snapshot_integrity": { "const": "pass" },
+    "synthetic": { "const": true },
+    "terminal_counts": { "type": "object" },
+    "terminal_consistency": { "const": "pass" },
+    "validation_id": { "type": "string" }
+  },
+  "required": ["actual_attempt_count", "artifact_integrity", "attempts", "comparison_evaluation", "cross_reference_integrity", "ledger_integrity", "oracle_evaluation", "quality_evaluation", "registration_id", "route_identity", "safety_evaluation", "schema_version", "source_snapshot_integrity", "synthetic", "terminal_counts", "terminal_consistency", "validation_id"],
+  "type": "object"
+}

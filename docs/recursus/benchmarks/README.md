@@ -2,9 +2,15 @@
 
 [Recursus overview](../README.md) | [Protocol](PROTOCOL.md) | [Scenarios](SCENARIO_CATALOG.md) | [Metrics](METRICS_AND_PROMOTION.md)
 
-> **Status:** protocol only. No Recursus Careers comparison in this document has been executed.
+> **Status:** RC-1 foundation plus one RC-2 v4 provider-free dry run and twelve actual Claude Code reference attempts. No Recursus Careers comparison has been executed.
 
 The model-free [Benchmark Foundation v1](../../../evals/recursus/README.md) is accepted for RC-1. It validates corpus structure and fixture integrity only and is not a benchmark result.
+
+## RC-2 reference-capture status
+
+The accepted versioned [RC-2 v4 registration](../../../evals/recursus/rc2-claude-code-reference-v4/registration.json) binds route `co-claude-code`, the exact accepted corpus, OpenCnid repository revision, instruction and harness hashes, Claude Code 2.1.223, the read-only permission profile, environment policies, budgets, repeat count, randomized order, and deviations before provider output. Its ledger contains one completed provider-free dry run and twelve actual attempts captured on Windows, exactly three for each registered scenario. Under preregistered deviations `RC2-DEV-CONTENT-ONLY` and `RC2-DEV-HOST-PREFLIGHT`, all twelve actual attempts have terminal status `completed` and termination reason `none`. Complete-set validation passes on the capture host, and the focused RC-2 tests passed the full Ubuntu, macOS, and Windows CI matrix on exact reviewed implementation head `e50e787149e7e15aac373e1bc7981a1fbcd65795`. Provider identity is `not_reported`; the trusted runner envelope explicitly reported model `claude-sonnet-5` in all twelve actual attempts. The V4 evidence-root README is a hash-bound preregistration snapshot and retains its pre-attempt status text; the append-only ledger and this benchmark overview state the current result. A preserved historical [v1 record](../../../evals/recursus/rc2-claude-code-reference-v1/README.md) records the earlier expired OAuth session. Historical [v2 evidence](../../../evals/recursus/rc2-claude-code-reference-v2/README.md) and v3 evidence contain only provider-free dry runs. V3 was superseded because its source snapshot paired the OpenCnid merge revision with the upstream Career Ops repository URL. All historical records remain sealed.
+
+These records are at most L1 run facts. They do not compare output with an oracle or another route. They do not establish factuality, safety, application quality, feature parity, advancement, comparative performance, or hiring outcomes. RC-2 is accepted through PR #2.
 
 ## Purpose
 

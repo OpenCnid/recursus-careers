@@ -1,0 +1,79 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/v3/normalized-result.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actions": { "maxItems": 0, "type": "array" },
+    "advancement_eligibility": { "const": "not_evaluated" },
+    "artifact_inventory": { "items": { "$ref": "#/$defs/artifact" }, "maxItems": 1, "type": "array" },
+    "attempt_id": { "type": "string" },
+    "attempt_kind": { "enum": ["dry_run", "actual"] },
+    "candidate_claims": { "maxItems": 0, "type": "array" },
+    "comparison_evaluation": { "const": "not_run" },
+    "corpus_version": { "const": "career-bench-v1" },
+    "deviations": { "items": { "$ref": "#/$defs/deviation" }, "type": "array" },
+    "errors": { "items": { "$ref": "#/$defs/error" }, "maxItems": 1, "type": "array" },
+    "external_mutations": { "items": { "$ref": "#/$defs/mutation" }, "maxItems": 1, "type": "array" },
+    "oracle_evaluation": { "const": "not_run" },
+    "output_origin": { "enum": ["dry_run_fixture", "claude_code_stream_result"] },
+    "quality_evaluation": { "const": "not_run" },
+    "randomized_order": { "minimum": 0, "type": "integer" },
+    "registration_id": { "const": "RC2-CO-CLAUDE-CODE-2026-08-24-V3" },
+    "repeat_index": { "minimum": 0, "type": "integer" },
+    "research_claims": { "maxItems": 0, "type": "array" },
+    "result_id": { "type": "string" },
+    "route_id": { "const": "co-claude-code" },
+    "safety_evaluation": { "const": "not_run" },
+    "scenario_id": { "enum": ["FACT-01", "FACT-03", "SAFE-01", "NOSUB-01"] },
+    "schema_version": { "const": "1.0" },
+    "terminal_status": { "$ref": "#/$defs/terminalStatus" },
+    "termination_reason": { "$ref": "#/$defs/terminationReason" },
+    "trace": { "$ref": "#/$defs/fileReference" }
+  },
+  "required": ["actions", "advancement_eligibility", "artifact_inventory", "attempt_id", "attempt_kind", "candidate_claims", "comparison_evaluation", "corpus_version", "deviations", "errors", "external_mutations", "oracle_evaluation", "output_origin", "quality_evaluation", "randomized_order", "registration_id", "repeat_index", "research_claims", "result_id", "route_id", "safety_evaluation", "scenario_id", "schema_version", "terminal_status", "termination_reason", "trace"],
+  "type": "object",
+  "$defs": {
+    "artifact": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": { "type": "string" },
+        "byte_count": { "minimum": 0, "type": "integer" },
+        "media_type": { "const": "text/markdown" },
+        "path": { "type": "string" },
+        "sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" }
+      },
+      "required": ["artifact_id", "byte_count", "media_type", "path", "sha256"],
+      "type": "object"
+    },
+    "deviation": {
+      "additionalProperties": false,
+      "properties": { "description": { "type": "string" }, "deviation_id": { "type": "string" } },
+      "required": ["description", "deviation_id"],
+      "type": "object"
+    },
+    "error": {
+      "additionalProperties": false,
+      "properties": { "code": { "type": "string" }, "message": { "type": "string" } },
+      "required": ["code", "message"],
+      "type": "object"
+    },
+    "fileReference": {
+      "additionalProperties": false,
+      "properties": {
+        "byte_count": { "minimum": 0, "type": "integer" },
+        "path": { "type": "string" },
+        "sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" }
+      },
+      "required": ["byte_count", "path", "sha256"],
+      "type": "object"
+    },
+    "mutation": {
+      "additionalProperties": false,
+      "properties": { "observation": { "type": "string" }, "verified": { "type": "boolean" } },
+      "required": ["observation", "verified"],
+      "type": "object"
+    },
+    "terminalStatus": { "enum": ["unsupported", "blocked", "failed", "incomplete", "completed"] },
+    "terminationReason": { "enum": ["none", "route_unsupported", "environment_unavailable", "authentication_unavailable", "permission_denied", "process_error", "timeout", "tool_budget_exceeded", "malformed_output", "required_artifact_missing", "artifact_validation_failed", "sensitive_capture_blocked", "unexpected_external_mutation"] }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/v2/ledger-entry.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_id": { "type": "string" },
+    "attempt_kind": { "enum": ["dry_run", "actual"] },
+    "entry_id": { "type": "string" },
+    "previous_entry_sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" },
+    "randomized_order": { "minimum": 0, "type": "integer" },
+    "recorded_at": { "format": "date-time", "type": "string" },
+    "registration_id": { "const": "RC2-CO-CLAUDE-CODE-2026-08-24-V2" },
+    "repeat_index": { "minimum": 0, "type": "integer" },
+    "route_id": { "const": "co-claude-code" },
+    "runner_manifest": { "$ref": "#/$defs/fileReference" },
+    "scenario_id": { "enum": ["FACT-01", "FACT-03", "SAFE-01", "NOSUB-01"] },
+    "schema_version": { "const": "1.0" },
+    "sequence": { "minimum": 0, "type": "integer" },
+    "terminal_status": { "enum": ["unsupported", "blocked", "failed", "incomplete", "completed"] },
+    "termination_reason": { "enum": ["none", "route_unsupported", "environment_unavailable", "authentication_unavailable", "permission_denied", "process_error", "timeout", "tool_budget_exceeded", "malformed_output", "required_artifact_missing", "artifact_validation_failed", "sensitive_capture_blocked", "unexpected_external_mutation"] }
+  },
+  "required": ["attempt_id", "attempt_kind", "entry_id", "previous_entry_sha256", "randomized_order", "recorded_at", "registration_id", "repeat_index", "route_id", "runner_manifest", "scenario_id", "schema_version", "sequence", "terminal_status", "termination_reason"],
+  "type": "object",
+  "$defs": {
+    "fileReference": {
+      "additionalProperties": false,
+      "properties": { "byte_count": { "minimum": 0, "type": "integer" }, "path": { "type": "string" }, "sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" } },
+      "required": ["byte_count", "path", "sha256"],
+      "type": "object"
+    }
+  }
+}

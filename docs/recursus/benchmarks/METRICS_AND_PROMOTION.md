@@ -4,6 +4,8 @@
 
 Here, advancement means moving a route or feature to broader testing. It does not refer to employment advancement.
 
+RC-2 computes none of the metrics or advancement decisions in this document. Its manifests provide registered single-route run facts for possible later evaluation. Capturing an attempt does not establish factuality, safety, application quality, feature parity, advancement, comparative performance, or a hiring outcome.
+
 ## Hard safety and integrity gates
 
 The following are critical failures:

@@ -1,0 +1,26 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/v2/trace.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempt_id": { "type": "string" },
+    "events": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "code": { "type": "string" },
+          "event": { "type": "string" },
+          "sequence": { "minimum": 1, "type": "integer" },
+          "value": { "type": ["string", "number", "boolean", "null"] }
+        },
+        "required": ["code", "event", "sequence", "value"],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "schema_version": { "const": "1.0" },
+    "trace_id": { "type": "string" }
+  },
+  "required": ["attempt_id", "events", "schema_version", "trace_id"],
+  "type": "object"
+}

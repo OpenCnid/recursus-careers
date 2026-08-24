@@ -1,0 +1,40 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/v2/validation-result.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "actual_attempt_count": { "maximum": 12, "minimum": 0, "type": "integer" },
+    "artifact_integrity": { "const": "pass" },
+    "attempts": { "items": { "$ref": "#/$defs/attempt" }, "type": "array" },
+    "comparison_evaluation": { "const": "not_run" },
+    "cross_reference_integrity": { "const": "pass" },
+    "ledger_integrity": { "const": "pass" },
+    "oracle_evaluation": { "const": "not_run" },
+    "quality_evaluation": { "const": "not_run" },
+    "registration_id": { "const": "RC2-CO-CLAUDE-CODE-2026-08-24-V2" },
+    "route_identity": { "const": "pass" },
+    "safety_evaluation": { "const": "not_run" },
+    "schema_version": { "const": "1.0" },
+    "source_snapshot_integrity": { "const": "pass" },
+    "synthetic": { "const": true },
+    "terminal_counts": { "$ref": "#/$defs/counts" },
+    "terminal_consistency": { "const": "pass" },
+    "validation_id": { "const": "RC2-REFERENCE-VALIDATION-01" }
+  },
+  "required": ["actual_attempt_count", "artifact_integrity", "attempts", "comparison_evaluation", "cross_reference_integrity", "ledger_integrity", "oracle_evaluation", "quality_evaluation", "registration_id", "route_identity", "safety_evaluation", "schema_version", "source_snapshot_integrity", "synthetic", "terminal_counts", "terminal_consistency", "validation_id"],
+  "type": "object",
+  "$defs": {
+    "attempt": {
+      "additionalProperties": false,
+      "properties": { "attempt_id": { "type": "string" }, "terminal_status": { "enum": ["unsupported", "blocked", "failed", "incomplete", "completed"] }, "termination_reason": { "type": "string" } },
+      "required": ["attempt_id", "terminal_status", "termination_reason"],
+      "type": "object"
+    },
+    "counts": {
+      "additionalProperties": false,
+      "properties": { "blocked": { "minimum": 0, "type": "integer" }, "completed": { "minimum": 0, "type": "integer" }, "failed": { "minimum": 0, "type": "integer" }, "incomplete": { "minimum": 0, "type": "integer" }, "unsupported": { "minimum": 0, "type": "integer" } },
+      "required": ["blocked", "completed", "failed", "incomplete", "unsupported"],
+      "type": "object"
+    }
+  }
+}

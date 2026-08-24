@@ -1,0 +1,209 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/v2/registration.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "attempts": { "items": { "$ref": "#/$defs/attempt" }, "maxItems": 12, "minItems": 12, "type": "array" },
+    "budgets": { "$ref": "#/$defs/budgets" },
+    "canonical_serialization": { "const": "recursus-canonical-json-v1" },
+    "comparison": { "const": "none" },
+    "corpus": { "$ref": "#/$defs/corpus" },
+    "deviations": { "items": { "$ref": "#/$defs/deviation" }, "type": "array" },
+    "dry_run_plan": { "$ref": "#/$defs/dryRun" },
+    "environment": { "$ref": "#/$defs/environment" },
+    "lane": { "const": "reference_capture" },
+    "milestone": { "const": "RC-2" },
+    "non_evaluations": { "$ref": "#/$defs/nonEvaluations" },
+    "policies": { "$ref": "#/$defs/policies" },
+    "randomization": { "$ref": "#/$defs/randomization" },
+    "registered_at": { "format": "date-time", "type": "string" },
+    "registration_id": { "const": "RC2-CO-CLAUDE-CODE-2026-08-24-V2" },
+    "registration_version": { "const": "2" },
+    "route": { "$ref": "#/$defs/route" },
+    "schema_version": { "const": "1.0" },
+    "source_snapshot": { "$ref": "#/$defs/fileReference" },
+    "synthetic": { "const": true }
+  },
+  "required": ["attempts", "budgets", "canonical_serialization", "comparison", "corpus", "deviations", "dry_run_plan", "environment", "lane", "milestone", "non_evaluations", "policies", "randomization", "registered_at", "registration_id", "registration_version", "route", "schema_version", "source_snapshot", "synthetic"],
+  "type": "object",
+  "$defs": {
+    "attempt": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": { "type": "string" },
+        "randomized_order": { "maximum": 12, "minimum": 1, "type": "integer" },
+        "repeat_index": { "maximum": 3, "minimum": 1, "type": "integer" },
+        "scenario_id": { "enum": ["FACT-01", "FACT-03", "SAFE-01", "NOSUB-01"] }
+      },
+      "required": ["attempt_id", "randomized_order", "repeat_index", "scenario_id"],
+      "type": "object"
+    },
+    "budgets": {
+      "additionalProperties": false,
+      "properties": {
+        "max_budget_usd": { "const": 0.5 },
+        "max_output_bytes": { "const": 262144 },
+        "max_retries": { "const": 0 },
+        "max_tool_calls": { "const": 12 },
+        "wall_time_ms": { "const": 300000 }
+      },
+      "required": ["max_budget_usd", "max_output_bytes", "max_retries", "max_tool_calls", "wall_time_ms"],
+      "type": "object"
+    },
+    "corpus": {
+      "additionalProperties": false,
+      "properties": {
+        "corpus_id": { "const": "CORPUS-CAREER-BENCH-V1" },
+        "corpus_version": { "const": "career-bench-v1" },
+        "schema_version": { "const": "1.0" }
+      },
+      "required": ["corpus_id", "corpus_version", "schema_version"],
+      "type": "object"
+    },
+    "deviation": {
+      "additionalProperties": false,
+      "properties": { "description": { "type": "string" }, "deviation_id": { "type": "string" } },
+      "required": ["description", "deviation_id"],
+      "type": "object"
+    },
+    "dryRun": {
+      "additionalProperties": false,
+      "properties": {
+        "attempt_id": { "const": "RC2-DRY-RUN-01" },
+        "external_runner_started": { "const": false },
+        "output_origin": { "const": "dry_run_fixture" },
+        "provider_request": { "const": "not_made_by_design" },
+        "scenario_id": { "const": "FACT-01" }
+      },
+      "required": ["attempt_id", "external_runner_started", "output_origin", "provider_request", "scenario_id"],
+      "type": "object"
+    },
+    "environment": {
+      "additionalProperties": false,
+      "properties": {
+        "architecture": { "type": "string" },
+        "locale": { "type": "string" },
+        "os_platform": { "type": "string" },
+        "os_release": { "type": "string" },
+        "timezone": { "type": "string" }
+      },
+      "required": ["architecture", "locale", "os_platform", "os_release", "timezone"],
+      "type": "object"
+    },
+    "fileReference": {
+      "additionalProperties": false,
+      "properties": {
+        "byte_count": { "minimum": 0, "type": "integer" },
+        "path": { "type": "string" },
+        "sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" }
+      },
+      "required": ["byte_count", "path", "sha256"],
+      "type": "object"
+    },
+    "harness": {
+      "additionalProperties": false,
+      "properties": { "id": { "const": "rc2-claude-code-reference-v2" }, "version": { "const": "2.0.0" } },
+      "required": ["id", "version"],
+      "type": "object"
+    },
+    "modelIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "reasoning_effort": { "type": "string" },
+        "reporting_status": { "enum": ["not_reported", "reported"] },
+        "snapshot": { "type": "string" }
+      },
+      "required": ["id", "reasoning_effort", "reporting_status", "snapshot"],
+      "type": "object"
+    },
+    "nonEvaluations": {
+      "additionalProperties": false,
+      "properties": {
+        "advancement": { "const": "not_evaluated" },
+        "comparison": { "const": "not_run" },
+        "factuality": { "const": "not_run" },
+        "quality": { "const": "not_run" },
+        "safety": { "const": "not_run" }
+      },
+      "required": ["advancement", "comparison", "factuality", "quality", "safety"],
+      "type": "object"
+    },
+    "permissionProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_tools": { "items": { "type": "string" }, "type": "array" },
+        "denied_tools": { "items": { "type": "string" }, "type": "array" },
+        "id": { "const": "co-claude-code-read-only-v1" },
+        "mode": { "const": "dontAsk" }
+      },
+      "required": ["allowed_tools", "denied_tools", "id", "mode"],
+      "type": "object"
+    },
+    "policies": {
+      "additionalProperties": false,
+      "properties": {
+        "allowed_external_process": { "const": "co-claude-code" },
+        "automatic_updates": { "const": "disabled" },
+        "browser": { "const": "disabled" },
+        "identity_capture": { "const": "explicit_runner_output_only" },
+        "mcp": { "const": "disabled" },
+        "network": { "const": "provider_only_actual_attempts" },
+        "plugins": { "const": "disabled" },
+        "telemetry": { "const": "disabled" }
+      },
+      "required": ["allowed_external_process", "automatic_updates", "browser", "identity_capture", "mcp", "network", "plugins", "telemetry"],
+      "type": "object"
+    },
+    "product": {
+      "additionalProperties": false,
+      "properties": { "id": { "const": "career-ops" }, "version": { "type": "string" } },
+      "required": ["id", "version"],
+      "type": "object"
+    },
+    "providerIdentity": {
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "reporting_status": { "enum": ["not_reported", "reported"] },
+        "version": { "type": "string" }
+      },
+      "required": ["id", "reporting_status", "version"],
+      "type": "object"
+    },
+    "randomization": {
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": { "const": "rc2-order-v1" },
+        "seed": { "pattern": "^[a-f0-9]{64}$", "type": "string" }
+      },
+      "required": ["algorithm", "seed"],
+      "type": "object"
+    },
+    "route": {
+      "additionalProperties": false,
+      "properties": {
+        "harness": { "$ref": "#/$defs/harness" },
+        "model": { "$ref": "#/$defs/modelIdentity" },
+        "permission_profile": { "$ref": "#/$defs/permissionProfile" },
+        "product": { "$ref": "#/$defs/product" },
+        "provider": { "$ref": "#/$defs/providerIdentity" },
+        "route_id": { "const": "co-claude-code" },
+        "runner": { "$ref": "#/$defs/runner" },
+        "workflow": { "const": "native_claude_code_skill" }
+      },
+      "required": ["harness", "model", "permission_profile", "product", "provider", "route_id", "runner", "workflow"],
+      "type": "object"
+    },
+    "runner": {
+      "additionalProperties": false,
+      "properties": {
+        "binary_sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" },
+        "id": { "const": "claude-code" },
+        "version": { "type": "string" }
+      },
+      "required": ["binary_sha256", "id", "version"],
+      "type": "object"
+    }
+  }
+}

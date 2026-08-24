@@ -43,6 +43,8 @@ A paired result is eligible for interpretation only when the run record identifi
 - browser and network availability;
 - every manual intervention and protocol deviation.
 
+Use the schema's explicit missing-value representation. RC-2 provider and model fields use `not_reported` for a value the route does not report. Runner, harness, permission profile, source, and environment identity remain exact registered facts. Unavailable numeric usage and cost fields use `null` when their schema permits it. Never infer provider, model, or cost from a runner or product name.
+
 For a same-model runtime claim, the exact provider, model, reasoning setting, semantic prompt blocks, tools, permissions, and budgets must match. If they cannot match, the result stays an end-to-end configuration comparison.
 
 ## 4. Execution phases

@@ -14,7 +14,7 @@ This registry is the initial truth table for Recursus Careers. It should change 
 | Application tracker and integrity scripts | `career-ops` | inherited | Yes | No | unverified | Canonical files and status rules remain authoritative |
 | Interview, follow-up, reply, and offer workflows | `career-ops` | inherited | Yes | No | unverified | Do not relabel inherited workflows as Recursus inventions |
 | Company and contact research | `career-ops` | inherited | Yes | No | unverified | Recursus target is durable cross-role reuse, not basic research |
-| Career Ops through Claude Code CLI | `career-ops` | inherited | Yes | No | canonical reference, no Recursus benchmark | Primary upstream reference route |
+| Career Ops through Claude Code CLI | `career-ops` | inherited | Yes | No | accepted RC-2 v4 has one dry run and twelve actual attempts; no Recursus benchmark | All twelve actual attempts completed the capture contract under two preregistered deviations; no oracle or comparative evaluation was run |
 | Career Ops through OpenAI Codex CLI | `career-ops` | inherited | Yes | No | no Recursus benchmark | Existing compatibility route, not the preferred Recursus transport |
 | Local web UI and TUI | `career-ops` | inherited | Yes | No | unverified | The web UI remains an upstream alpha surface |
 
@@ -42,10 +42,11 @@ This registry is the initial truth table for Recursus Careers. It should change 
 | Feature | Primary owner | Component status | Recursus Careers integration | Available through Recursus Careers | Evidence | Limitations |
 | --- | --- | --- | --- | --- | --- | --- |
 | Benchmark Foundation v1 structural verifier | `recursus-careers` | implemented | not integrated | No | focused structural tests plus Ubuntu, macOS, and Windows CI | Validates schemas, exact fixture bytes, path containment, provenance locator resolution, and seeded-file oracle exclusion only. It executes no model, harness, workflow, or provider and produces no factuality, safety, quality, parity, advancement, or comparative result. |
+| Claude Code reference capture v4 | `recursus-careers` | implemented | not integrated | No | accepted through PR #2 after focused RC-2 tests passed Ubuntu, macOS, and Windows CI; one Windows provider-free dry run and twelve Windows actual attempts are validated | Captures single-route synthetic process and artifact facts only. Provider identity is `not_reported`; model `claude-sonnet-5` was explicitly reported by the trusted runner envelope. No oracle or Recursus comparison was run. Historical v1 through v3 evidence remains append-only. |
 
 ## Known absent evidence
 
-At this accepted RC-1 foundation point there is:
+At the accepted RC-2 reference-capture point there is:
 
 - no Recursus execution integration diff from the pinned Career Ops baseline;
 - no demonstrated Career Ops execution through a Recursus profile;

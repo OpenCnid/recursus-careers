@@ -1,0 +1,129 @@
+{
+  "$id": "https://career-ops.test/schemas/recursus/rc2/v4/runner-manifest.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_inventory": { "items": { "$ref": "#/$defs/artifact" }, "maxItems": 1, "type": "array" },
+    "attempt_id": { "type": "string" },
+    "attempt_kind": { "enum": ["dry_run", "actual"] },
+    "configured_model": { "$ref": "#/$defs/modelIdentity" },
+    "configured_provider": { "$ref": "#/$defs/providerIdentity" },
+    "deviations": { "items": { "$ref": "#/$defs/deviation" }, "type": "array" },
+    "environment": { "$ref": "#/$defs/environment" },
+    "errors": { "items": { "$ref": "#/$defs/error" }, "maxItems": 1, "type": "array" },
+    "execution_attestation": { "enum": ["absent", "runner_attested"] },
+    "identity_capture_policy": { "const": "explicit_runner_output_only" },
+    "invocation": { "$ref": "#/$defs/fileReference" },
+    "manifest_id": { "type": "string" },
+    "normalized_result": { "$ref": "#/$defs/fileReference" },
+    "observations": { "$ref": "#/$defs/observations" },
+    "randomized_order": { "minimum": 0, "type": "integer" },
+    "recorded_at": { "format": "date-time", "type": "string" },
+    "registration": { "$ref": "#/$defs/fileReference" },
+    "registration_id": { "const": "RC2-CO-CLAUDE-CODE-2026-08-24-V4" },
+    "repeat_index": { "minimum": 0, "type": "integer" },
+    "reported_model": { "$ref": "#/$defs/modelIdentity" },
+    "reported_provider": { "$ref": "#/$defs/providerIdentity" },
+    "route_id": { "const": "co-claude-code" },
+    "runner": { "$ref": "#/$defs/runner" },
+    "scenario_id": { "enum": ["FACT-01", "FACT-03", "SAFE-01", "NOSUB-01"] },
+    "schema_version": { "const": "1.0" },
+    "seed_inventory": { "$ref": "#/$defs/fileReference" },
+    "source_snapshot": { "$ref": "#/$defs/fileReference" },
+    "terminal_status": { "$ref": "#/$defs/terminalStatus" },
+    "termination_reason": { "$ref": "#/$defs/terminationReason" },
+    "trace": { "$ref": "#/$defs/fileReference" },
+    "usage": { "$ref": "#/$defs/usage" },
+    "workspace_inventory": { "$ref": "#/$defs/fileReference" }
+  },
+  "required": ["artifact_inventory", "attempt_id", "attempt_kind", "configured_model", "configured_provider", "deviations", "environment", "errors", "execution_attestation", "identity_capture_policy", "invocation", "manifest_id", "normalized_result", "observations", "randomized_order", "recorded_at", "registration", "registration_id", "repeat_index", "reported_model", "reported_provider", "route_id", "runner", "scenario_id", "schema_version", "seed_inventory", "source_snapshot", "terminal_status", "termination_reason", "trace", "usage", "workspace_inventory"],
+  "type": "object",
+  "$defs": {
+    "artifact": {
+      "additionalProperties": false,
+      "properties": { "artifact_id": { "type": "string" }, "byte_count": { "minimum": 0, "type": "integer" }, "media_type": { "const": "text/markdown" }, "path": { "type": "string" }, "sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" } },
+      "required": ["artifact_id", "byte_count", "media_type", "path", "sha256"],
+      "type": "object"
+    },
+    "deviation": {
+      "additionalProperties": false,
+      "properties": { "description": { "type": "string" }, "deviation_id": { "type": "string" } },
+      "required": ["description", "deviation_id"],
+      "type": "object"
+    },
+    "error": {
+      "additionalProperties": false,
+      "properties": { "code": { "type": "string" }, "message": { "type": "string" } },
+      "required": ["code", "message"],
+      "type": "object"
+    },
+    "environment": {
+      "additionalProperties": false,
+      "properties": {
+        "architecture": { "type": "string" },
+        "locale": { "type": "string" },
+        "os_platform": { "type": "string" },
+        "os_release": { "type": "string" },
+        "timezone": { "type": "string" }
+      },
+      "required": ["architecture", "locale", "os_platform", "os_release", "timezone"],
+      "type": "object"
+    },
+    "fileReference": {
+      "additionalProperties": false,
+      "properties": { "byte_count": { "minimum": 0, "type": "integer" }, "path": { "type": "string" }, "sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" } },
+      "required": ["byte_count", "path", "sha256"],
+      "type": "object"
+    },
+    "modelIdentity": {
+      "additionalProperties": false,
+      "properties": { "id": { "maxLength": 128, "type": "string" }, "reasoning_effort": { "maxLength": 128, "type": "string" }, "reporting_status": { "enum": ["not_reported", "reported"] }, "snapshot": { "maxLength": 128, "type": "string" } },
+      "required": ["id", "reasoning_effort", "reporting_status", "snapshot"],
+      "type": "object"
+    },
+    "observations": {
+      "additionalProperties": false,
+      "properties": {
+        "authentication_unavailable": { "type": "boolean" },
+        "conflicting_terminal_events": { "type": "boolean" },
+        "environment_unavailable": { "type": "boolean" },
+        "exit_code": { "type": ["integer", "null"] },
+        "external_runner_started": { "type": "boolean" },
+        "malformed_event_count": { "minimum": 0, "type": "integer" },
+        "permission_denied": { "type": "boolean" },
+        "process_signal": { "type": ["string", "null"] },
+        "provider_request": { "enum": ["not_made_by_design", "not_made", "not_observed", "reported"] },
+        "route_unsupported": { "type": "boolean" },
+        "sensitive_capture_blocked": { "type": "boolean" },
+        "timed_out": { "type": "boolean" },
+        "tool_budget_exceeded": { "type": "boolean" },
+        "tool_call_count": { "minimum": 0, "type": "integer" },
+        "trusted_terminal_event": { "type": "boolean" },
+        "trusted_terminal_success": { "type": ["boolean", "null"] },
+        "workspace_unchanged": { "type": "boolean" }
+      },
+      "required": ["authentication_unavailable", "conflicting_terminal_events", "environment_unavailable", "exit_code", "external_runner_started", "malformed_event_count", "permission_denied", "process_signal", "provider_request", "route_unsupported", "sensitive_capture_blocked", "timed_out", "tool_budget_exceeded", "tool_call_count", "trusted_terminal_event", "trusted_terminal_success", "workspace_unchanged"],
+      "type": "object"
+    },
+    "providerIdentity": {
+      "additionalProperties": false,
+      "properties": { "id": { "maxLength": 128, "type": "string" }, "reporting_status": { "enum": ["not_reported", "reported"] }, "version": { "maxLength": 128, "type": "string" } },
+      "required": ["id", "reporting_status", "version"],
+      "type": "object"
+    },
+    "runner": {
+      "additionalProperties": false,
+      "properties": { "binary_sha256": { "pattern": "^[a-f0-9]{64}$", "type": "string" }, "id": { "const": "claude-code" }, "version": { "maxLength": 128, "pattern": "^[0-9]+(?:\\.[0-9]+){1,3}(?:[-+][0-9A-Za-z.-]+)?$", "type": "string" } },
+      "required": ["binary_sha256", "id", "version"],
+      "type": "object"
+    },
+    "terminalStatus": { "enum": ["unsupported", "blocked", "failed", "incomplete", "completed"] },
+    "terminationReason": { "enum": ["none", "route_unsupported", "environment_unavailable", "authentication_unavailable", "permission_denied", "process_error", "timeout", "tool_budget_exceeded", "malformed_output", "required_artifact_missing", "artifact_validation_failed", "sensitive_capture_blocked", "unexpected_external_mutation"] },
+    "usage": {
+      "additionalProperties": false,
+      "properties": { "cache_creation_input_tokens": { "minimum": 0, "type": ["number", "null"] }, "cache_read_input_tokens": { "minimum": 0, "type": ["number", "null"] }, "duration_ms": { "minimum": 0, "type": ["number", "null"] }, "input_tokens": { "minimum": 0, "type": ["number", "null"] }, "output_tokens": { "minimum": 0, "type": ["number", "null"] }, "total_cost_usd": { "minimum": 0, "type": ["number", "null"] } },
+      "required": ["cache_creation_input_tokens", "cache_read_input_tokens", "duration_ms", "input_tokens", "output_tokens", "total_cost_usd"],
+      "type": "object"
+    }
+  }
+}
