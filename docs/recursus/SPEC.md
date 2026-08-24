@@ -1,6 +1,6 @@
 # Benchmark Foundation v1 specification
 
-Status: implemented locally; exact-commit review and CI acceptance pending
+Status: accepted for RC-1 after reviewed Windows and supported-CI evidence in PR #1
 
 Roadmap milestone: [RC-1](ROADMAP.md#rc-1-benchmark-foundation-v1)
 

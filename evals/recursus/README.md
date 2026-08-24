@@ -1,6 +1,6 @@
 # Recursus Benchmark Foundation v1
 
-Status: implemented locally for roadmap milestone RC-1. The roadmap remains `in progress` until the exact reviewed commit has the required Windows and supported-CI evidence.
+Status: accepted for roadmap milestone RC-1 through PR #1 after the exact implementation head passed the required Windows and supported-CI checks.
 
 This foundation validates corpus structure and fixture integrity only. It is not a model benchmark result.
 

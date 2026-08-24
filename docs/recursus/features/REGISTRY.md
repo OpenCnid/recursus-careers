@@ -41,11 +41,11 @@ This registry is the initial truth table for Recursus Careers. It should change 
 
 | Feature | Primary owner | Component status | Recursus Careers integration | Available through Recursus Careers | Evidence | Limitations |
 | --- | --- | --- | --- | --- | --- | --- |
-| Benchmark Foundation v1 structural verifier | `recursus-careers` | implemented locally | not integrated | No | focused local structural tests | Validates schemas, exact fixture bytes, path containment, provenance locator resolution, and seeded-file oracle exclusion only. It executes no model, harness, workflow, or provider and produces no factuality, safety, quality, parity, advancement, or comparative result. |
+| Benchmark Foundation v1 structural verifier | `recursus-careers` | implemented | not integrated | No | focused structural tests plus Ubuntu, macOS, and Windows CI | Validates schemas, exact fixture bytes, path containment, provenance locator resolution, and seeded-file oracle exclusion only. It executes no model, harness, workflow, or provider and produces no factuality, safety, quality, parity, advancement, or comparative result. |
 
 ## Known absent evidence
 
-At this local RC-1 implementation point there is:
+At this accepted RC-1 foundation point there is:
 
 - no Recursus execution integration diff from the pinned Career Ops baseline;
 - no demonstrated Career Ops execution through a Recursus profile;

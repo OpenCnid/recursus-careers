@@ -4,7 +4,7 @@
 
 > **Status:** protocol only. No Recursus Careers comparison in this document has been executed.
 
-The model-free [Benchmark Foundation v1](../../../evals/recursus/README.md) is implemented locally for RC-1. It validates corpus structure and fixture integrity only and is not a benchmark result.
+The model-free [Benchmark Foundation v1](../../../evals/recursus/README.md) is accepted for RC-1. It validates corpus structure and fixture integrity only and is not a benchmark result.
 
 ## Purpose
 

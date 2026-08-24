@@ -26,8 +26,8 @@ No milestone becomes `accepted` because its documentation was written. Acceptanc
 
 | ID | Milestone | Status | Primary outcome | Depends on |
 | --- | --- | --- | --- | --- |
-| RC-0 | Documentation and claim boundary | `in progress` | A shared baseline for architecture, benchmarks, feature status, and allowed claims | Current Career Ops behavior and pinned Recursus sources |
-| RC-1 | Benchmark Foundation v1 | `in progress` | A deterministic, offline corpus and structural verifier that later runners can use | RC-0 |
+| RC-0 | Documentation and claim boundary | `accepted` | A shared baseline for architecture, benchmarks, feature status, and allowed claims | Current Career Ops behavior and pinned Recursus sources |
+| RC-1 | Benchmark Foundation v1 | `accepted` | A deterministic, offline corpus and structural verifier that later runners can use | RC-0 |
 | RC-2 | Claude Code reference capture | `next` | Reproducible reference runs from unchanged Career Ops through Claude Code | RC-1 and an available Claude Code environment |
 | RC-3 | Minimal Recursus execution bridge | `planned` | The same cases can run through Recursus without claiming feature parity | RC-1 and the required Recursus runner surface |
 | RC-4 | Compiled prompt and context parity | `planned` | Provider-neutral inputs preserve the Career Ops workflow contract | RC-2 and RC-3 |
@@ -58,7 +58,7 @@ Exit evidence:
 - Documentation checks pass with no broken local links.
 - The changes are reviewed and accepted.
 
-Current note: the documentation is drafted in the working tree. It is not yet accepted or committed.
+Current note: the documentation baseline is accepted through PR #1 after claim-boundary review, local-link review, and the repository's supported CI checks.
 
 ### RC-1: Benchmark Foundation v1
 
@@ -81,7 +81,7 @@ Exit evidence:
 
 A local implementation may be handed off as complete work without being marked `accepted`. RC-1 becomes `accepted` only after its exact commit passes the required Windows and supported-CI checks.
 
-Current note: RC-1 is implemented locally and is being prepared for reviewed pull-request evidence. It remains `in progress` until the exact reviewed commit passes Windows and supported CI. RC-2 is the next bounded task, but its execution gate is RC-1 acceptance.
+Current note: RC-1 is accepted through PR #1. Exact implementation head `634fc30` passed the full repository suite on Ubuntu, macOS, and Windows, together with CodeQL, dependency review, user-data guard, upgrade regression, and visual checks. RC-2 is the next bounded task.
 
 ### RC-2: Claude Code reference capture
 

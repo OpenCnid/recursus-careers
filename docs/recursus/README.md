@@ -4,7 +4,7 @@ This directory defines how Recursus Careers will extend the Career Ops workflow,
 
 ## Current status
 
-The Career Ops application and execution routes remain unchanged from commit `bde5de661afbb72977a190e543ded24a72c9c86e`. RC-1, the offline [Benchmark Foundation v1](../../evals/recursus/README.md), is implemented locally with the root [structural verifier](../../verify-recursus-benchmark.mjs). This does not integrate a Recursus execution route. The documents in this directory describe the intended integration and its acceptance criteria. They do not claim that the planned Recursus runtime behavior is already available. The [feature registry](features/REGISTRY.md) is the canonical current-status record.
+The Career Ops application and execution routes remain unchanged from commit `bde5de661afbb72977a190e543ded24a72c9c86e`. RC-1, the offline [Benchmark Foundation v1](../../evals/recursus/README.md), is accepted through PR #1 with the root [structural verifier](../../verify-recursus-benchmark.mjs). This does not integrate a Recursus execution route. The documents in this directory describe the intended integration and its acceptance criteria. They do not claim that the planned Recursus runtime behavior is already available. The [feature registry](features/REGISTRY.md) is the canonical current-status record.
 
 The primary reference is **Career Ops through the Claude Code CLI**. Career Ops through the OpenAI Codex CLI is an existing compatibility route. The preferred future Recursus Careers configuration uses the Recursus and DSH runtime with the direct `openai-codex` provider adapter. It does not use the Codex CLI runner. The exact model is recorded separately, and the product is not defined by one runner, provider, or model.
 
