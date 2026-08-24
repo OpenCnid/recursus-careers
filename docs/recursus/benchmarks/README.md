@@ -1,0 +1,85 @@
+# Recursus Careers benchmark overview
+
+[Recursus overview](../README.md) | [Protocol](PROTOCOL.md) | [Scenarios](SCENARIO_CATALOG.md) | [Metrics](METRICS_AND_PROMOTION.md)
+
+> **Status:** protocol only. No Recursus Careers comparison in this document has been executed.
+
+The model-free [Benchmark Foundation v1](../../../evals/recursus/README.md) is implemented locally for RC-1. It validates corpus structure and fixture integrity only and is not a benchmark result.
+
+## Purpose
+
+The benchmark separates four questions that are easy to confuse:
+
+1. Which complete product stack performs better for a user?
+2. Does Recursus preserve the mature Career Ops behavior?
+3. Does the Recursus runtime improve results when the model is held constant?
+4. What does RLM, Honcho, or Dovetail contribute on its own?
+
+No single comparison answers all four. In these documents, **advancement** means moving a route or feature to broader testing. An **ablation** toggles one component while holding all other registered conditions fixed.
+
+## Reference hierarchy
+
+| Route ID | Product and workflow | Runner or harness | Provider and model | Permission identity | Role in the benchmark |
+| --- | --- | --- | --- | --- | --- |
+| `co-claude-code` | Pinned Career Ops | Claude Code CLI | Exact values recorded per run | Exact CLI and project configuration recorded | Primary upstream reference |
+| `co-codex-cli` | The same Career Ops snapshot | OpenAI Codex CLI | Exact values recorded when reported | Exact CLI and project configuration recorded | Existing compatibility route |
+| `rc-direct` | Recursus Careers, direct route | Recursus plus DSH | One fixed exact provider and model | Registered Recursus capability profile | Minimal Recursus treatment with RLM and Honcho disabled |
+| `rc-rlm` | Recursus Careers, selective RLM | Recursus plus DSH | Same as `rc-direct` | Same as `rc-direct`, plus declared RLM authority | RLM ablation treatment |
+| `rc-honcho` | Recursus Careers, controlled recall | Recursus plus DSH | Same as `rc-direct` | Same as `rc-direct` | Memory ablation treatment |
+| `rc-dovetail` | Recursus Careers, named Dovetail workflow | Recursus plus DSH | Same as `rc-direct` | Same as `rc-direct` | Workflow ablation treatment |
+| `rc-auto` | Recursus Careers, automatic eligible routing | Recursus plus DSH | Preferred direct `openai-codex` adapter and exact model recorded | Registered full-treatment profile | Preferred product treatment after individual ablations pass |
+
+The machine result value is `unsupported`; human-facing reports display "not supported." Missing model or permission identity is `not reported`. Neither label counts as a pass.
+
+## Benchmark lanes
+
+| Lane | Baseline | Treatment | Supported conclusion |
+| --- | --- | --- | --- |
+| Feature parity | `co-claude-code` | `rc-direct` | Whether Recursus covers the required Career Ops workflow surface |
+| End-to-end product configuration | `co-claude-code` | `rc-auto` with the direct `openai-codex` adapter | Which bundled configuration performs better under the stated conditions |
+| Codex compatibility route | `co-codex-cli` | `rc-direct` with the same exact model where possible | A closer provider/model control that still includes runner, harness, and transport differences |
+| Same-model runtime comparison | Career Ops through a named runner and exact model | Recursus through DSH with the same exact model, semantic prompt, tools, permissions, and budget | Runtime effect, separate from model choice, only when every control matches |
+| Model-only | Exact model A in one named runner or harness | Exact model B in that same runner or harness | Within-runner model effect |
+| Ablation | `rc-direct` or the full accepted Recursus route | One component enabled or disabled | Contribution of RLM, Honcho, Dovetail, routing, or recovery |
+| Longitudinal | The applicable accepted routes | The other route | Recall, stale-state handling, role changes, and relationship continuity |
+| Live research | Accepted native routes | The other route | Real-world retrieval behavior, with time and source drift declared |
+
+The end-to-end product-configuration lane cannot establish that Recursus or Codex alone caused a difference.
+
+## Required benchmark order
+
+1. Pass deterministic safety and data-integrity gates.
+2. Match the declared Career Ops through Claude Code feature-parity surface.
+3. Run the end-to-end product-configuration comparison.
+4. Run a same-model runtime comparison where an exact shared model route exists.
+5. Enable RLM, Honcho, and Dovetail one at a time.
+6. Run the automatic route only after individual components have evidence.
+7. Publish only the claims allowed by the resulting evidence level.
+
+## What is measured
+
+The primary axes are:
+
+- candidate-claim factuality;
+- evidence, provenance, and citation coverage;
+- source freshness and stale-input detection;
+- research depth and relevance for companies, labs, papers, repositories, and people;
+- company-specific application quality;
+- score and recommendation stability across repeated runs;
+- recovery from interrupted work;
+- verified artifact completion and pipeline integrity;
+- prohibited side effects and private-data leakage;
+- wall time, tokens, compute, retries, tool calls, cost, and human correction time.
+
+Quality, safety, reliability, and efficiency are reported separately. They are not collapsed into one unexplained score.
+
+## Evidence levels for comparison claims
+
+| Level | Minimum evidence | Allowed wording |
+| --- | --- | --- |
+| L1, run fact | One pinned configuration and complete run record | "Route A completed 7 of 8 cases in run set X." |
+| L2, controlled benchmark | Frozen fixtures, fixed rubric, matched controls, and all attempts reported | "Route A scored higher on benchmark X under these conditions." |
+| L3, replicated scoped finding | Repeated runs across the stated cases and platforms with uncertainty reported | "Route A had a higher verified completion rate across this corpus." |
+| L4, controlled within-runner model finding | Exact models in the same runner with matched prompts, tools, permissions, and budgets | "Within runner X, model A outperformed model B on the stated task population." |
+
+Only a valid same-model runtime pilot can support an `EXPAND` decision under the registered thresholds. An end-to-end product pilot records a scoped bundled-configuration result but cannot isolate or promote the Recursus runtime. No pilot can establish universal superiority or improved hiring outcomes.

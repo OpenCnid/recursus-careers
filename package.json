@@ -58,6 +58,7 @@
     "openai:eval": "node openai-eval.mjs",
     "openai:tailor": "node openai-tailor.mjs",
     "eval:golden": "node eval-golden.mjs",
+    "recursus:bench:verify": "node verify-recursus-benchmark.mjs validate",
     "star": "node match-star.mjs",
     "archive": "node archive-posting.mjs",
     "prepare:application": "node prepare-application.mjs",

@@ -87,6 +87,8 @@ const requiredSystemPaths = [
   '.cursor/skills/',
   'tracker-columns-tests.mjs',
   'updater-migration-tests.mjs',
+  'verify-recursus-benchmark.mjs',
+  'lib/recursus-benchmark.mjs',
   'README.ar.md',
   'README.de.md',
   'README.hi.md',

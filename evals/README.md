@@ -1,4 +1,11 @@
-# Golden-set eval for cheap-model routing (#1354)
+# Evaluation systems
+
+This repository has two separate evaluation surfaces:
+
+- The existing [golden-set classifier harness](#golden-set-eval-for-cheap-model-routing-1354) runs recorded or live model output and measures agreement with frozen role labels.
+- [Recursus Benchmark Foundation v1](recursus/README.md) is an offline, model-free structural verifier for a fictional corpus. It validates schemas, exact fixture bytes, cross-references, path containment, provenance locator resolution, and seeded-file oracle exclusion. It does not execute or evaluate a model or harness and produces no factuality, safety, quality, parity, advancement, or comparative result.
+
+## Golden-set eval for cheap-model routing (#1354)
 
 > **Status: v1.** The *mechanism* (`eval-golden.mjs`) is design-invariant and runs
 > today. Reference labels are now frozen (10 synthetic cases — see **Labeling
