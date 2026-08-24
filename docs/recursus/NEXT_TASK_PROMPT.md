@@ -25,6 +25,7 @@ Acceptance gate before editing:
    - `node test-all.mjs --only recursus/`
    - `node scripts/check-syntax.mjs`
 6. If RC-2 is not accepted or a required check fails for an implementation reason, stop RC-3 execution, gather exact evidence, and repair only the RC-2 acceptance blocker. Do not build or invoke a Recursus route on an unaccepted reference foundation.
+7. Confirm the repository pins concrete Recursus, DSH, and direct-provider-adapter revisions and entrypoints for RC-3. If any selection is absent or ambiguous, stop and obtain that source-selection decision before designing or invoking the bridge.
 
 Read these files completely in this order:
 
@@ -45,7 +46,7 @@ Read these files completely in this order:
 15. `evals/recursus/rc2-claude-code-reference-v4/source-snapshot.json`
 16. all RC-2 v4 schemas and validator code
 17. `verify-recursus-benchmark.mjs` and `lib/recursus-benchmark.mjs`
-18. the pinned Recursus and DSH source references named by the architecture documents
+18. the concrete Recursus, DSH, and direct-provider-adapter revisions and entrypoints confirmed by the acceptance gate
 19. relevant provider-adapter, test, updater, package, ignore, and evidence-storage conventions
 
 Search for more specific `AGENTS.md`, `CODEX.md`, or equivalent instructions before touching a nested directory. Follow the most specific applicable rules.
@@ -85,7 +86,7 @@ Binding RC-3 implementation contract:
 - Treat hashes as byte-identity evidence only.
 - Do not evaluate output against the oracle in RC-3. Do not calculate factuality, safety, quality, CAQ, parity, advancement, superiority, or hiring outcomes.
 - Keep the existing Career Ops workflow behavior unchanged. The bridge is an evaluation route beside the product workflow, not a product integration claim.
-- Add no dependency unless the accepted pinned Recursus route requires it and the design cannot be implemented safely without it. Document and review the exact dependency decision before mutation.
+- Add no dependency unless the accepted pinned Recursus, DSH, and direct-adapter route requires it and the design cannot be implemented safely without it. Document and review the exact dependency decision before mutation.
 - Use `apply_patch` for hand-written changes.
 - Do not use em dash characters in new prose.
 - Do not commit or push unless the current user explicitly asks for repository publication.

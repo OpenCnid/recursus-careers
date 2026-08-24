@@ -42,7 +42,7 @@ This registry is the initial truth table for Recursus Careers. It should change 
 | Feature | Primary owner | Component status | Recursus Careers integration | Available through Recursus Careers | Evidence | Limitations |
 | --- | --- | --- | --- | --- | --- | --- |
 | Benchmark Foundation v1 structural verifier | `recursus-careers` | implemented | not integrated | No | focused structural tests plus Ubuntu, macOS, and Windows CI | Validates schemas, exact fixture bytes, path containment, provenance locator resolution, and seeded-file oracle exclusion only. It executes no model, harness, workflow, or provider and produces no factuality, safety, quality, parity, advancement, or comparative result. |
-| Claude Code reference capture v4 | `recursus-careers` | implemented locally | not integrated | No | focused RC-2 tests, one validated provider-free dry run, and twelve validated actual attempts | Captures single-route synthetic process and artifact facts only. Provider identity is `not_reported`; model `claude-sonnet-5` was explicitly reported by the trusted runner envelope. No oracle or Recursus comparison was run. Historical v1 through v3 evidence remains append-only. |
+| Claude Code reference capture v4 | `recursus-careers` | implemented | not integrated | No | unit-verified locally with focused RC-2 tests, one validated provider-free dry run, and twelve validated actual attempts | Captures single-route synthetic process and artifact facts only. Provider identity is `not_reported`; model `claude-sonnet-5` was explicitly reported by the trusted runner envelope. No oracle or Recursus comparison was run. Historical v1 through v3 evidence remains append-only. |
 
 ## Known absent evidence
 

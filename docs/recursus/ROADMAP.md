@@ -29,7 +29,7 @@ No milestone becomes `accepted` because its documentation was written. Acceptanc
 | RC-0 | Documentation and claim boundary | `accepted` | A shared baseline for architecture, benchmarks, feature status, and allowed claims | Current Career Ops behavior and pinned Recursus sources |
 | RC-1 | Benchmark Foundation v1 | `accepted` | A deterministic, offline corpus and structural verifier that later runners can use | RC-0 |
 | RC-2 | Claude Code reference capture | `in progress` | Reproducible reference runs from unchanged Career Ops through Claude Code | RC-1 and an available Claude Code environment |
-| RC-3 | Minimal Recursus execution bridge | `planned` | The same cases can run through Recursus without claiming feature parity | RC-1 and the required Recursus runner surface |
+| RC-3 | Minimal Recursus execution bridge | `planned` | The same cases can run through Recursus without claiming feature parity | RC-1, RC-2, and the required Recursus runner surface |
 | RC-4 | Compiled prompt and context parity | `planned` | Provider-neutral inputs preserve the Career Ops workflow contract | RC-2 and RC-3 |
 | RC-5 | Feature parity and deterministic gates | `planned` | Required Career Ops behaviors pass on the Recursus route before enhancements begin | RC-4 |
 | RC-6 | Durable execution and evidence-backed completion | `planned` | Runs can resume, retry, recover, and prove artifact completion | RC-5 and Recursus supervision support |
@@ -102,7 +102,7 @@ Bounded implementation contract:
 - Add runner-produced evidence under an RC-2 contract. Do not weaken RC-1's unconditional rejection of `runner_attested` input.
 - Validate route identity, source snapshot, artifact bytes, hashes, terminal status, and manifest cross-references. Do not score factuality, safety, application quality, parity, advancement, or comparative performance in RC-2.
 
-The complete kickoff prompt is [NEXT_TASK_PROMPT.md](NEXT_TASK_PROMPT.md). It must be used only after RC-1 is accepted on the exact merged revision.
+The staged [NEXT_TASK_PROMPT.md](NEXT_TASK_PROMPT.md) is for RC-3. It must be used only after RC-2 is accepted on the exact merged revision and the required Recursus, DSH, and direct-adapter revisions and entrypoints are concretely pinned.
 
 Exit evidence:
 
