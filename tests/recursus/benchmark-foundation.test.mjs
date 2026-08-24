@@ -15,7 +15,6 @@ import {
 import fs from 'node:fs';
 import childProcess from 'node:child_process';
 import dgram from 'node:dgram';
-import diagnosticsChannel from 'node:diagnostics_channel';
 import dns from 'node:dns';
 import http from 'node:http';
 import https from 'node:https';
@@ -1163,8 +1162,8 @@ test('all verifier commands invoke zero network, browser, provider, plugin, tele
     object[name] = deny(label);
   };
 
-  // Load the verifier before patching runtime-wide built-ins. Node 24 uses
-  // diagnostics_channel while loading modules, which is not verifier activity.
+  // Load the verifier before patching runtime-wide built-ins. The separate
+  // import-graph assertion below excludes direct telemetry dependencies.
   const freshLibrary = await import(`${LIB_URL}?denial-instrumented=1`);
   const freshCli = await import(`${pathToFileURL(join(ROOT, 'verify-recursus-benchmark.mjs')).href}?denial-instrumented=1`);
 
@@ -1179,7 +1178,6 @@ test('all verifier commands invoke zero network, browser, provider, plugin, tele
   for (const name of ['request', 'get']) patchMethod(https, name, `https.${name}`);
   patchMethod(tls, 'connect', 'tls.connect');
   for (const name of ['exec', 'execFile', 'execSync', 'execFileSync', 'fork', 'spawn', 'spawnSync']) patchMethod(childProcess, name, `child_process.${name}`);
-  for (const name of ['channel', 'tracingChannel']) patchMethod(diagnosticsChannel, name, `telemetry.${name}`);
 
   const globalNames = ['browser', 'provider', 'plugin', 'telemetry'];
   const globalDescriptors = new Map();
@@ -1225,7 +1223,7 @@ test('implementation import graph excludes provider, browser, plugin, telemetry,
   for (const file of ['lib/recursus-benchmark.mjs', 'verify-recursus-benchmark.mjs']) {
     const source = readFileSync(join(ROOT, file), 'utf8');
     const imports = [...source.matchAll(/from\s+['"]([^'"]+)['"]/g)].map((match) => match[1]);
-    assert.ok(imports.every((specifier) => !/(?:child_process|dns|dgram|http|https|net|tls|playwright|openai|anthropic|plugin|telemetry)/i.test(specifier)));
+    assert.ok(imports.every((specifier) => !/(?:child_process|diagnostics_channel|dns|dgram|http|https|net|tls|playwright|openai|anthropic|opentelemetry|sentry|plugin|telemetry)/i.test(specifier)));
     assert.doesNotMatch(source, /process\.env/);
   }
 });
