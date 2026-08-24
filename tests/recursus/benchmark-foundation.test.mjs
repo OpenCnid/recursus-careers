@@ -1202,7 +1202,9 @@ test('all verifier commands invoke zero network, browser, provider, plugin, tele
     for (const args of calls) {
       const io = captureIo();
       const exitCode = await freshLibrary.main(args, { io: io.io, repoRoot: ROOT, env });
-      assert.equal(exitCode, 0, `${args[0]} succeeds under denial instrumentation; stderr=${JSON.stringify(io.output().stderr)}`);
+      if (exitCode !== 0) {
+        throw new Error(`denial command=${args[0]} exit=${exitCode} stderr=${JSON.stringify(io.output().stderr)} touched=${JSON.stringify([...counter.entries()])}`);
+      }
       assert.equal(io.output().stderr, '');
     }
     assert.deepEqual([...counter.entries()], []);
