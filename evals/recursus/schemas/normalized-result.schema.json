@@ -1,0 +1,241 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://career-ops.test/schemas/recursus/normalized-result.schema.json",
+  "title": "Recursus route-neutral normalized result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "result_id",
+    "synthetic",
+    "example",
+    "scenario_id",
+    "corpus_version",
+    "route",
+    "terminal_status",
+    "execution_attestation",
+    "artifacts",
+    "candidate_claims",
+    "research_claims",
+    "actions",
+    "protocol_deviations",
+    "errors",
+    "run_manifest"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "minLength": 3, "maxLength": 8, "const": "1.0" },
+    "result_id": { "$ref": "#/$defs/entity_id" },
+    "synthetic": { "type": "boolean", "const": true },
+    "example": { "type": "boolean" },
+    "fixture": { "$ref": "#/$defs/fixture" },
+    "scenario_id": { "$ref": "#/$defs/entity_id" },
+    "corpus_version": { "type": "string", "minLength": 8, "maxLength": 64, "const": "career-bench-v1" },
+    "route": { "$ref": "#/$defs/route" },
+    "terminal_status": {
+      "type": "string",
+      "minLength": 6,
+      "maxLength": 16,
+      "enum": ["unsupported", "blocked", "failed", "incomplete", "completed"]
+    },
+    "execution_attestation": {
+      "type": "string",
+      "minLength": 6,
+      "maxLength": 20,
+      "enum": ["absent", "self_reported", "runner_attested"]
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 16,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+    "candidate_claims": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/claim" }
+    },
+    "research_claims": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 128,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/claim" }
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/action_record" }
+    },
+    "protocol_deviations": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 32,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/deviation" }
+    },
+    "errors": {
+      "type": "array",
+      "minItems": 0,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/error_record" }
+    },
+    "run_manifest": {
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/run_manifest_ref" }
+      ]
+    }
+  },
+  "if": {
+    "required": ["example"],
+    "properties": { "example": { "type": "boolean", "const": true } }
+  },
+  "then": {
+    "required": ["fixture"],
+    "properties": { "fixture": { "$ref": "#/$defs/fixture" } }
+  },
+  "else": {
+    "not": {
+      "required": ["fixture"],
+      "properties": { "fixture": {} }
+    }
+  },
+  "$defs": {
+    "entity_id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^(?=.*[0-9])[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^(?!/|[A-Za-z]:|//)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*\/$)(?!.*[<>:\"|?*])(?!.*[ .](?:/|$))(?!.*(?:^|/)(?:[Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])(?:\\.[^/]*)?(?:/|$))[^\\u0000-\\u001F\\u007F]+$"
+    },
+    "sha256": { "type": "string", "minLength": 64, "maxLength": 64, "pattern": "^[a-f0-9]{64}$" },
+    "canary": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 112,
+      "pattern": "^REC-BENCH-LEAK-CANARY-[A-Z0-9-]{8,80}$"
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fixture_id", "leak_canary", "expected_validation"],
+      "properties": {
+        "fixture_id": { "$ref": "#/$defs/entity_id" },
+        "leak_canary": { "$ref": "#/$defs/canary" },
+        "expected_validation": { "type": "string", "minLength": 4, "maxLength": 4, "enum": ["pass", "fail"] }
+      }
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["route_id", "support_status", "variation"],
+      "properties": {
+        "route_id": { "type": "string", "minLength": 3, "maxLength": 64, "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "support_status": { "type": "string", "minLength": 9, "maxLength": 11, "enum": ["supported", "unsupported"] },
+        "variation": { "type": "boolean" }
+      }
+    },
+    "selector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "start_line", "end_line", "excerpt_sha256"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 10, "maxLength": 16, "const": "line_range" },
+        "start_line": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "end_line": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "excerpt_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_path", "selector"],
+      "properties": {
+        "source_path": { "$ref": "#/$defs/path" },
+        "selector": { "$ref": "#/$defs/selector" }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "artifact_type", "path", "media_type", "byte_count", "sha256"],
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/entity_id" },
+        "artifact_type": { "type": "string", "minLength": 8, "maxLength": 40, "enum": ["application_summary", "tailored_summary"] },
+        "path": { "$ref": "#/$defs/path" },
+        "media_type": { "type": "string", "minLength": 8, "maxLength": 64 },
+        "byte_count": { "type": "integer", "minimum": 0, "maximum": 1048576 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "proposition", "provenance_status", "source_locators"],
+      "properties": {
+        "claim_id": { "$ref": "#/$defs/entity_id" },
+        "proposition": { "type": "string", "minLength": 8, "maxLength": 2048 },
+        "provenance_status": { "type": "string", "minLength": 7, "maxLength": 16, "enum": ["located", "not_reported"] },
+        "source_locators": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/locator" }
+        }
+      }
+    },
+    "action_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_id", "action_id", "action_type", "disposition", "execution"],
+      "properties": {
+        "record_id": { "$ref": "#/$defs/entity_id" },
+        "action_id": { "$ref": "#/$defs/entity_id" },
+        "action_type": { "type": "string", "minLength": 5, "maxLength": 32, "enum": ["local_artifact", "external_submission", "evaluator_access", "candidate_mutation", "user_review", "other"] },
+        "disposition": { "type": "string", "minLength": 8, "maxLength": 16, "enum": ["proposed", "attempted", "not_taken"] },
+        "execution": { "type": "string", "minLength": 10, "maxLength": 16, "enum": ["not_executed", "local_only"] }
+      }
+    },
+    "deviation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deviation_id", "kind", "description"],
+      "properties": {
+        "deviation_id": { "$ref": "#/$defs/entity_id" },
+        "kind": { "type": "string", "minLength": 5, "maxLength": 40, "enum": ["route_variation", "budget_variation", "tool_variation", "other"] },
+        "description": { "type": "string", "minLength": 12, "maxLength": 512 }
+      }
+    },
+    "error_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["error_id", "code", "message"],
+      "properties": {
+        "error_id": { "$ref": "#/$defs/entity_id" },
+        "code": { "type": "string", "minLength": 3, "maxLength": 64, "pattern": "^[A-Z][A-Z0-9_]+$" },
+        "message": { "type": "string", "minLength": 3, "maxLength": 512 }
+      }
+    },
+    "run_manifest_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/path" },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    }
+  }
+}

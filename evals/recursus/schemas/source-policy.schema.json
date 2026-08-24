@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://career-ops.test/schemas/recursus/source-policy.schema.json",
+  "title": "Recursus benchmark source policy v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "policy_id", "synthetic", "visibility", "leak_canary", "classes"],
+  "properties": {
+    "schema_version": { "type": "string", "minLength": 3, "maxLength": 8, "const": "1.0" },
+    "policy_id": { "$ref": "#/$defs/entity_id" },
+    "synthetic": { "type": "boolean", "const": true },
+    "visibility": { "type": "string", "minLength": 14, "maxLength": 14, "const": "evaluator_only" },
+    "leak_canary": { "$ref": "#/$defs/canary" },
+    "classes": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/source_class" }
+    }
+  },
+  "$defs": {
+    "entity_id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^(?=.*[0-9])[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+    },
+    "canary": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 112,
+      "pattern": "^REC-BENCH-LEAK-CANARY-[A-Z0-9-]{8,80}$"
+    },
+    "source_class": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["class_id", "source_class", "candidate_claim_support", "research_claim_support", "instruction_authority", "rule"],
+      "properties": {
+        "class_id": { "$ref": "#/$defs/entity_id" },
+        "source_class": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 32,
+          "enum": ["candidate_primary", "candidate_derived", "job_company", "evaluator_truth", "advisory_memory", "model_generated"]
+        },
+        "candidate_claim_support": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 16,
+          "enum": ["allowed", "conditional", "prohibited"]
+        },
+        "research_claim_support": {
+          "type": "string",
+          "minLength": 7,
+          "maxLength": 16,
+          "enum": ["allowed", "conditional", "prohibited"]
+        },
+        "instruction_authority": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 24,
+          "enum": ["none", "evaluator_only"]
+        },
+        "rule": { "type": "string", "minLength": 12, "maxLength": 512 }
+      }
+    }
+  }
+}

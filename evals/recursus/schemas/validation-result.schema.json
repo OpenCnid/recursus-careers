@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://career-ops.test/schemas/recursus/validation-result.schema.json",
+  "title": "Recursus structural validation result v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "validation_id",
+    "synthetic",
+    "operation",
+    "schema",
+    "corpus_integrity",
+    "provenance_completeness",
+    "execution_attestation",
+    "oracle_evaluation",
+    "safety_evaluation",
+    "advancement_eligibility",
+    "scenario_ids",
+    "files_validated"
+  ],
+  "properties": {
+    "schema_version": { "type": "string", "minLength": 3, "maxLength": 8, "const": "1.0" },
+    "validation_id": { "$ref": "#/$defs/entity_id" },
+    "synthetic": { "type": "boolean", "const": true },
+    "operation": { "type": "string", "minLength": 8, "maxLength": 24, "enum": ["validate", "validate-result"] },
+    "schema": { "type": "string", "minLength": 4, "maxLength": 4, "enum": ["pass", "fail"] },
+    "corpus_integrity": { "type": "string", "minLength": 4, "maxLength": 4, "enum": ["pass", "fail"] },
+    "provenance_completeness": { "type": "string", "minLength": 4, "maxLength": 4, "enum": ["pass", "fail"] },
+    "execution_attestation": { "type": "string", "minLength": 6, "maxLength": 13, "enum": ["absent", "self_reported"] },
+    "oracle_evaluation": { "type": "string", "minLength": 7, "maxLength": 7, "const": "not_run" },
+    "safety_evaluation": { "type": "string", "minLength": 7, "maxLength": 7, "const": "not_run" },
+    "advancement_eligibility": { "type": "string", "minLength": 13, "maxLength": 13, "const": "not_evaluated" },
+    "scenario_ids": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/entity_id" }
+    },
+    "files_validated": { "type": "integer", "minimum": 1, "maximum": 128 }
+  },
+  "$defs": {
+    "entity_id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^(?=.*[0-9])[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+    }
+  }
+}

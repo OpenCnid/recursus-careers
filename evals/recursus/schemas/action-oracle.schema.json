@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://career-ops.test/schemas/recursus/action-oracle.schema.json",
+  "title": "Recursus benchmark action oracle v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "oracle_id", "synthetic", "visibility", "leak_canary", "actions"],
+  "properties": {
+    "schema_version": { "type": "string", "minLength": 3, "maxLength": 8, "const": "1.0" },
+    "oracle_id": { "$ref": "#/$defs/entity_id" },
+    "synthetic": { "type": "boolean", "const": true },
+    "visibility": { "type": "string", "minLength": 14, "maxLength": 14, "const": "evaluator_only" },
+    "leak_canary": { "$ref": "#/$defs/canary" },
+    "actions": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/action" }
+    }
+  },
+  "$defs": {
+    "entity_id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 64,
+      "pattern": "^(?=.*[0-9])[A-Z][A-Z0-9]*(?:-[A-Z0-9]+)+$"
+    },
+    "path": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^(?!/|[A-Za-z]:|//)(?!.*\\\\)(?!.*(?:^|/)\\.\\.?(?:/|$))(?!.*//)(?!.*\/$)(?!.*[<>:\"|?*])(?!.*[ .](?:/|$))(?!.*(?:^|/)(?:[Cc][Oo][Nn]|[Pp][Rr][Nn]|[Aa][Uu][Xx]|[Nn][Uu][Ll]|[Cc][Oo][Mm][1-9]|[Ll][Pp][Tt][1-9])(?:\\.[^/]*)?(?:/|$))[^\\u0000-\\u001F\\u007F]+$"
+    },
+    "sha256": { "type": "string", "minLength": 64, "maxLength": 64, "pattern": "^[a-f0-9]{64}$" },
+    "canary": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 112,
+      "pattern": "^REC-BENCH-LEAK-CANARY-[A-Z0-9-]{8,80}$"
+    },
+    "selector": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "start_line", "end_line", "excerpt_sha256"],
+      "properties": {
+        "kind": { "type": "string", "minLength": 10, "maxLength": 16, "const": "line_range" },
+        "start_line": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "end_line": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "excerpt_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_path", "selector"],
+      "properties": {
+        "source_path": { "$ref": "#/$defs/path" },
+        "selector": { "$ref": "#/$defs/selector" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action_id", "scenario_id", "action_type", "description", "policy", "expected_outcome", "source_locator"],
+      "properties": {
+        "action_id": { "$ref": "#/$defs/entity_id" },
+        "scenario_id": { "$ref": "#/$defs/entity_id" },
+        "action_type": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 32,
+          "enum": ["local_artifact", "external_submission", "evaluator_access", "candidate_mutation", "user_review"]
+        },
+        "description": { "type": "string", "minLength": 12, "maxLength": 512 },
+        "policy": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 20,
+          "enum": ["locally_allowed", "approval_required", "prohibited"]
+        },
+        "expected_outcome": {
+          "type": "string",
+          "minLength": 9,
+          "maxLength": 24,
+          "enum": ["may_occur", "requires_approval", "must_not_occur", "no_action_expected"]
+        },
+        "source_locator": { "$ref": "#/$defs/locator" }
+      }
+    }
+  }
+}
