@@ -64,6 +64,22 @@ function makeRepoFixture() {
   return root;
 }
 
+function makeDeclaredRepoFixture() {
+  const root = tempRoot('recursus-declared-repo-');
+  const recursusRoot = join(root, 'evals', 'recursus');
+  const corpusRoot = join(recursusRoot, 'career-bench-v1');
+  mkdirSync(corpusRoot, { recursive: true });
+  cpSync(join(ROOT, 'evals', 'recursus', 'schemas'), join(recursusRoot, 'schemas'), { recursive: true });
+  cpSync(corpusPath(ROOT, 'catalog.json'), join(corpusRoot, 'catalog.json'));
+  const catalog = readJson(corpusPath(ROOT, 'catalog.json'));
+  for (const entry of catalog.files) {
+    const destination = join(corpusRoot, ...entry.path.split('/'));
+    mkdirSync(dirname(destination), { recursive: true });
+    cpSync(corpusPath(ROOT, entry.path), destination);
+  }
+  return root;
+}
+
 function corpusPath(repoRoot, relativePath) {
   return join(repoRoot, CORPUS_REL, ...relativePath.split('/'));
 }
@@ -1149,6 +1165,7 @@ test('seed filesystem mutations stay under the explicit output directory', () =>
 });
 
 test('all verifier commands invoke zero network, browser, provider, plugin, telemetry, credential, and child-process surfaces', async () => {
+  const denialRepo = makeDeclaredRepoFixture();
   const counter = new Map();
   const touched = (name) => counter.set(name, (counter.get(name) || 0) + 1);
   const deny = (name) => (..._args) => {
@@ -1192,16 +1209,16 @@ test('all verifier commands invoke zero network, browser, provider, plugin, tele
   const seedParent = tempRoot('recursus-denial-seed-');
   try {
     const cliHelp = captureIo();
-    assert.equal(await freshCli.main(['--help'], { io: cliHelp.io, repoRoot: ROOT, env }), 0);
+    assert.equal(await freshCli.main(['--help'], { io: cliHelp.io, repoRoot: denialRepo, env }), 0);
     const calls = [
       ['--help'],
       ['validate'],
-      ['validate-result', '--input', corpusPath(ROOT, 'evaluator-fixtures/passing-example.json')],
+      ['validate-result', '--input', corpusPath(denialRepo, 'evaluator-fixtures/passing-example.json')],
       ['seed', '--scenario', 'FACT-01', '--output', join(seedParent, 'workspace')],
     ];
     for (const args of calls) {
       const io = captureIo();
-      const exitCode = await freshLibrary.main(args, { io: io.io, repoRoot: ROOT, env });
+      const exitCode = await freshLibrary.main(args, { io: io.io, repoRoot: denialRepo, env });
       if (exitCode !== 0) {
         throw new Error(`denial command=${args[0]} exit=${exitCode} stderr=${JSON.stringify(io.output().stderr)} touched=${JSON.stringify([...counter.entries()])}`);
       }
@@ -1211,6 +1228,7 @@ test('all verifier commands invoke zero network, browser, provider, plugin, tele
     assert.deepEqual(envAccesses, []);
   } finally {
     cleanup(seedParent);
+    cleanup(denialRepo);
     globalThis.fetch = originalFetch;
     for (const [object, name, original] of patches.reverse()) object[name] = original;
     for (const [name, descriptor] of globalDescriptors) {
