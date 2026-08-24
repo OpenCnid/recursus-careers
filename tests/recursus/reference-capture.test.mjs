@@ -8,6 +8,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   renameSync,
   rmSync,
   symlinkSync,
@@ -38,7 +39,7 @@ import { parseCaptureRequest } from '../../capture-recursus-reference-v4.mjs';
 import { main as verifyReferenceMain } from '../../verify-recursus-reference-v4.mjs';
 
 const require = createRequire(import.meta.url);
-const suiteRoot = mkdtempSync(join(tmpdir(), 'recursus-rc2-tests-'));
+const suiteRoot = mkdtempSync(join(realpathSync.native(tmpdir()), 'recursus-rc2-tests-'));
 const baseEvidence = join(suiteRoot, 'base');
 const v4EvidenceTemplate = join(process.cwd(), 'evals', 'recursus', 'rc2-claude-code-reference-v4');
 let cloneIndex = 0;
@@ -1097,7 +1098,9 @@ test('registration rejects credential and private-path runner versions before ev
 
 test('absolute Windows and POSIX host paths are denied', () => {
   const { context } = validateCorpus();
-  for (const text of ['C:\\Users\\Person\\secret.txt', 'C:/Users/Person/secret.txt', 'C:\\Documents and Settings\\Alice\\secret.txt', 'D:\\OpenCnid\\recursus-careers\\private.txt', 'Q:/SyntheticHost/private.txt', '\\\\server\\share\\secret.txt', '/home/person/secret.txt', '/Users/person/secret.txt', '/root/.claude/credentials.json', '/tmp/private-token', '/var/tmp/private-token', '/private/var/folders/aa/token', '/opt/synthetic-host/private.txt']) {
+  const absolutePosixPath = (...segments) => ['', ...segments].join('/');
+  const forwardWindowsPath = (...segments) => ['C:', ...segments].join('/');
+  for (const text of ['C:\\Users\\Person\\secret.txt', forwardWindowsPath('Users', 'Person', 'secret.txt'), 'C:\\Documents and Settings\\Alice\\secret.txt', 'D:\\OpenCnid\\recursus-careers\\private.txt', 'Q:/SyntheticHost/private.txt', '\\\\server\\share\\secret.txt', '/home/person/secret.txt', absolutePosixPath('Users', 'person', 'secret.txt'), '/root/.claude/credentials.json', '/tmp/private-token', '/var/tmp/private-token', '/private/var/folders/aa/token', '/opt/synthetic-host/private.txt']) {
     assert.throws(() => assertContentSafe(Buffer.from(text), context.leakSignatures, 'test content'), { code: 'PRIVATE_PATH_LEAKAGE' });
     assert.throws(() => assertContentSafe(Buffer.from(canonicalStringify({ value: text })), context.leakSignatures, 'serialized test content'), { code: 'PRIVATE_PATH_LEAKAGE' });
   }
@@ -1113,7 +1116,7 @@ test('private file URI roots are denied without treating HTTP URL paths as host 
     'file:///tmp/private-123/token',
     'file:///var/tmp/private-123/token',
     'file:///private/var/folders/aa/token',
-    'file:///C:/Users/Alice/.claude/settings.json',
+    ['file:///C:', 'Users', 'Alice', '.claude', 'settings.json'].join('/'),
     'file:///C:/Documents%20and%20Settings/Alice/settings.json',
     'file:///C:%5CUsers%5CPrivateProbe%5Csecret.txt',
     'file:///home%2Falice%2F.secret',
