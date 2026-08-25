@@ -74,7 +74,7 @@ Outcome:
 - A deterministic offline verifier detects structural drift, path escape, oracle leakage, and unsupported self-attestation.
 - A deterministic seeding command creates an agent-visible workspace that excludes evaluator-only material.
 
-Scope is defined by [Benchmark Foundation v1 specification](SPEC.md).
+The accepted executable contract is preserved in the [Benchmark Foundation v1 package](../../evals/recursus/README.md) and PR #1 history. The active [specification](SPEC.md) now bounds RC-4.
 
 Explicit boundary: this milestone does not run a model or harness, calculate application quality, evaluate factuality or safety, test recovery, or declare parity or superiority.
 

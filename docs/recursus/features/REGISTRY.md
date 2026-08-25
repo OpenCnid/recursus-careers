@@ -47,14 +47,15 @@ This registry is the initial truth table for Recursus Careers. It should change 
 
 ## Known absent evidence
 
-At the current RC-3 in-progress point there is:
+At the accepted RC-3 boundary there is:
 
 - no accepted product integration of the V17 evaluation bridge into Career Ops;
-- no exact reviewed-revision Windows and supported-CI evidence for RC-3;
+- no compiled prompt or context parity result; RC-4 is next and has not started;
 - no Claude Code feature-parity result;
 - no Recursus Careers RLM, Honcho, or Dovetail ablation;
 - no same-model runtime comparison;
-- no scoped better, safer, provider-neutral-in-behavior, or more-efficient claim;
+- no complete Recursus Milestone 1 or current-pin Linux double-build, profile, smoke, and clean-machine acceptance evidence;
+- no scoped better, safer, provider-neutral-in-behavior, or more-efficient claim; and
 - no evidence about callbacks, interviews, offers, or hiring outcomes.
 
 ## Advancement checklist
