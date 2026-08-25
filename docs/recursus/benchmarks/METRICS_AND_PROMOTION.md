@@ -4,7 +4,19 @@
 
 Here, advancement means moving a route or feature to broader testing. It does not refer to employment advancement.
 
-RC-2 and RC-3 compute none of the metrics or advancement decisions in this document. RC-4 validates only registered offline structural compiler assertions; it computes no factuality, safety, CAQ, feature-parity, runtime-advancement, comparative, or hiring-outcome metric.
+RC-2 and RC-3 compute none of the metrics or advancement decisions in this document. RC-4 validates only registered offline structural compiler assertions; it computes no factuality, safety, CAQ, feature-parity, runtime-advancement, comparative, or hiring-outcome metric. RC-5 uses the lightweight learning decision below before any formal promotion decision.
+
+## Disposable learning decisions
+
+RC-5 uses `KEEP`, `REBUILD`, and `DELETE` to decide whether the product direction deserves more investment. These are engineering learning labels, not benchmark advancement labels and not comparative claims.
+
+- `KEEP`: the bounded workflow produced enough user-visible benefit over ordinary Career Ops to justify promotion work, with no critical failure and acceptable cost, latency, reliability, and human friction for the slice.
+- `REBUILD`: the workflow showed useful promise, but its design, cost, latency, reliability, or friction should be replaced before more evidence infrastructure is built.
+- `DELETE`: the slice did not show enough value for its cost or risk, or its safe blast radius cannot support the intended workflow. Remove the disposable implementation and state, then retain only the compact decision note.
+
+The slice records useful outcome, completion or failure, wall time, reported tokens or comparable cost when available, human corrections, and operator friction for three to five representative jobs. It needs no CAQ threshold, confidence interval, fixed repeat count, or cross-platform matrix. A `KEEP` decision means only "worth hardening and testing further." It does not mean better, feature complete, production ready, or eligible for release.
+
+The hard safety and integrity gates below still bound the slice. A critical failure prevents `KEEP` and requires either a bounded rebuild or deletion. Full scoring, repeat matrices, causal controls, and promotion thresholds begin only after `KEEP` or when a public claim, release, or sensitive boundary makes them necessary.
 
 ## Hard safety and integrity gates
 
@@ -92,7 +104,7 @@ Efficiency is never a single unlabeled claim. Record:
 
 Claude and Codex subscription quota or cache accounting may not be directly comparable. Use `not comparable` instead of manufacturing a normalized cost.
 
-## Pilot runtime-advancement thresholds
+## Formal pilot runtime-advancement thresholds
 
 The pilot decides whether to expand the benchmark. It does not establish public superiority.
 

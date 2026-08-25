@@ -4,7 +4,7 @@ Status: working roadmap
 
 Last reviewed: 2026-08-25
 
-This roadmap turns the Recursus Careers design into a sequence of testable repository changes. It is ordered by evidence dependency, not by how exciting a feature sounds. Each milestone must leave behind artifacts that the next milestone can inspect.
+This roadmap turns the Recursus Careers design into small, testable repository changes. The current priority is fast product learning inside an explicit blast radius. Build the smallest useful path, test it immediately, and keep, rebuild, or delete it before investing in promotion-grade evidence.
 
 Recursus Careers and the Recursus runtime are separate projects. This roadmap covers the Career Ops product integration in this repository. When a milestone depends on work in Recursus, DSH, RLM, Honcho, Dovetail, or a provider adapter, that dependency is named rather than counted as a feature here.
 
@@ -16,11 +16,29 @@ Recursus Careers and the Recursus runtime are separate projects. This roadmap co
 | `in progress` | Work exists, but its acceptance evidence is incomplete. |
 | `next` | The next bounded implementation slice. |
 | `planned` | Defined at roadmap level and not started. |
+| `conditional` | Not scheduled; undertaken only when an earlier learning decision or sensitive boundary justifies it. |
 | `blocked` | A named dependency prevents meaningful progress. |
 
 No milestone becomes `accepted` because its documentation was written. Acceptance requires the evidence in its exit criteria.
 
 `implemented locally` is a handoff condition, not a roadmap status. A milestone that requires CI or cross-platform evidence remains `in progress` until that evidence exists on the exact reviewed commit.
+
+## Operating model
+
+RC-4 is the last infrastructure-heavy gate before testing product value. RC-5 replaces the former mandatory RC-5 through RC-7 sequence with one disposable end-to-end slice. RC-6 and RC-7 retain their IDs for traceability, but they are conditional follow-ups rather than prerequisites to learning.
+
+Before implementation, record a lightweight slice card with:
+
+- one user-visible workflow and three to five representative jobs;
+- the branch, worktree, disposable state, allowed writes, and rollback or deletion target;
+- prohibited external actions, especially application submission and message sending;
+- an explicit time and token budget;
+- the ordinary Career Ops comparison path; and
+- the observations that will support `KEEP`, `REBUILD`, or `DELETE`.
+
+Build only enough of the real path to answer the product question. Test as soon as one end-to-end case works, not after every planned capability is complete. Record user-visible usefulness, completion or failure, latency, token or comparable cost when reported, human correction, and workflow friction. Stop when the decision is clear.
+
+Full preregistration, frozen evidence packages, repeat matrices, cross-platform acceptance, and causal ablations are promotion work. They are required before a supported product path, release, public comparative claim, or sensitive data, action, or security expansion. They are not prerequisites for a disposable learning slice. Accepted evidence remains immutable when a slice is rebuilt or deleted.
 
 Acceptance history preserves the reviewed pre-acceptance state without overriding the active milestone map:
 
@@ -37,15 +55,15 @@ Acceptance history preserves the reviewed pre-acceptance state without overridin
 | RC-1 | Benchmark Foundation v1 | `accepted` | A deterministic, offline corpus and structural verifier that later runners can use | RC-0 |
 | RC-2 | Claude Code reference capture | `accepted` | Reproducible reference runs from unchanged Career Ops through Claude Code | RC-1 and an available Claude Code environment |
 | RC-3 | Minimal Recursus execution bridge | `accepted` | The same cases can run through Recursus without claiming feature parity | RC-1, RC-2, and the required Recursus runner surface |
-| RC-4 | Compiled prompt and context parity | `in progress` | Four registered synthetic pilot mode contracts compile into two offline route-delivery bundles with matching decoded structural semantics under registered adapter rules | RC-2 and RC-3 |
-| RC-5 | Feature parity and deterministic gates | `planned` | Required Career Ops behaviors pass on the Recursus route before enhancements begin | RC-4 |
-| RC-6 | Durable execution and evidence-backed completion | `planned` | Runs can resume, retry, recover, and prove artifact completion | RC-5 and Recursus supervision support |
-| RC-7 | Selective RLM research | `planned` | Deep research is invoked only when its value and cost can be measured | RC-6 and an integrated RLM route |
-| RC-8 | Honcho advisory memory | `planned` | Reusable preferences and context are recalled with provenance and cannot become candidate facts | RC-6 and an integrated Honcho route |
-| RC-9 | Dovetail delegation and routing | `planned` | Parallel work, routing, and synthesis have explicit ownership and evidence contracts | RC-6 and integrated Dovetail support |
-| RC-10 | Company, lab, and relationship intelligence | `planned` | Research can be reused across roles without mixing facts, inferences, and memory | RC-7 through RC-9 |
-| RC-11 | Operator experience | `planned` | A user can inspect, control, resume, and audit Recursus runs from Career Ops | RC-6 and stable run contracts |
-| RC-12 | Expanded pilot and release evidence | `planned` | Paired evaluations support narrowly worded release claims | RC-2 through RC-11 as required by each claim |
+| RC-4 | Compiled prompt and context parity | `accepted` | Four registered synthetic pilot mode contracts compile into two offline route-delivery bundles with matching decoded structural semantics under registered adapter rules | RC-2 and RC-3 |
+| RC-5 | Disposable end-to-end value slice | `next` | A small real Recursus Careers workflow is tested immediately on three to five representative jobs against ordinary Career Ops, ending in `KEEP`, `REBUILD`, or `DELETE` | RC-4 |
+| RC-6 | Promotion hardening and durable completion | `conditional` | A kept slice is hardened for resume, retry, recovery, and evidence-backed completion only where the supported path needs it | RC-5 `KEEP` and required Recursus supervision support |
+| RC-7 | Selective RLM research | `conditional` | RLM is tested only if RC-5 exposes a research bottleneck worth its added cost and authority | RC-5 `KEEP` and an integrated RLM route |
+| RC-8 | Honcho advisory memory | `conditional` | Reusable preferences and context are tested only if the kept workflow needs continuity | RC-5 `KEEP` and an integrated Honcho route |
+| RC-9 | Dovetail delegation and routing | `conditional` | Delegation is tested only if the kept workflow has parallel work whose coordination cost can be justified | RC-5 `KEEP` and integrated Dovetail support |
+| RC-10 | Company, lab, and relationship intelligence | `conditional` | Reusable intelligence is built only after the slice demonstrates repeat-use value without mixing facts, inferences, and memory | RC-5 `KEEP` and the specific justified components |
+| RC-11 | Operator experience | `conditional` | A kept workflow gains the inspection, control, resume, and audit surfaces required for support | RC-5 `KEEP` and stable run contracts |
+| RC-12 | Expanded pilot and release evidence | `conditional` | Paired evaluations support narrowly worded release claims after product value is demonstrated | RC-5 `KEEP` and the capabilities required by each proposed claim |
 
 ## Milestone details
 
@@ -75,7 +93,7 @@ Outcome:
 - A deterministic offline verifier detects structural drift, path escape, oracle leakage, and unsupported self-attestation.
 - A deterministic seeding command creates an agent-visible workspace that excludes evaluator-only material.
 
-The accepted executable contract is preserved in the [Benchmark Foundation v1 package](../../evals/recursus/README.md) and PR #1 history. The active [specification](SPEC.md) now bounds RC-4.
+The accepted executable contract is preserved in the [Benchmark Foundation v1 package](../../evals/recursus/README.md) and PR #1 history. The [RC-4 specification](SPEC.md) is now an accepted historical implementation boundary.
 
 Explicit boundary: this milestone does not run a model or harness, calculate application quality, evaluate factuality or safety, test recovery, or declare parity or superiority.
 
@@ -144,7 +162,7 @@ Exit evidence:
 
 Current note: registration `RC3-REC-DIRECT-2026-08-25-V17` and source snapshot `RC3-SOURCE-SNAPSHOT-2026-08-25-V17` bind Recursus merge commit `d6d25dda3951e46fe1b03ec3cecc3f348bfe2346`, DSH, the direct adapter, model, runner, harness, authority profile, seed, budgets, source closure, immutable image, and evidence shape. Two independent V17 dry checks produced identical hashes. The official external V17 evidence contains one dry run and one fresh-seed actual `FACT-01` attempt. Both independently validate with terminal status `completed`; the actual termination reason is `none`, and the validator emits unique identity `RC3-ROUTE-VALIDATION-17`. The actual manifest attests one DSH request, one direct-adapter invocation, one registered application fetch, one trusted terminal event, one 390-byte Markdown artifact, zero denied or unregistered fetches, strict successful cleanup checks, unchanged seeded workspace, and passing content, oracle, credential, complete-input, staging, and post-run scans. The configured runtime read and used the OAuth grant. Host and runner code did not inspect credential values, and no credential value was copied into, hashed for, persisted in, or logged in evidence.
 
-V1 through V16 remain preserved historical contract records. V1 had no materialized executable source closure to archive. The existing V2 through V15 executable sources and V4 through V15 focused tests were placed in an operator-verified local archive and pruned from the current checkout, so the historical commands are not runnable here. The [archive record](RC3_ARCHIVE_RECORD.md) qualifies exactly what was verified. V1 through V4 did not produce an accepted actual route. V5 ended `incomplete/identity_mismatch`; V6 ended `incomplete/authority_attestation_failed`; V7 reached the provider but did not publish an actual record because host reconciliation failed; V8 and V9 each produced independently valid failed records with `failed/process_error` while their event grammars omitted normal DSH lifecycle events. V10 produced structurally valid evidence but final red-team review rejected it because public helpers could mint false actual attestation, timestamp chronology failed open, and Docker cleanup errors could be mistaken for absence. V11 corrected those defects but stopped before reservation, DSH, adapter, or provider invocation with `PRIVATE_PATH_LEAK` because its complete-input scan did not allow two registered container paths. V12 produced a completed local actual record, but final red-team review rejected it because registered-container-path redaction could hide path traversal and embedded host paths, opaque decoded paths were not scanned, and its validation identity was stale. V13 was rejected because public projection code could mint actual attestation and its staging and transformed-content closure was incomplete. V14 was rejected before a provider attempt because output could be staged before the content gate, the runtime import window preceded fetch enforcement, transformed-content closure remained incomplete, and `--require-actual` did not require verified completion. V15 corrected those findings and produced locally valid evidence, but final review rejected it because completion did not require trusted seed and runner-input validation and its artifact budget was enforced after persistence. V16 added both missing completion predicates and discarded over-budget artifact bytes before persistence; it remains a valid historical execution record pinned to Recursus `4444405e8b34124b1518fa2a66d0223e202234e4`. V17 preserves that authority boundary while pinning the transition-aware Recursus merge commit whose exact post-merge Ubuntu and Windows CI passed. Recursus Milestone 1 and current-pin Linux double-build, profile, smoke, and clean-machine acceptance evidence remain incomplete. No historical attempt is retried or promoted. Exact Careers implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency CI in PR #4. The local execution exit evidence and required exact-commit CI exist, so RC-3 is `accepted`. RC-4 is `in progress`; exact reviewed-head required CI is still pending.
+V1 through V16 remain preserved historical contract records. V1 had no materialized executable source closure to archive. The existing V2 through V15 executable sources and V4 through V15 focused tests were placed in an operator-verified local archive and pruned from the current checkout, so the historical commands are not runnable here. The [archive record](RC3_ARCHIVE_RECORD.md) qualifies exactly what was verified. V1 through V4 did not produce an accepted actual route. V5 ended `incomplete/identity_mismatch`; V6 ended `incomplete/authority_attestation_failed`; V7 reached the provider but did not publish an actual record because host reconciliation failed; V8 and V9 each produced independently valid failed records with `failed/process_error` while their event grammars omitted normal DSH lifecycle events. V10 produced structurally valid evidence but final red-team review rejected it because public helpers could mint false actual attestation, timestamp chronology failed open, and Docker cleanup errors could be mistaken for absence. V11 corrected those defects but stopped before reservation, DSH, adapter, or provider invocation with `PRIVATE_PATH_LEAK` because its complete-input scan did not allow two registered container paths. V12 produced a completed local actual record, but final red-team review rejected it because registered-container-path redaction could hide path traversal and embedded host paths, opaque decoded paths were not scanned, and its validation identity was stale. V13 was rejected because public projection code could mint actual attestation and its staging and transformed-content closure was incomplete. V14 was rejected before a provider attempt because output could be staged before the content gate, the runtime import window preceded fetch enforcement, transformed-content closure remained incomplete, and `--require-actual` did not require verified completion. V15 corrected those findings and produced locally valid evidence, but final review rejected it because completion did not require trusted seed and runner-input validation and its artifact budget was enforced after persistence. V16 added both missing completion predicates and discarded over-budget artifact bytes before persistence; it remains a valid historical execution record pinned to Recursus `4444405e8b34124b1518fa2a66d0223e202234e4`. V17 preserves that authority boundary while pinning the transition-aware Recursus merge commit whose exact post-merge Ubuntu and Windows CI passed. Recursus Milestone 1 and current-pin Linux double-build, profile, smoke, and clean-machine acceptance evidence remain incomplete. No historical attempt is retried or promoted. Exact Careers implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency CI in PR #4. The local execution exit evidence and required exact-commit CI exist, so RC-3 is `accepted`. RC-4 is also `accepted` through PR #6 after exact reviewed implementation head `f086626ef344b59fa466e13eeeb3eccc1acd97fd` passed every required check.
 
 ### RC-4: Compiled prompt and context parity
 
@@ -164,20 +182,28 @@ Bounded evidence statement: For the registered synthetic fixtures, four pilot mo
 
 Structural prompt and context parity validated. No runner, provider, model, workflow behavior, factuality, safety, quality, feature-parity, or comparative claim was verified.
 
-### RC-5: Feature parity and deterministic gates
+Current note: RC-4 V2 registration `RC4-PROMPT-CONTEXT-2026-08-25-V2` is the accepted compiler-boundary contract. PR #6 merged it after exact implementation head `f086626ef344b59fa466e13eeeb3eccc1acd97fd` passed Ubuntu, macOS, Windows, CodeQL, dependency review, guard, upgrade regression, and visual checks. Frozen rejected V1 remains byte-identical. RC-4 did not execute a provider or integrate the compiler into the product workflow.
+
+### RC-5: Disposable end-to-end value slice
 
 Outcome:
 
-- The Recursus route reaches the required Career Ops behavior before Recursus-only enhancements are enabled.
-- Deterministic gates verify artifact presence, schema validity, provenance coverage, and prohibited actions.
+- One small but real Recursus Careers workflow reaches a user-visible result for three to five representative jobs.
+- The same goals are run through ordinary Career Ops for a practical usefulness, cost, latency, reliability, and friction comparison.
+- Implementation and generated state stay inside the registered blast radius and can be discarded without changing canonical Career Ops state.
+- The slice ends with `KEEP`, `REBUILD`, or `DELETE`, not an open-ended infrastructure backlog.
 
 Exit evidence:
 
-- The parity matrix passes for the selected modes and scenarios.
-- Human review handles judgments that deterministic checks cannot establish.
-- Known deviations have owners, rationale, and expiry conditions.
+- The lightweight slice card records the user path, representative jobs, authority, allowed writes, time and token budget, comparison path, and decision signal.
+- At least one end-to-end case is tested as soon as it works, followed by no more than the registered three to five jobs needed for the decision.
+- A compact result table records useful outcome, completion or failure, latency, reported tokens or comparable cost, human correction, and friction.
+- No application is submitted, no message is sent, and no other external mutation occurs without separate explicit authorization.
+- The decision note explains what is kept, rebuilt, or deleted and why. It makes no public superiority or release claim.
 
-### RC-6: Durable execution and evidence-backed completion
+### RC-6: Promotion hardening and durable completion
+
+Conditional follow-up: schedule RC-6 only after RC-5 returns `KEEP`, and only for the workflow surface proposed for support. A disposable slice may use simpler bounded recovery if that is enough to answer the product question.
 
 Outcome:
 
@@ -193,6 +219,8 @@ Exit evidence:
 - Recovery cost and success rate are measured against the unchanged baseline.
 
 ### RC-7: Selective RLM research
+
+Conditional follow-up: schedule RC-7 only after RC-5 returns `KEEP` and identifies a research bottleneck. RLM is not required merely because the component exists.
 
 Outcome:
 
@@ -288,12 +316,12 @@ These rules apply to every milestone:
 6. Never treat model self-report as runner attestation.
 7. Never perform an external submission as part of a benchmark.
 8. Never combine quality and efficiency into a favorable headline when a hard safety or factuality gate failed.
-9. Preserve enough raw evidence for an independent reviewer to reproduce every reported metric.
-10. Add one major Recursus capability at a time before testing combinations.
+9. Preserve enough result data to explain each learning decision. Formal benchmarks must preserve enough raw evidence for an independent reviewer to reproduce every reported metric.
+10. Prefer the smallest end-to-end combination that answers the product question. Isolate components later when promotion or a causal claim requires it.
 
 ## Ordering rationale
 
-The benchmark foundation comes first because every later comparison depends on stable inputs, route identity, source isolation, and honest failure states. Claude Code reference capture comes before Recursus enhancement work because it defines the product behavior that Recursus must preserve. RLM, memory, and delegation arrive only after parity and durable execution, which keeps feature attribution possible.
+RC-1 through RC-4 established stable inputs, route identity, source isolation, honest failure states, and a provider-free compiler boundary. That foundation is sufficient to attempt a bounded real workflow. The next dependency is product value, not more speculative infrastructure. Durable execution, RLM, memory, delegation, operator experience, and formal comparisons are promoted only when RC-5 shows that the workflow is worth keeping and identifies which capability is needed next.
 
 ## Change policy
 
@@ -306,3 +334,5 @@ A roadmap change must state:
 - whether a previously allowed claim must be withdrawn.
 
 When implementation begins, update this roadmap and the [feature registry](features/REGISTRY.md) independently. Roadmap progress does not establish feature availability.
+
+Quick iteration may replace or delete an unpromoted slice without creating a new milestone ceremony. Record the decision and preserve accepted historical evidence. Any change that broadens authority, publishes a comparative claim, or promotes a supported path must use the full change and evidence policy.
