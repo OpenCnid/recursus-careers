@@ -16,7 +16,7 @@ The actual route ran only through the explicit V17 capture command. It used a co
 
 | Area | Purpose | Start here |
 | --- | --- | --- |
-| Delivery | Orders the implementation milestones and defines the next bounded task | [Roadmap](ROADMAP.md), then [Benchmark Foundation v1 specification](SPEC.md) |
+| Delivery | Orders the implementation milestones and defines the next bounded task | [Roadmap](ROADMAP.md), then [RC-4 compiled prompt and context parity specification](SPEC.md) |
 | Benchmarks | Defines the comparison routes, scenarios, metrics, controls, and advancement rules | [Benchmark overview](benchmarks/README.md) |
 | Architecture | Defines ownership, runtime boundaries, intended differences, and prompt compilation | [Architecture overview](architecture/README.md) |
 | Features | Records feature ownership, maturity, evidence, limitations, and advancement criteria | [Feature documentation](features/README.md) |
@@ -32,7 +32,8 @@ The actual route ran only through the explicit V17 capture command. It used a co
 Supporting documents:
 
 - [Recursus Careers roadmap](ROADMAP.md)
-- [Benchmark Foundation v1 specification](SPEC.md)
+- [RC-4 compiled prompt and context parity specification](SPEC.md)
+- [Codex kickoff prompt for RC-4](RC4_NEXT_TASK_PROMPT.md)
 - [RC-3 source and component selection](RC3_SOURCE_SELECTION.md)
 - [Historical Codex kickoff prompt for RC-3](NEXT_TASK_PROMPT.md)
 - [Benchmark protocol](benchmarks/PROTOCOL.md)
