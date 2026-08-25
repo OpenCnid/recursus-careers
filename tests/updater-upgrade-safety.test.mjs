@@ -20,11 +20,26 @@
  */
 
 import { createHash } from 'crypto';
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'fs';
+import {
+  copyFileSync,
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  existsSync,
+  rmSync,
+  unlinkSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { join, dirname } from 'path';
 import { pass, fail } from './helpers.mjs';
-import { gitIn, locallyModifiedSystemFiles, revertPaths } from '../update-system.mjs';
+import {
+  gitIn,
+  locallyModifiedSystemFiles,
+  revertPaths,
+  staleSystemFiles,
+  USER_PATHS,
+} from '../update-system.mjs';
 
 // A throwaway git repo plus a ctx that binds the seam's git runner and
 // filesystem root to it, so nothing touches the real working tree. autocrlf is
@@ -194,6 +209,68 @@ console.log('\n🧪 Testing updater upgrade safety (#2337, #2007)...');
     pass('#2337: a locally-deleted system file is omitted by the existsSync filter, never flagged for backup');
   } else {
     fail(`deleted-file path mishandled (threw=${threw}, got=${JSON.stringify(result)})`);
+  }
+
+  rmSync(dir, { recursive: true, force: true });
+}
+
+// 1d. An upstream-deleted tracked test still receives the local-edit promise.
+// The default path keeps the local bytes and backup. Force may remove the file,
+// but the backup remains and a later updater rollback restores the local HEAD.
+{
+  const { dir, g, ctx } = makeRepo('co-upgrade-stale-preserve-');
+  const retired = 'tests/retired-local.test.mjs';
+  const current = 'tests/current.test.mjs';
+
+  writeFixture(dir, retired, ['// shared baseline']);
+  writeFixture(dir, current, ['// remains upstream']);
+  g('add', '-A');
+  g('commit', '-qm', 'base');
+
+  g('checkout', '-q', '-b', 'upstream');
+  g('rm', '-q', retired);
+  g('commit', '-qm', 'retire old test');
+
+  g('checkout', '-q', 'main');
+  writeFixture(dir, retired, ['// local retained fix']);
+  g('add', retired);
+  g('commit', '-qm', 'local test fix');
+
+  const atRisk = locallyModifiedSystemFiles(['tests/'], 'upstream', ctx);
+  const backup = `${join(dir, ...retired.split('/'))}.bak`;
+  copyFileSync(join(dir, ...retired.split('/')), backup);
+  const localFiles = g('ls-files').split('\n').filter(Boolean);
+  const remoteFiles = g('ls-tree', '-r', '--name-only', 'upstream').split('\n').filter(Boolean);
+
+  const defaultPrune = staleSystemFiles(
+    localFiles,
+    remoteFiles,
+    ['tests/'],
+    USER_PATHS,
+    new Set(atRisk),
+  );
+  if (
+    atRisk.includes(retired)
+    && !defaultPrune.includes(retired)
+    && existsSync(join(dir, ...retired.split('/')))
+    && existsSync(backup)
+  ) {
+    pass('#2337: default stale pruning preserves and backs up a locally edited upstream-deleted test');
+  } else {
+    fail(`default stale preservation failed: ${JSON.stringify({ atRisk, defaultPrune })}`);
+  }
+
+  const forcedPrune = staleSystemFiles(localFiles, remoteFiles, ['tests/'], USER_PATHS, new Set());
+  if (forcedPrune.includes(retired)) {
+    unlinkSync(join(dir, ...retired.split('/')));
+  }
+  const removedBeforeRollback = !existsSync(join(dir, ...retired.split('/'))) && existsSync(backup);
+  revertPaths(forcedPrune, new Set(), ctx);
+  const restoredAfterRollback = readFileSync(join(dir, ...retired.split('/')), 'utf-8') === '// local retained fix';
+  if (removedBeforeRollback && restoredAfterRollback && existsSync(backup)) {
+    pass('#2337: force can prune after backup and rollback restores the locally committed test');
+  } else {
+    fail(`forced stale prune or rollback failed: ${JSON.stringify({ removedBeforeRollback, restoredAfterRollback })}`);
   }
 
   rmSync(dir, { recursive: true, force: true });

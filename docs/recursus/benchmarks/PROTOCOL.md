@@ -49,6 +49,10 @@ For a same-model runtime claim, the exact provider, model, reasoning setting, se
 
 ## 4. Execution phases
 
+### RC-3 bridge prerequisite
+
+Before Phase A or any comparison lane, the minimal `recursus-direct-v16` bridge may exercise one accepted seed as an execution-route conformance fact. Its provider-free dry run validates only the local evidence pipeline. Its actual route requires the frozen direct adapter, a fresh isolated seed, a content-addressed read-only worker image, a dedicated credential mount, a networkless worker namespace, host-enforced destination and tunnel budgets, trusted runtime observations, canonical private-path scanning, strict external-resource cleanup and staging-topology checks, pre-persistence artifact-budget enforcement, bounded artifacts, and independent validation. The official V16 evidence contains one completed dry run and one completed actual `FACT-01` attempt. RC-3 does not open the oracle, score output, establish feature or prompt parity, or support an advancement or comparative claim.
+
 ### Phase A: deterministic conformance
 
 Run model-free or provider-double checks for state transitions, report reservation, deduplication, role lineage, artifact validation, no-submit enforcement, and prompt/context structure.

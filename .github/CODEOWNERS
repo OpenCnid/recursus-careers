@@ -63,3 +63,15 @@
 # check runs through, so it keeps the wider review.
 /tests/     @Scott-Emberson
 /dashboard/ @Scott-Emberson
+
+# Recursus benchmark contracts and execution routes
+/docs/recursus/              @santifer
+/evals/recursus/             @santifer
+/lib/AGENTS.md               @santifer
+/lib/recursus/               @santifer
+/lib/recursus-*.mjs          @santifer
+/*recursus*.mjs              @santifer
+/scripts/AGENTS.md           @santifer
+/scripts/recursus/           @santifer
+/scripts/freeze-recursus-route-v*.mjs @santifer
+/tests/recursus/             @santifer @Scott-Emberson

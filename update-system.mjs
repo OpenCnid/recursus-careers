@@ -61,7 +61,7 @@ export const UPDATE_PATH_CHECKOUT_BUDGET_MS = parsePositiveInt(process.env.CAREE
 export const REEXEC_BUFFER_TIMEOUT_MS = parsePositiveInt(process.env.CAREER_OPS_REEXEC_BUFFER_TIMEOUT_MS, 60000);
 
 // System layer paths — ONLY these files get updated
-const SYSTEM_PATHS = [
+export const SYSTEM_PATHS = [
   '.gitattributes',
   'modes/README.md',
   'modes/_shared.md',
@@ -171,6 +171,17 @@ const SYSTEM_PATHS = [
   'lib/recursus-reference-capture-v3.mjs',
   'lib/recursus-reference-v4.mjs',
   'lib/recursus-reference-capture-v4.mjs',
+  'lib/AGENTS.md',
+  'lib/recursus-route-v16.mjs',
+  'lib/recursus-route-capture-v16.mjs',
+  'lib/recursus-route-content-gate-v16.mjs',
+  'lib/recursus-route-html-entities-v16.mjs',
+  'lib/recursus-route-credential-permission-v16.mjs',
+  'lib/recursus-route-denial-probe-v16.mjs',
+  'lib/recursus-route-proxy-v16.mjs',
+  'lib/recursus-route-relay-v16.mjs',
+  'lib/recursus-route-socket-init-v16.mjs',
+  'lib/recursus-route-worker-v16.mjs',
   'img-to-pdf.mjs',
   'archive-posting.mjs',
   'jd-capture.mjs',
@@ -272,6 +283,11 @@ const SYSTEM_PATHS = [
   'prepare-recursus-reference-v4.mjs',
   'capture-recursus-reference-v4.mjs',
   'verify-recursus-reference-v4.mjs',
+  'prepare-recursus-route-v16.mjs',
+  'capture-recursus-route-v16.mjs',
+  'verify-recursus-route-v16.mjs',
+  'scripts/AGENTS.md',
+  'scripts/freeze-recursus-route-v16.mjs',
   'evals/',
   'openrouter-runner.mjs',
   'jd-similarity.mjs',
@@ -843,12 +859,20 @@ function pathMatchesManifest(file, entry) {
   return normalizedFile === normalizedEntry || normalizedFile.startsWith(`${normalizedEntry}/`);
 }
 
-export function staleSystemFiles(localFiles, remoteFiles, systemPaths, userPaths = USER_PATHS) {
+export function staleSystemFiles(
+  localFiles,
+  remoteFiles,
+  systemPaths,
+  userPaths = USER_PATHS,
+  preservedPaths = new Set(),
+) {
   const remote = new Set([...remoteFiles].map(normalizeRepoPath));
+  const preserved = new Set([...preservedPaths].map(normalizeRepoPath));
   if (remote.size === 0) return [];
   return [...localFiles]
     .map(normalizeRepoPath)
     .filter((file) => !remote.has(file))
+    .filter((file) => !preserved.has(file))
     .filter((file) => systemPaths.some((entry) => pathMatchesManifest(file, entry)))
     .filter((file) => !userPaths.some((entry) => pathMatchesManifest(file, entry)));
 }
@@ -1783,7 +1807,7 @@ async function apply() {
       }
       if (remoteFiles.size > 0) {
         const localFiles = git('ls-files').split('\n').filter(Boolean);
-        for (const f of staleSystemFiles(localFiles, remoteFiles, SYSTEM_PATHS)) {
+        for (const f of staleSystemFiles(localFiles, remoteFiles, SYSTEM_PATHS, USER_PATHS, preservedSet)) {
           try {
             unlinkSync(join(ROOT, f));
             updated.push(f);
@@ -1795,58 +1819,6 @@ async function apply() {
       }
     } catch (err) {
       console.error(`Stale system-file prune step failed: ${err.message}`);
-    }
-
-    // tests/ and test-fixtures/ are both auto-discovered and EXECUTED
-    // (tests/**/*.test.mjs run directly; test-fixtures/upgrade/<state>/ dirs are
-    // enumerated by seed-fixture.mjs's listStates() and exercised by its
-    // --self-test, which fails if a stale state lacks expected.json/required
-    // files). Stale files left behind by upstream renames would run twice,
-    // crash the suite, or make the self-test iterate a state that no longer
-    // ships upstream. `git checkout` never deletes upstream-removed files (see
-    // the limitation note in rollback below) — prune tracked extras against
-    // FETCH_HEAD. Only git-tracked files are removed: a user's untracked local
-    // experiments in these dirs are never touched.
-    for (const prunePrefix of ['tests/', 'test-fixtures/']) {
-      try {
-        let remoteFiles = new Set();
-        try {
-          remoteFiles = new Set(
-            git('ls-tree', '-r', '--name-only', 'FETCH_HEAD', '--', prunePrefix)
-              .split('\n').filter(Boolean).map((p) => p.replace(/\\/g, '/'))
-          );
-        } catch {
-          // The dir may not exist in older targets (ls-tree throws) — nothing
-          // to prune. This is the only expected-and-silent failure here.
-        }
-        // An empty set means FETCH_HEAD has no such dir at all (older target, or
-        // ls-tree quietly returning nothing) — pruning against it would delete
-        // every local file under the prefix. Only prune when the remote actually
-        // ships the directory.
-        if (remoteFiles.size > 0) {
-          const localFiles = git('ls-files', '--', prunePrefix).split('\n').filter(Boolean);
-          for (const f of localFiles) {
-            if (!remoteFiles.has(f.replace(/\\/g, '/'))) {
-              // Per-file isolation: one failed unlink (locked file, permissions)
-              // must not abort pruning the rest.
-              try {
-                unlinkSync(join(ROOT, f));
-                // Raw path only: `updated` entries are reused as git pathspecs by
-                // revertPaths() and the scoped commit below. Pushed only after a
-                // successful unlink so failed deletions never enter `updated`.
-                updated.push(f);
-                console.log(`Pruned stale file: ${f}`);
-              } catch (err) {
-                console.error(`Failed to prune stale file ${f}: ${err.message}`);
-              }
-            }
-          }
-        }
-      } catch (err) {
-        // Unexpected failure (e.g. ls-files threw) — surface it instead of
-        // silently skipping the prune step.
-        console.error(`Stale-file prune step failed for ${prunePrefix}: ${err.message}`);
-      }
     }
 
     // 3c. Reconcile .gitignore (#2756). Every other system file is checked out

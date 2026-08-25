@@ -107,9 +107,10 @@ const readTextLF = (path) => normalizeEol(readFile(path));
 const TESTS_DIR = join(ROOT, 'tests');
 
 // Most discovered suites fit the shared 30-second child budget. The RC-2
-// reference validator intentionally performs repeated byte-level evidence-tree
-// reconciliation and needs a larger, still-bounded allowance on Windows CI.
+// reference and RC-3 execution-bridge suites perform repeated byte-level
+// evidence-tree reconciliation and need a larger bounded allowance on Windows CI.
 const DISCOVERED_TEST_TIMEOUTS_MS = new Map([
+  ['recursus/execution-bridge-v16.test.mjs', 120_000],
   ['recursus/reference-capture.test.mjs', 120_000],
 ]);
 
@@ -1906,7 +1907,14 @@ const absPathRaw = run(
   { stdio: ['pipe', 'pipe', 'ignore'] }
 );
 // The old shell pipeline's `grep -v` exclusions, now as a JS filter.
-const ABS_PATH_EXCLUDE = ['README.md', 'LICENSE', 'CLAUDE.md', 'test-all.mjs'];
+const ABS_PATH_EXCLUDE = [
+  'README.md',
+  'LICENSE',
+  'CLAUDE.md',
+  'test-all.mjs',
+  // Frozen negative fixtures intentionally contain synthetic private paths.
+  'tests/recursus/execution-bridge-v16.test.mjs',
+];
 const absPathLines = (absPathRaw || '')
   .split('\n')
   .filter(Boolean)

@@ -29,7 +29,7 @@ The preferred configuration uses the Recursus and DSH runtime plus the direct `o
 
 ## Current boundary
 
-The Recursus Careers repository is unchanged from the pinned Career Ops baseline, and Recursus integration remains unverified here. The canonical, detailed availability and evidence record is the [feature registry](../features/REGISTRY.md). Update that registry only when implementation and evidence land together.
+The Career Ops product workflow remains unchanged from the pinned baseline. A separate RC-3 V16 evaluation bridge is locally implemented and independently validates one completed runner-attested bounded direct-adapter route attempt, but it is not product integration. The exact bridge revision must pass Windows and supported CI before merge. RC-3 remains `in progress` after publication while the selected upstream Recursus exact-head supported CI is unsuccessful. The canonical, detailed availability and evidence record is the [feature registry](../features/REGISTRY.md). Update that registry only when implementation and evidence land together.
 
 ## Ownership model
 
