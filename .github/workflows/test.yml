@@ -42,7 +42,12 @@ jobs:
       # Skip the postinstall (npx playwright install chromium); the tests
       # never launch a browser, so the ~170 MB download is pure CI overhead.
       - run: npm install --ignore-scripts
-      - run: node test-all.mjs --quick
+      - name: Run quick suite with a canonical temporary root
+        run: node test-all.mjs --quick
+        env:
+          TMPDIR: ${{ runner.temp }}
+          TMP: ${{ runner.temp }}
+          TEMP: ${{ runner.temp }}
       - name: Go dashboard tests
         run: go test ./...
         working-directory: dashboard

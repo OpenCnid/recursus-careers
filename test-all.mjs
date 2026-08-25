@@ -106,10 +106,11 @@ const readTextLF = (path) => normalizeEol(readFile(path));
 // standalone *.test.mjs files are never picked up.
 const TESTS_DIR = join(ROOT, 'tests');
 
-// Most discovered suites fit the shared 30-second child budget. The RC-2
-// reference and RC-3 execution-bridge suites perform repeated byte-level
-// evidence-tree reconciliation and need a larger bounded allowance on Windows CI.
+// Most discovered suites fit the shared 30-second child budget. The Recursus
+// benchmark, RC-2 reference, and RC-3 execution-bridge suites perform repeated
+// byte-level reconciliation and need a larger bounded allowance on Windows CI.
 const DISCOVERED_TEST_TIMEOUTS_MS = new Map([
+  ['recursus/benchmark-foundation.test.mjs', 120_000],
   ['recursus/execution-bridge-v16.test.mjs', 120_000],
   ['recursus/reference-capture.test.mjs', 120_000],
 ]);
