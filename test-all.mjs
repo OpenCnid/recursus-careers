@@ -1916,6 +1916,7 @@ const ABS_PATH_EXCLUDE = [
   'test-all.mjs',
   // Frozen negative fixtures intentionally contain synthetic private paths.
   'tests/recursus/execution-bridge-v16.test.mjs',
+  'tests/recursus/execution-bridge-v17.test.mjs',
 ];
 const absPathLines = (absPathRaw || '')
   .split('\n')
