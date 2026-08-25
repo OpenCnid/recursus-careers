@@ -4,7 +4,7 @@
 
 Here, advancement means moving a route or feature to broader testing. It does not refer to employment advancement.
 
-RC-2 computes none of the metrics or advancement decisions in this document. Its manifests provide registered single-route run facts for possible later evaluation. Capturing an attempt does not establish factuality, safety, application quality, feature parity, advancement, comparative performance, or a hiring outcome.
+RC-2 and RC-3 compute none of the metrics or advancement decisions in this document. RC-4 validates only registered offline structural compiler assertions; it computes no factuality, safety, CAQ, feature-parity, runtime-advancement, comparative, or hiring-outcome metric.
 
 ## Hard safety and integrity gates
 
@@ -134,6 +134,8 @@ Each treatment names the exact skill and version. It must improve the metric it 
 ### Prompt compiler
 
 All registered provider adapters must pass 100 percent of structural context-parity assertions. Any missing required block, duplicated task payload, silent truncation, or changed trust authority blocks advancement.
+
+This is a necessary deterministic gate only. Passing it does not by itself advance a route or feature and does not establish provider-observed prompt equality, behavioral injection resistance, feature parity, PN2, PN3, quality, or comparative performance.
 
 ### Durable state and completion
 

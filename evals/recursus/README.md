@@ -17,9 +17,13 @@ node scripts/recursus/prepare-recursus-route-v17.mjs dry-run --run-root <new-ext
 node scripts/recursus/verify-recursus-route-v17.mjs validate --evidence-dir <external-evidence-directory>
 node scripts/recursus/capture-recursus-route-v17.mjs preflight <all-explicit-registered-runtime-options>
 node scripts/recursus/capture-recursus-route-v17.mjs actual <all-explicit-registered-runtime-options>
+node scripts/recursus/verify-prompt-context-v1.mjs validate
+node scripts/recursus/verify-prompt-context-v1.mjs compile --mode <mode> --fixture <fixture> --target <target> --output <explicit-empty-directory>
+node scripts/recursus/verify-prompt-context-v1.mjs compare --mode <mode> --fixture <fixture>
+node scripts/recursus/verify-prompt-context-v1.mjs --help
 ```
 
-The RC-1 implementation and the RC-3 dry-run and validation commands are dependency-free, offline, and local. RC-1 `validate`, `validate-result`, and `--help` are read-only. RC-1 `seed` is its only writing operation, and it writes only below the explicit output directory after validating the complete copy plan. The separate RC-3 actual command is guarded and is not an offline command.
+The RC-1 implementation, RC-3 dry-run and validation commands, and RC-4 compiler are dependency-free, offline, and local. RC-1 `validate`, `validate-result`, and `--help` are read-only. RC-1 `seed` is its only writing operation, and it writes only below the explicit output directory after validating the complete copy plan. RC-4 `validate`, `compare`, and `--help` are read-only. RC-4 `compile` writes only deterministic synthetic artifacts below an explicit caller-owned empty output directory after validating the complete read and write plan. The separate RC-3 actual command is guarded and is not an offline command.
 
 ## Layout
 
@@ -76,12 +80,20 @@ evals/recursus/
     schemas/               active strict RC-3 route and evidence contracts
     registration.json      preregistered one-case direct-adapter route
     source-snapshot.json   exact accepted foundations, sources, image, and runner identities
+  rc4-prompt-context-v1/   frozen rejected RC-4 record, preserved byte-identically
+  rc4-prompt-context-v2/
+    schemas/               six closed RC-4 compiler-boundary contracts
+    modes/                 four pilot Career Ops mode manifests
+    adapters/              two offline route-delivery adapter manifests
+    fixtures/              registered synthetic invocation matrix
+    registration.json      RC-4 package and artifact identities
+    source-snapshot.json   exact system and agent-visible synthetic source identities
   historical-source/
     rc2-claude-code-reference-v3/package.json
                             exact V3 package bytes for isolated historical validation
 ```
 
-The V1 through V16 directories preserve historical contract records, including registrations, schemas, source snapshots, Docker definitions, and status records. V1 through V15 command blocks describe the archived development state and are not runnable from the current checkout. V1 had no materialized executable source closure to archive. Existing V2 through V15 executable sources and V4 through V15 focused tests are retained only in an operator-verified local archive. V16 remains a valid historical execution record pinned to the predecessor Recursus revision. V17 is the active shipped RC-3 execution implementation.
+The RC-3 V1 through V16 directories preserve historical contract records, including registrations, schemas, source snapshots, Docker definitions, and status records. RC-3 V1 through V15 command blocks describe the archived development state and are not runnable from the current checkout. RC-3 V1 had no materialized executable source closure to archive. Existing RC-3 V2 through V15 executable sources and V4 through V15 focused tests are retained only in an operator-verified local archive. RC-3 V16 remains a valid historical execution record pinned to the predecessor Recursus revision. V17 is the active shipped RC-3 execution implementation. RC-4 V1 is a separate frozen rejected package preserved after its freeze edit omitted a required isolation field; RC-4 V2 is the active candidate.
 
 The four seed cases are `FACT-01`, `FACT-03`, `SAFE-01`, and `NOSUB-01`. All names, organizations, facts, and URLs are fictional. URLs use reserved `.test` domains.
 
@@ -111,3 +123,15 @@ After copying, the verifier scans the complete seeded tree and the emitted inven
 RC-2 v4 reuses these exact bytes and the same seeding implementation. It is accepted through PR #2. Its evidence contains one validated provider-free dry run and twelve validated actual attempts captured on Windows in the preregistered order. Under preregistered deviations `RC2-DEV-CONTENT-ONLY` and `RC2-DEV-HOST-PREFLIGHT`, all twelve actual attempts have terminal status `completed` and termination reason `none`. Exact reviewed implementation head `e50e787149e7e15aac373e1bc7981a1fbcd65795` passed the full repository suite on Ubuntu, macOS, and Windows, together with the required security and regression checks. Provider identity is `not_reported`; model `claude-sonnet-5` was explicitly reported by the trusted runner envelope. The V4 evidence-root README is itself bound by the preregistered source snapshot, so its embedded pre-attempt status remains unchanged; the append-only ledger and current roadmap record the later attempt state. V1 through v3 remain sealed historical evidence. V3 was superseded to correct its implementation-repository identity. To reconstruct V3 validation, copy the repository into an isolated temporary directory, replace only that temporary copy's root `package.json` with `evals/recursus/historical-source/rc2-claude-code-reference-v3/package.json`, and run the V3 validator against the copied V3 evidence. The separate RC-2 validator does not weaken RC-1 or reinterpret structural validation as model, workflow, factuality, safety, quality, parity, advancement, or comparative evidence.
 
 RC-3 adds a separate `recursus-direct-v17` route contract beside the product workflow. Registration `RC3-REC-DIRECT-2026-08-25-V17` covers one accepted `FACT-01` seed, Recursus `d6d25dda3951e46fe1b03ec3cecc3f348bfe2346`, the direct `deepseek-openai-codex` adapter, `gpt-5.6-sol`, configured-catalog snapshot identity, `xhigh` reasoning, one provider request at most, and one bounded Markdown artifact. Two independent V17 dry checks match exactly. One official external V17 dry run and one fresh-seed actual attempt independently validate as `completed`; the actual termination reason is `none`. The route-produced normalized result, content-safe trace, artifact inventory, worker observation, authority observation, strict cleanup observation, and runner-attested manifest cross-reference exact bytes. V1 through V16 remain preserved historical contract records and are not promoted. V1 had no materialized executable source closure to archive. Existing V2 through V15 executable sources and V4 through V15 focused tests are archived outside the repository and are not shipped. V10 and V12 through V15 were rejected after review; V11 stopped before reservation, DSH, adapter, or provider invocation; V16 remains a valid historical route pinned to the predecessor Recursus revision. Selected Recursus commit `d6d25dda3951e46fe1b03ec3cecc3f348bfe2346` passed exact post-merge Ubuntu and Windows CI, while Recursus Milestone 1 and current-pin Linux acceptance evidence remain incomplete. Exact Careers implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency CI in PR #4, so RC-3 is `accepted`. It does not establish factuality, safety, quality, prompt parity, feature parity, advancement, comparison, application quality, or hiring outcomes.
+
+## RC-4 candidate boundary
+
+RC-4 is `in progress`. Registration `RC4-PROMPT-CONTEXT-2026-08-25-V2` and source snapshot `RC4-SOURCE-SNAPSHOT-2026-08-25-V2` define a provider-free compiler candidate for `oferta`, `pdf`, `cover`, and `email`. The two targets are `co-claude-code-reference-v1` and `recursus-direct-v1`; both stop at inspectable offline route-delivery bundles before runner or provider transport. The candidate uses twelve positive synthetic invocations, one missing-source negative per mode, and one global over-budget negative. Its 196608-byte limit is a deterministic compiler capacity, not a provider context-window or token-usage observation. The frozen V1 registration is preserved as a rejected record because its freeze edit omitted the required provider-isolation field; V2 supersedes it without rewriting V1 bytes.
+
+The accepted RC-2 V4 snapshot hash-binds root `package.json`, so the user-authorized RC-4 preservation exception leaves that file byte-identical and uses the direct verifier entrypoint. This exception does not weaken RC-2 validation.
+
+For the registered synthetic fixtures, four pilot mode contracts compile into two offline route-delivery bundles whose decoded semantic block identities, authority, trust, order, source hashes, policies, and output contracts match under the registered adapter rules.
+
+Structural prompt and context parity validated. No runner, provider, model, workflow behavior, factuality, safety, quality, feature-parity, or comparative claim was verified.
+
+RC-4 does not establish provider-observed prompt equality, executed workflow or tool behavior, prompt-injection resistance, action safety, candidate-claim factuality, application or artifact quality, full Career Ops feature parity, PN2 or PN3 maturity, Recursus product integration, comparative advancement, or hiring outcomes. The selected Recursus revision passed its cited Ubuntu and Windows repository CI. Separately, Recursus Milestone 1 and current-pin Linux double-build, profile, smoke, and clean-machine acceptance evidence remain incomplete; RC-4 neither executes nor closes those gaps.

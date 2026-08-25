@@ -29,7 +29,7 @@ The preferred configuration uses the Recursus and DSH runtime plus the direct `o
 
 ## Current boundary
 
-The Career Ops product workflow remains unchanged from the pinned baseline. A separate RC-3 V17 evaluation bridge independently validates one completed runner-attested bounded direct-adapter route attempt, but it is not product integration. Its selected Recursus revision passed exact Ubuntu and Windows CI; Recursus Milestone 1 and current-pin Linux acceptance evidence remain incomplete. Exact Careers implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency CI in PR #4, so RC-3 is `accepted`. The canonical, detailed availability and evidence record is the [feature registry](../features/REGISTRY.md). Update that registry only when implementation and evidence land together.
+The Career Ops product workflow remains unchanged from the pinned baseline. A separate RC-3 V17 evaluation bridge independently validates one completed runner-attested bounded direct-adapter route attempt, but it is not product integration. Its selected Recursus revision passed exact Ubuntu and Windows repository CI. Separately, Recursus Milestone 1 and current-pin Linux double-build, profile, smoke, and clean-machine acceptance evidence remain incomplete. Exact Careers implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency CI in PR #4, so RC-3 is `accepted`. RC-4 is `in progress` as bounded offline compiler work and neither executes nor closes the missing runtime evidence. The canonical, detailed availability and evidence record is the [feature registry](../features/REGISTRY.md). Update that registry only when implementation and evidence land together.
 
 ## Ownership model
 
@@ -74,4 +74,4 @@ A model saying "done" is not completion. Completion requires current evidence fo
 8. External mutations require stable identity, human authority, and reconciliation before retry.
 9. Every claim about behavior names its owner, implementation status, and evidence.
 
-See [Intended Recursus differences](INTENDED_DIFFERENCES.md) for the detailed contracts and [Compiled prompt and context contract](PROMPT_CONTEXT_CONTRACT.md) for provider parity.
+See [Intended Recursus differences](INTENDED_DIFFERENCES.md) for the detailed contracts and [Compiled prompt and context contract](PROMPT_CONTEXT_CONTRACT.md) for structural compiler and route-adapter requirements.

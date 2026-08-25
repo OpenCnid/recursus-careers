@@ -30,8 +30,13 @@ jobs:
       - name: Set up Node 18 for syntax compatibility
         uses: actions/setup-node@v7
         with:
-          node-version: '24'
+          node-version: '18'
       - run: npm run lint
+      - name: Verify the dependency-free RC-4 compiler on Node 18
+        run: |
+          node scripts/recursus/verify-prompt-context-v1.mjs validate
+          node scripts/recursus/verify-prompt-context-v1.mjs compare --mode oferta --fixture oferta-ordinary
+          node --test tests/recursus/prompt-context-v1.test.mjs
       - name: Set up Node 24 for the test suite
         uses: actions/setup-node@v7
         with:

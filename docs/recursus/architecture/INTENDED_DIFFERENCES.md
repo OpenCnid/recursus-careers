@@ -10,7 +10,7 @@ Every section below describes a target difference unless it explicitly says othe
 
 | Area | Career Ops reference | Intended Recursus difference | Proof required before availability claim |
 | --- | --- | --- | --- |
-| Prompt and context | Shared mode files plus runner-specific loading and wrappers | One versioned semantic prompt contract compiled for every provider | 100 percent context-parity tests and provider capture evidence |
+| Prompt and context | Shared mode files plus runner-specific loading and wrappers | One versioned semantic prompt contract compiled for every supported route adapter | 100 percent context-parity tests and provider capture evidence |
 | Run state | Files plus workflow-specific batch and web state | One durable project-scoped run graph for every workflow | Restart, replay, concurrency, and projection-rebuild tests |
 | Recovery | Batch-specific retry and resume, other runs vary by runner | Supervised execution with explicit lost, paused, blocked, failed, and verified states | Fault injection across processes, children, tools, and restarts |
 | Completion | Local scripts and prompt instructions check parts of the workflow | Versioned evidence gates prevent premature completion | Required validators block completion and stale evidence is invalidated |
@@ -38,7 +38,7 @@ Byte-identical provider request JSON is not required. Providers use different ro
 
 ### Required proof
 
-See [Prompt and context contract](PROMPT_CONTEXT_CONTRACT.md). Advancement requires structural parity on every supported adapter and injection-resistance tests with no policy-authority inversion.
+See [Prompt and context contract](PROMPT_CONTEXT_CONTRACT.md). RC-4 may satisfy only the structural portion at the offline route-delivery boundary. Provider-request capture and behavioral injection-resistance tests remain separate required proof before advancement.
 
 ## 2. Durable run state, retries, and recovery
 
