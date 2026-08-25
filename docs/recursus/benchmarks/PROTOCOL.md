@@ -17,6 +17,8 @@ Every benchmark run set must be registered before execution with:
 
 Changing one of these fields after results are visible creates a new benchmark version. Old attempts remain in the report.
 
+These requirements govern formal benchmark phases, promotion decisions, and comparative claims. The RC-5 disposable learning slice is an earlier product experiment, not a formal benchmark run set. It uses the lightweight slice record in Section 4 and cannot support benchmark or superiority language.
+
 ## 2. Controlled inputs
 
 The core suite uses synthetic candidate profiles, frozen job descriptions, dated company source packs, deterministic ATS pages, and a hidden truth ledger. Live URLs and live search are evaluated separately because their contents change between paired runs.
@@ -59,9 +61,26 @@ Run model-free or provider-double checks for state transitions, report reservati
 
 RC-4 is a model-free Phase A compiler-boundary conformance package. It is not a Phase B feature-parity run and creates no comparative result or advancement decision.
 
+### RC-5: disposable learning slice
+
+Before formal Phase B or Phase C, build and immediately test one bounded Recursus Careers workflow on three to five representative jobs. This slice answers whether the product direction creates enough user-visible value to justify further investment. It does not establish feature parity, runtime causality, statistical confidence, or a public comparative claim.
+
+The slice record names:
+
+- the user-visible workflow and ordinary Career Ops comparison path;
+- the jobs or synthetic cases, with private material excluded from publishable evidence;
+- exact code revisions and enough route, model, tool, permission, and budget identity to interpret the result;
+- the disposable workspace, allowed writes, and rollback or deletion target;
+- prohibited external actions; and
+- the time and token cap plus the `KEEP`, `REBUILD`, or `DELETE` decision signal.
+
+Test the first end-to-end case as soon as it works. Stop after the registered three to five jobs or earlier if the decision is already clear. Record useful outcome, completion or failure, latency, reported tokens or comparable cost, human correction, and workflow friction. Repeat counts, statistical thresholds, full cross-platform evidence, and component ablations are not required at this stage. Application submission, message sending, and other external mutation remain prohibited without separate explicit authorization.
+
+Only `KEEP` advances the workflow toward formal promotion. `REBUILD` replaces the slice inside the same bounded authority, and `DELETE` removes its implementation and disposable state while retaining a compact decision note. Accepted RC-1 through RC-4 evidence is never rewritten.
+
 ### Phase B: feature parity
 
-Exercise onboarding, evaluation, scanning, company research, CV/PDF generation, batch processing, interruption recovery, browser-assisted form preparation, and human submission gates. Missing capability is a parity failure or an explicit `unsupported` item, not a benchmark exclusion.
+After an RC-5 `KEEP` decision, exercise the Career Ops behavior in the proposed supported scope. This may include onboarding, evaluation, scanning, company research, CV/PDF generation, batch processing, interruption recovery, browser-assisted form preparation, and human submission gates. A missing capability inside that declared scope is a parity failure or an explicit `unsupported` item, not a benchmark exclusion. Capabilities outside the proposed scope remain named limitations.
 
 ### Phase C: initial quality pilot
 

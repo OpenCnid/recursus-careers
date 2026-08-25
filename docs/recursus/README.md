@@ -10,13 +10,13 @@ The primary reference is **Career Ops through the Claude Code CLI**. Career Ops 
 
 RC-3 is `accepted` through PR #4. Exact implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency CI. The active versioned [`recursus-direct-v17` contract](../../evals/recursus/rc3-recursus-direct-v17/README.md) registers Recursus, DSH, the direct `openai-codex` adapter, `gpt-5.6-sol`, configured-catalog snapshot identity, and `xhigh` reasoning for one `FACT-01` attempt. Its offline path starts from the accepted RC-1 seed, constructs the registered bridge input, captures a bounded synthetic artifact, normalizes it, emits a content-safe trace and runner manifest, and independently validates external evidence. Two independent V17 dry checks match exactly. The official external evidence contains one completed dry run and one completed fresh-seed actual attempt with termination reason `none`.
 
-The actual route ran only through the explicit V17 capture command. It used a content-addressed read-only container, a fresh read-only seed, a dedicated writable credential mount managed by the configured runtime, a networkless worker namespace, and a host-owned CONNECT allowlist for `auth.openai.com:443` and `chatgpt.com:443`. The validated manifest records one DSH request, one direct-adapter invocation, one registered application fetch, one trusted terminal event, one 390-byte text artifact, strict successful cleanup checks, no denied or unregistered access, and no unexpected mutation. The configured runtime read and used the OAuth grant; host and runner code did not inspect credential values, and no credential value entered evidence. V1 through V16 remain preserved historical contract records. V1 had no materialized executable source closure to archive. The existing V2 through V15 executable sources and V4 through V15 focused tests were placed in an operator-verified local archive and pruned from the current checkout, so their recorded commands are not runnable here. The [archive record](RC3_ARCHIVE_RECORD.md) qualifies exactly what was verified. V10 and V12 through V15 were rejected after review; V11 stopped before runtime or provider invocation. V16 remains an independently valid historical execution record pinned to the superseded Recursus revision. The selected V17 Recursus revision passed exact post-merge Ubuntu and Windows CI. Separately, Recursus Milestone 1 and current-pin Linux double-build, profile, smoke, and clean-machine acceptance evidence remain incomplete. Exact Careers implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed the required Windows and supported CI in PR #4, so RC-3 is `accepted`. RC-4 is `in progress` and remains provider-free compiler-boundary work.
+The actual route ran only through the explicit V17 capture command. It used a content-addressed read-only container, a fresh read-only seed, a dedicated writable credential mount managed by the configured runtime, a networkless worker namespace, and a host-owned CONNECT allowlist for `auth.openai.com:443` and `chatgpt.com:443`. The validated manifest records one DSH request, one direct-adapter invocation, one registered application fetch, one trusted terminal event, one 390-byte text artifact, strict successful cleanup checks, no denied or unregistered access, and no unexpected mutation. The configured runtime read and used the OAuth grant; host and runner code did not inspect credential values, and no credential value entered evidence. V1 through V16 remain preserved historical contract records. V1 had no materialized executable source closure to archive. The existing V2 through V15 executable sources and V4 through V15 focused tests were placed in an operator-verified local archive and pruned from the current checkout, so their recorded commands are not runnable here. The [archive record](RC3_ARCHIVE_RECORD.md) qualifies exactly what was verified. V10 and V12 through V15 were rejected after review; V11 stopped before runtime or provider invocation. V16 remains an independently valid historical execution record pinned to the superseded Recursus revision. The selected V17 Recursus revision passed exact post-merge Ubuntu and Windows CI. Separately, Recursus Milestone 1 and current-pin Linux double-build, profile, smoke, and clean-machine acceptance evidence remain incomplete. Exact Careers implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed the required Windows and supported CI in PR #4, so RC-3 is `accepted`. RC-4 is `accepted` through PR #6. Exact implementation head `f086626ef344b59fa466e13eeeb3eccc1acd97fd` passed the required Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency checks. RC-4 remains a provider-free compiler-boundary result, not product integration or comparative evidence.
 
 ## Documentation map
 
 | Area | Purpose | Start here |
 | --- | --- | --- |
-| Delivery | Orders the implementation milestones and defines the next bounded task | [Roadmap](ROADMAP.md), then [RC-4 compiled prompt and context parity specification](SPEC.md) |
+| Delivery | Defines the fast, bounded delivery loop and the next disposable product slice | [Roadmap](ROADMAP.md), then [RC-5: Disposable end-to-end value slice](ROADMAP.md#rc-5-disposable-end-to-end-value-slice) |
 | Benchmarks | Defines the comparison routes, scenarios, metrics, controls, and advancement rules | [Benchmark overview](benchmarks/README.md) |
 | Architecture | Defines ownership, runtime boundaries, intended differences, and prompt compilation | [Architecture overview](architecture/README.md) |
 | Features | Records feature ownership, maturity, evidence, limitations, and advancement criteria | [Feature documentation](features/README.md) |
@@ -32,8 +32,8 @@ The actual route ran only through the explicit V17 capture command. It used a co
 Supporting documents:
 
 - [Recursus Careers roadmap](ROADMAP.md)
-- [RC-4 compiled prompt and context parity specification](SPEC.md)
-- [Codex kickoff prompt for RC-4](RC4_NEXT_TASK_PROMPT.md)
+- [Accepted RC-4 compiled prompt and context parity specification](SPEC.md)
+- [Historical Codex kickoff prompt for RC-4](RC4_NEXT_TASK_PROMPT.md)
 - [RC-3 source and component selection](RC3_SOURCE_SELECTION.md)
 - [Historical Codex kickoff prompt for RC-3](NEXT_TASK_PROMPT.md)
 - [Benchmark protocol](benchmarks/PROTOCOL.md)
@@ -42,6 +42,12 @@ Supporting documents:
 - [Intended Recursus differences](architecture/INTENDED_DIFFERENCES.md)
 - [Compiled prompt and context contract](architecture/PROMPT_CONTEXT_CONTRACT.md)
 - [Initial feature registry](features/REGISTRY.md)
+
+## Delivery approach
+
+Starting with RC-5, delivery uses bounded vertical slices. Define the smallest useful user path and its blast radius, build it, test it immediately on three to five representative jobs against ordinary Career Ops, and then choose `KEEP`, `REBUILD`, or `DELETE`. A disposable learning slice needs only enough specification to bound authority, cost, writes, and the decision signal. It does not need release-grade preregistration or a full evidence matrix.
+
+Full freezing, repeat matrices, cross-platform evidence, and formal promotion thresholds return before a successful slice is promoted into a supported path, before a public comparative claim or release, or when work crosses a sensitive data, action, or security boundary. A learning slice may not submit an application, send a message, or perform another external mutation without separate explicit authorization.
 
 ## Governing sources
 

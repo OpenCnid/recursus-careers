@@ -22,7 +22,8 @@ This registry is the initial truth table for Recursus Careers. It should change 
 
 | Feature | Primary owner | Component status | Recursus Careers integration | Available through Recursus Careers | Intended enablement | Blocking milestone or work | Advancement evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Compiled prompt and context contract | `recursus-careers` | implementation candidate | not integrated | No | required | RC-4 offline compiler and route adapters | 100 percent of registered structural assertions across the two RC-4 offline targets for registered synthetic fixtures; product integration and behavioral evidence remain absent |
+| Compiled prompt and context contract | `recursus-careers` | implemented | offline compiler boundary only | No | required | RC-5 disposable product slice | RC-4 V2 passed 100 percent of registered structural assertions across both offline targets on exact reviewed head `f086626ef344b59fa466e13eeeb3eccc1acd97fd`; product integration and behavioral evidence remain absent |
+| Disposable end-to-end product slice | `recursus-careers` | planned | not started | No | next learning step | RC-5 | Three to five representative jobs compared with ordinary Career Ops, ending in `KEEP`, `REBUILD`, or `DELETE`; no benchmark or superiority claim |
 | Durable project-scoped run graph | `recursus-runtime` | specified | not integrated | No | required | Recursus Milestone 2 | Restart, replay, concurrency, and recovery suite |
 | Process, child, timer, and provider supervision | `recursus-runtime` | specified | not integrated | No | required | Recursus Milestone 3 | Explicit reconnect, lost-state, cancellation, and orphan tests |
 | Evidence-gated completion | `recursus-runtime` and `recursus-careers` | specified | not integrated | No | required | Recursus Milestone 4 plus Career Ops gate definitions | Mandatory gates block premature and stale completion |
@@ -44,14 +45,14 @@ This registry is the initial truth table for Recursus Careers. It should change 
 | Benchmark Foundation v1 structural verifier | `recursus-careers` | implemented | not integrated | No | focused structural tests plus Ubuntu, macOS, and Windows CI | Validates schemas, exact fixture bytes, path containment, provenance locator resolution, and seeded-file oracle exclusion only. It executes no model, harness, workflow, or provider and produces no factuality, safety, quality, parity, advancement, or comparative result. |
 | Claude Code reference capture v4 | `recursus-careers` | implemented | not integrated | No | accepted through PR #2 after focused RC-2 tests passed Ubuntu, macOS, and Windows CI; one Windows provider-free dry run and twelve Windows actual attempts are validated | Captures single-route synthetic process and artifact facts only. Provider identity is `not_reported`; model `claude-sonnet-5` was explicitly reported by the trusted runner envelope. No oracle or Recursus comparison was run. Historical v1 through v3 evidence remains append-only. |
 | Minimal Recursus execution bridge v17 | `recursus-careers` | implemented | evaluation route only | No | two matching provider-free checks, one validated official external dry run, one validated fresh-seed actual attempt, strict schemas, independent validator, immutable nine-file build context, complete HTML5 entity decoding, focused positive, negative, denial, overwrite, attestation, chronology, cleanup, leakage, transformed-content, staging-topology, pre-persistence artifact-budget, false-input-validation, and real mutation tests, and exact implementation CI on Ubuntu, macOS, and Windows | Registers exact Recursus, DSH, adapter, model, runner, harness, authority, policies, budgets, seed, source closure, image, and evidence identity. The actual route used one DSH request and one direct-adapter invocation and returned a normalized result plus runner-attested manifest. V1 through V16 remain historical contract records. V1 had no materialized executable source closure to archive; existing V2 through V15 executable sources and V4 through V15 focused tests are operator-archived and not shipped. V10 and V12 through V15 were rejected after review, V11 stopped before provider invocation, and V16 remains a valid historical route pinned to the predecessor Recursus revision. The selected V17 Recursus revision passed exact Ubuntu and Windows CI; Recursus Milestone 1 and current-pin Linux acceptance evidence remain incomplete. Exact Careers implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency CI in PR #4, so RC-3 is accepted. This is execution-route conformance, not product integration, prompt or feature parity, quality, safety, advancement, or comparison evidence. |
-| RC-4 offline prompt and context compiler v1 | `recursus-careers` | implementation candidate | not integrated | No | local verification and exact reviewed-head CI pending | For registered synthetic fixtures only, compiles four pilot mode contracts to two inspectable offline route-delivery bundles and inverse-decodes their structural semantics. Structural prompt and context parity validation makes no runner, provider, model, workflow behavior, factuality, safety, quality, feature-parity, or comparative claim. |
+| RC-4 offline prompt and context compiler v2 | `recursus-careers` | implemented | offline compiler boundary only | No | accepted through PR #6 after exact reviewed head `f086626ef344b59fa466e13eeeb3eccc1acd97fd` passed Ubuntu, macOS, Windows, CodeQL, dependency review, guard, upgrade regression, and visual checks | For registered synthetic fixtures only, compiles four pilot mode contracts to two inspectable offline route-delivery bundles and inverse-decodes their structural semantics. Frozen V1 remains rejected and byte-identical. Structural prompt and context parity validation makes no runner, provider, model, workflow behavior, factuality, safety, quality, feature-parity, or comparative claim. |
 
 ## Known absent evidence
 
-At the accepted RC-3 boundary there is:
+At the accepted RC-4 boundary there is:
 
 - no accepted product integration of the V17 evaluation bridge into Career Ops;
-- no accepted RC-4 result yet; implementation is in progress and exact reviewed-head required CI is pending;
+- no Recursus Careers product integration or RC-5 learning result yet;
 - no Claude Code feature-parity result;
 - no Recursus Careers RLM, Honcho, or Dovetail ablation;
 - no same-model runtime comparison;
@@ -60,6 +61,8 @@ At the accepted RC-3 boundary there is:
 - no evidence about callbacks, interviews, offers, or hiring outcomes.
 
 ## Advancement checklist
+
+This checklist applies when a kept slice is promoted to an `integrated` product status. It is not required to build or discard the bounded RC-5 learning slice.
 
 Before changing a row to `integrated`:
 

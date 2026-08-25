@@ -2,7 +2,7 @@
 
 [Recursus overview](../README.md) | [Protocol](PROTOCOL.md) | [Scenarios](SCENARIO_CATALOG.md) | [Metrics](METRICS_AND_PROMOTION.md)
 
-> **Status:** RC-1 Benchmark Foundation v1, RC-2 v4 reference evidence, and RC-3 V17 bridge evidence are accepted. RC-4 is `in progress` and remains provider-free compiler-boundary work. No Recursus Careers comparison has been executed.
+> **Status:** RC-1 Benchmark Foundation v1, RC-2 v4 reference evidence, RC-3 V17 bridge evidence, and the RC-4 V2 provider-free compiler boundary are accepted. RC-5 is the next disposable product-value slice. No formal Recursus Careers comparison has been executed.
 
 The model-free [Benchmark Foundation v1](../../../evals/recursus/README.md) is accepted for RC-1. It validates corpus structure and fixture integrity only and is not a benchmark result.
 
@@ -61,6 +61,8 @@ The machine result value is `unsupported`; human-facing reports display "not sup
 The end-to-end product-configuration lane cannot establish that Recursus or Codex alone caused a difference.
 
 ## Required benchmark order
+
+This order applies only after an RC-5 `KEEP` decision promotes a slice toward formal evidence. RC-5 comes first as a three-to-five-job learning comparison and cannot support benchmark or superiority language.
 
 1. Pass deterministic safety and data-integrity gates.
 2. Match the declared Career Ops through Claude Code feature-parity surface.
