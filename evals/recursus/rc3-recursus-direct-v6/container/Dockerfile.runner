@@ -1,0 +1,14 @@
+FROM recursus-rc3-v5@sha256:ac45f3f2926db9f3955920e88e77a35ce565f39f87d490b2d461a8b91dd6136f
+
+USER root
+RUN rm /opt/rc3/recursus-route-credential-permission-v5.mjs \
+    /opt/rc3/recursus-route-proxy-v5.mjs \
+    /opt/rc3/recursus-route-relay-v5.mjs \
+    /opt/rc3/recursus-route-socket-init-v5.mjs \
+    /opt/rc3/recursus-route-worker-v5.mjs
+COPY runner/ /opt/rc3/
+RUN chown -R 65532:65532 /opt/rc3 \
+    && chmod -R go-w /opt/rc3
+USER 65532:65532
+WORKDIR /opt/rc3
+ENTRYPOINT ["/usr/local/bin/node"]

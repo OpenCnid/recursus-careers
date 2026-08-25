@@ -48,3 +48,38 @@ evals/recursus/rc2-claude-code-reference-v3/evidence/**/artifacts/* -text
 evals/recursus/rc2-claude-code-reference-v3/evidence/ledger/*.json text eol=lf
 evals/recursus/rc2-claude-code-reference-v4/evidence/**/artifacts/* -text
 evals/recursus/rc2-claude-code-reference-v4/evidence/ledger/*.json text eol=lf
+
+# RC-3 route artifacts are stored outside the repository. Preserve exact bytes
+# if a later accepted milestone explicitly publishes a bounded evidence tree.
+evals/recursus/rc3-recursus-direct-v1/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v1/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v2/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v2/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v3/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v3/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v4/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v4/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v5/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v5/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v6/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v6/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v7/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v7/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v8/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v8/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v9/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v9/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v10/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v10/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v11/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v11/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v12/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v12/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v13/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v13/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v14/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v14/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v15/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v15/evidence/ledger/*.json text eol=lf
+evals/recursus/rc3-recursus-direct-v16/evidence/**/artifacts/* -text
+evals/recursus/rc3-recursus-direct-v16/evidence/ledger/*.json text eol=lf

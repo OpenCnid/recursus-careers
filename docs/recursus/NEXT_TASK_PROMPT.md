@@ -1,13 +1,13 @@
 # Codex kickoff prompt for RC-3 minimal Recursus execution bridge
 
-Status: RC-3 is `next`. RC-2 is accepted through PR #2 with one validated provider-free dry run and twelve validated actual Claude Code attempts. The concrete Recursus, DSH, and direct-provider-adapter revisions and entrypoints must still pass the acceptance gate below before RC-3 starts.
+Status: this RC-3 kickoff prompt is retained as historical handoff material and is non-operative. RC-3 remains `in progress`, but V16 now has two matching provider-free checks and one official external dry run plus one fresh-seed runner-attested actual attempt that independently validate as `completed`; the actual termination reason is `none`. V10 and V12 through V15 were rejected after review, and V11 stopped before runtime or provider invocation. The exact bridge revision must pass Windows and supported CI before merge. RC-3 still cannot become `accepted` while the selected upstream Recursus exact-head supported CI remains unsuccessful. Do not rerun V1 through V16. RC-4 is next and has not started.
 
-Copy the prompt below into a new Codex task from the accepted merged `main` revision after confirming every acceptance gate below.
+The prompt below is retained only to preserve the historical instructions that governed this work. Do not copy or execute it as a current task.
 
 ```text
 Work in this repository:
 
-D:\OpenCnid\recursus-careers
+<repository-root>
 
 Implement roadmap milestone RC-3, Minimal Recursus execution bridge, from the accepted `main` branch.
 
@@ -17,7 +17,7 @@ Acceptance gate before editing:
 
 1. Run `git status --short` and preserve every existing user change.
 2. Confirm the current branch is based on the merged RC-2 revision.
-3. Confirm `docs/recursus/ROADMAP.md` marks RC-1 and RC-2 `accepted` and RC-3 `next`.
+3. Confirm `docs/recursus/ROADMAP.md` marks RC-1 and RC-2 `accepted`. On the original pre-RC-3 base, RC-3 may be `next`; on a continuation of this handoff, RC-3 must be `in progress`.
 4. Confirm the merged RC-2 pull request has successful Windows and supported-CI checks for the exact accepted revision.
 5. Run:
    - `node verify-recursus-benchmark.mjs validate`
@@ -25,7 +25,7 @@ Acceptance gate before editing:
    - `node test-all.mjs --only recursus/`
    - `node scripts/check-syntax.mjs`
 6. If RC-2 is not accepted or a required check fails for an implementation reason, stop RC-3 execution, gather exact evidence, and repair only the RC-2 acceptance blocker. Do not build or invoke a Recursus route on an unaccepted reference foundation.
-7. Confirm the repository pins concrete Recursus, DSH, and direct-provider-adapter revisions and entrypoints for RC-3. If any selection is absent or ambiguous, stop and obtain that source-selection decision before designing or invoking the bridge.
+7. Confirm [RC3_SOURCE_SELECTION.md](RC3_SOURCE_SELECTION.md) still resolves to the recorded immutable Recursus, DSH, and direct-provider-adapter revisions and entrypoints. If any selection is absent, ambiguous, or unavailable, stop and obtain a new source-selection decision before designing or invoking the bridge.
 
 Read these files completely in this order:
 
