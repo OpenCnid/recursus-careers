@@ -29,7 +29,7 @@ RC-4 is the last infrastructure-heavy gate before testing product value. RC-5 re
 
 Before implementation, record a lightweight slice card with:
 
-- one user-visible workflow and three to five representative jobs;
+- one user-visible workflow and three registered representative jobs;
 - the branch, worktree, disposable state, allowed writes, and rollback or deletion target;
 - prohibited external actions, especially application submission and message sending;
 - an explicit time and token budget;
@@ -39,6 +39,8 @@ Before implementation, record a lightweight slice card with:
 Build only enough of the real path to answer the product question. Test as soon as one end-to-end case works, not after every planned capability is complete. Record user-visible usefulness, completion or failure, latency, token or comparable cost when reported, human correction, and workflow friction. Stop when the decision is clear.
 
 Full preregistration, frozen evidence packages, repeat matrices, cross-platform acceptance, and causal ablations are promotion work. They are required before a supported product path, release, public comparative claim, or sensitive data, action, or security expansion. They are not prerequisites for a disposable learning slice. Accepted evidence remains immutable when a slice is rebuilt or deleted.
+
+The active contract is the [RC-5 disposable `oferta` slice card](RC5_SLICE_CARD.md). A fresh implementation session starts from the [RC-5 Codex kickoff prompt](RC5_NEXT_TASK_PROMPT.md). The accepted [RC-4 specification](SPEC.md) remains historical and does not govern RC-5.
 
 Acceptance history preserves the reviewed pre-acceptance state without overriding the active milestone map:
 
@@ -56,7 +58,7 @@ Acceptance history preserves the reviewed pre-acceptance state without overridin
 | RC-2 | Claude Code reference capture | `accepted` | Reproducible reference runs from unchanged Career Ops through Claude Code | RC-1 and an available Claude Code environment |
 | RC-3 | Minimal Recursus execution bridge | `accepted` | The same cases can run through Recursus without claiming feature parity | RC-1, RC-2, and the required Recursus runner surface |
 | RC-4 | Compiled prompt and context parity | `accepted` | Four registered synthetic pilot mode contracts compile into two offline route-delivery bundles with matching decoded structural semantics under registered adapter rules | RC-2 and RC-3 |
-| RC-5 | Disposable end-to-end value slice | `next` | A small real Recursus Careers workflow is tested immediately on three to five representative jobs against ordinary Career Ops, ending in `KEEP`, `REBUILD`, or `DELETE` | RC-4 |
+| RC-5 | Disposable end-to-end value slice | `next` | A small real Recursus Careers workflow is tested immediately on three registered representative jobs against ordinary Career Ops, ending in `KEEP`, `REBUILD`, or `DELETE` | RC-4 |
 | RC-6 | Promotion hardening and durable completion | `conditional` | A kept slice is hardened for resume, retry, recovery, and evidence-backed completion only where the supported path needs it | RC-5 `KEEP` and required Recursus supervision support |
 | RC-7 | Selective RLM research | `conditional` | RLM is tested only if RC-5 exposes a research bottleneck worth its added cost and authority | RC-5 `KEEP` and an integrated RLM route |
 | RC-8 | Honcho advisory memory | `conditional` | Reusable preferences and context are tested only if the kept workflow needs continuity | RC-5 `KEEP` and an integrated Honcho route |
@@ -186,9 +188,11 @@ Current note: RC-4 V2 registration `RC4-PROMPT-CONTEXT-2026-08-25-V2` is the acc
 
 ### RC-5: Disposable end-to-end value slice
 
+Active slice: [three-case disposable `oferta` contract](RC5_SLICE_CARD.md). Next session: [RC-5 Codex kickoff prompt](RC5_NEXT_TASK_PROMPT.md).
+
 Outcome:
 
-- One small but real Recursus Careers workflow reaches a user-visible result for three to five representative jobs.
+- One small but real Recursus Careers workflow reaches a user-visible result for three registered representative jobs.
 - The same goals are run through ordinary Career Ops for a practical usefulness, cost, latency, reliability, and friction comparison.
 - Implementation and generated state stay inside the registered blast radius and can be discarded without changing canonical Career Ops state.
 - The slice ends with `KEEP`, `REBUILD`, or `DELETE`, not an open-ended infrastructure backlog.
@@ -196,7 +200,7 @@ Outcome:
 Exit evidence:
 
 - The lightweight slice card records the user path, representative jobs, authority, allowed writes, time and token budget, comparison path, and decision signal.
-- At least one end-to-end case is tested as soon as it works, followed by no more than the registered three to five jobs needed for the decision.
+- At least one end-to-end case is tested as soon as it works, followed by no more than the three registered jobs needed for the decision.
 - A compact result table records useful outcome, completion or failure, latency, reported tokens or comparable cost, human correction, and friction.
 - No application is submitted, no message is sent, and no other external mutation occurs without separate explicit authorization.
 - The decision note explains what is kept, rebuilt, or deleted and why. It makes no public superiority or release claim.

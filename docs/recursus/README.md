@@ -16,7 +16,7 @@ The actual route ran only through the explicit V17 capture command. It used a co
 
 | Area | Purpose | Start here |
 | --- | --- | --- |
-| Delivery | Defines the fast, bounded delivery loop and the next disposable product slice | [Roadmap](ROADMAP.md), then [RC-5: Disposable end-to-end value slice](ROADMAP.md#rc-5-disposable-end-to-end-value-slice) |
+| Delivery | Defines the fast, bounded delivery loop and the next disposable product slice | [RC-5 slice card](RC5_SLICE_CARD.md), then [RC-5 Codex kickoff prompt](RC5_NEXT_TASK_PROMPT.md) |
 | Benchmarks | Defines the comparison routes, scenarios, metrics, controls, and advancement rules | [Benchmark overview](benchmarks/README.md) |
 | Architecture | Defines ownership, runtime boundaries, intended differences, and prompt compilation | [Architecture overview](architecture/README.md) |
 | Features | Records feature ownership, maturity, evidence, limitations, and advancement criteria | [Feature documentation](features/README.md) |
@@ -32,6 +32,8 @@ The actual route ran only through the explicit V17 capture command. It used a co
 Supporting documents:
 
 - [Recursus Careers roadmap](ROADMAP.md)
+- [RC-5 disposable `oferta` slice card](RC5_SLICE_CARD.md)
+- [Codex kickoff prompt for RC-5](RC5_NEXT_TASK_PROMPT.md)
 - [Accepted RC-4 compiled prompt and context parity specification](SPEC.md)
 - [Historical Codex kickoff prompt for RC-4](RC4_NEXT_TASK_PROMPT.md)
 - [RC-3 source and component selection](RC3_SOURCE_SELECTION.md)
@@ -45,7 +47,9 @@ Supporting documents:
 
 ## Delivery approach
 
-Starting with RC-5, delivery uses bounded vertical slices. Define the smallest useful user path and its blast radius, build it, test it immediately on three to five representative jobs against ordinary Career Ops, and then choose `KEEP`, `REBUILD`, or `DELETE`. A disposable learning slice needs only enough specification to bound authority, cost, writes, and the decision signal. It does not need release-grade preregistration or a full evidence matrix.
+Starting with RC-5, delivery uses bounded vertical slices. Define the smallest useful user path and its blast radius, build it, test it immediately on the three registered representative jobs against ordinary Career Ops, and then choose `KEEP`, `REBUILD`, or `DELETE`. A disposable learning slice needs only enough specification to bound authority, cost, writes, and the decision signal. It does not need release-grade preregistration or a full evidence matrix.
+
+The active RC-5 handoff is the [disposable `oferta` slice card](RC5_SLICE_CARD.md). The root [SPEC.md](SPEC.md) remains the accepted historical RC-4 contract and is not the instruction surface for RC-5.
 
 Full freezing, repeat matrices, cross-platform evidence, and formal promotion thresholds return before a successful slice is promoted into a supported path, before a public comparative claim or release, or when work crosses a sensitive data, action, or security boundary. A learning slice may not submit an application, send a message, or perform another external mutation without separate explicit authorization.
 
