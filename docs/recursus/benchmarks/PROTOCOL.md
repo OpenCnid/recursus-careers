@@ -57,6 +57,8 @@ Before Phase A or any comparison lane, the minimal `recursus-direct-v17` bridge 
 
 Run model-free or provider-double checks for state transitions, report reservation, deduplication, role lineage, artifact validation, no-submit enforcement, and prompt/context structure.
 
+RC-4 is a model-free Phase A compiler-boundary conformance package. It is not a Phase B feature-parity run and creates no comparative result or advancement decision.
+
 ### Phase B: feature parity
 
 Exercise onboarding, evaluation, scanning, company research, CV/PDF generation, batch processing, interruption recovery, browser-assisted form preparation, and human submission gates. Missing capability is a parity failure or an explicit `unsupported` item, not a benchmark exclusion.

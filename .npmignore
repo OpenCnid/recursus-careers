@@ -1,5 +1,6 @@
 # Personal data (user fills these)
 cv.md
+!evals/recursus/**/cv.md
 data/applications.md
 data/applications.db
 data/follow-ups.md
@@ -50,6 +51,18 @@ config/profile.yml
 portals.yml
 modes/_profile.md
 modes/_custom.md
+modes/_brief.md
+voice-dna.md
+documents/*
+!documents/.gitkeep
+!documents/README.md
+config/cv-facts.json
+config/benchmarks.yml
+config/local-paths.txt
+opencode.json
+.mcp.json
+.claude/settings.json
+.claude/hooks/
 .update-dismissed
 .update-lock
 

@@ -113,6 +113,7 @@ const DISCOVERED_TEST_TIMEOUTS_MS = new Map([
   ['recursus/benchmark-foundation.test.mjs', 120_000],
   ['recursus/execution-bridge-v16.test.mjs', 120_000],
   ['recursus/execution-bridge-v17.test.mjs', 120_000],
+  ['recursus/prompt-context-v1.test.mjs', 120_000],
   ['recursus/reference-capture.test.mjs', 120_000],
 ]);
 
@@ -13641,9 +13642,9 @@ try {
   const guardedPaths = (noUserData.match(/const USER_PATHS = \[([\s\S]*?)\];/) || [, ''])[1];
   if (
     guardedPaths.includes('/^modes\\/_custom\\.md$/') &&
-    !guardedPaths.includes('/^voice-dna\\.md$/')
+    guardedPaths.includes('/^voice-dna\\.md$/')
   ) {
-    pass('no-user-data guard protects modes/_custom.md without treating voice-dna.md as user data');
+    pass('no-user-data guard protects modes/_custom.md and voice-dna.md as user data');
   } else {
     fail('no-user-data guard has the wrong custom/user-layer paths (#1736)');
   }

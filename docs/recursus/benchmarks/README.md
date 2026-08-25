@@ -2,7 +2,7 @@
 
 [Recursus overview](../README.md) | [Protocol](PROTOCOL.md) | [Scenarios](SCENARIO_CATALOG.md) | [Metrics](METRICS_AND_PROMOTION.md)
 
-> **Status:** RC-1 foundation, accepted RC-2 v4 reference evidence, and an in-progress RC-3 V17 bridge with one validated provider-free dry run and one validated actual Recursus route attempt. No Recursus Careers comparison has been executed.
+> **Status:** RC-1 Benchmark Foundation v1, RC-2 v4 reference evidence, and RC-3 V17 bridge evidence are accepted. RC-4 is `in progress` and remains provider-free compiler-boundary work. No Recursus Careers comparison has been executed.
 
 The model-free [Benchmark Foundation v1](../../../evals/recursus/README.md) is accepted for RC-1. It validates corpus structure and fixture integrity only and is not a benchmark result.
 

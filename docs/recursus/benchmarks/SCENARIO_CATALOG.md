@@ -8,7 +8,9 @@ The implemented RC-1 subset is [career-bench-v1](../../../evals/recursus/README.
 
 RC-2 captures only these same four cases through the registered `co-claude-code` route. It does not compare generated output with expected behavior, critical-failure definitions, or evaluator-only oracle content. RC-2 terminal states record capture facts under a separate contract and do not change RC-1 normalized-result semantics.
 
-The larger package below remains planned for later milestones. It must not be read as implemented by RC-1 or RC-2.
+RC-4 compiler fixtures reuse only registered agent-visible source bytes. They do not promote evaluator-only scenario manifests or oracle material to agent-visible input and do not implement the later expanded corpus.
+
+The larger package below remains planned for later milestones. It must not be read as implemented by RC-1, RC-2, RC-3, or RC-4.
 
 The expanded executable corpus is expected to grow toward:
 

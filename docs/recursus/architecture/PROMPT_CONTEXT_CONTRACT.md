@@ -2,7 +2,7 @@
 
 [Architecture](README.md) | [Intended differences](INTENDED_DIFFERENCES.md) | [Benchmark protocol](../benchmarks/PROTOCOL.md)
 
-> **Status:** specified target, not implemented or integrated. The requirements below define the contract Recursus Careers must satisfy before the feature registry can promote the prompt compiler.
+> **Status:** The full provider-request and product-integration target below remains specified and not integrated. RC-4 implements only the bounded offline compiler and route-delivery subset for four registered synthetic pilot mode contracts and two offline targets. Its evidence does not observe provider requests or workflow behavior.
 
 ## Purpose
 
@@ -161,6 +161,8 @@ For each fixture:
 8. record permitted transport differences separately.
 
 Structural parity requires a 100 percent pass rate.
+
+RC-4 stops before outbound provider-request capture for the closed Claude Code runner. It validates inspectable offline route-delivery bundles and their inverse decoders, not provider requests.
 
 ## Injection-resistance test
 

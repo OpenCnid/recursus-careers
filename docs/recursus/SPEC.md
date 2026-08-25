@@ -1,6 +1,6 @@
 # RC-4 compiled prompt and context parity specification
 
-Status: ready for implementation; RC-4 remains `next` until implementation work begins
+Status: implementation in progress; acceptance requires the exact reviewed PR head to pass every required check
 
 Roadmap milestone: [RC-4](ROADMAP.md#rc-4-compiled-prompt-and-context-parity)
 
@@ -132,12 +132,14 @@ RC-4 MUST NOT:
 
 The implementation SHOULD use this layout. A naming change requires an explicit reason in the implementation handoff.
 
+The originally planned V1 package is preserved as a frozen rejected record after its freeze edit omitted the required provider-isolation field. The user explicitly authorized V2 on 2026-08-25. V2 is the active package below and MUST NOT rewrite any V1 byte.
+
 ```text
 lib/recursus/prompt-context-v1.mjs
 scripts/recursus/verify-prompt-context-v1.mjs
 tests/recursus/prompt-context-v1.test.mjs
 
-evals/recursus/rc4-prompt-context-v1/
+evals/recursus/rc4-prompt-context-v2/
   README.md
   registration.json
   source-snapshot.json
@@ -162,7 +164,7 @@ evals/recursus/rc4-prompt-context-v1/
 
 The implementation MUST also update:
 
-- `package.json` with one RC-4 verification command;
+- `package.json` with one RC-4 verification command, unless an accepted evidence snapshot hash-binds the current `package.json` bytes. When that preservation exception applies, `package.json` MUST remain byte-identical, the direct verifier entrypoint in section 13 is the required command surface, the exception MUST be recorded in the RC-4 package README and handoff, and the bound evidence validator MUST continue to pass;
 - `update-system.mjs` so every new distributed root or library file is protected by updater drift checks;
 - `evals/recursus/README.md` with the exact RC-4 evidence and non-claim boundary;
 - `docs/recursus/ROADMAP.md` and `docs/recursus/features/REGISTRY.md` only when status and evidence genuinely change; and
@@ -328,6 +330,8 @@ node scripts/recursus/verify-prompt-context-v1.mjs --help
 
 `compile` MUST resolve and validate the complete read and write plan before writing, refuse a non-empty output directory, write only deterministic synthetic compiler artifacts, and clean up a newly created output directory after a partial failure when safe.
 
+The writer MUST bind the planned physical output-root identity, revalidate that identity and resolved file containment around every create and write, reject deterministic root or ancestor replacement races, and clean up only a created file whose physical path and filesystem identity still match. Node.js provides no portable directory-handle-relative create primitive, so V1 does not claim atomic defense against a hostile external process mutating directory components in the interval between checks.
+
 `compare` MUST compile once, project to both targets, decode both bundles, compare all parity fields, and emit the exact non-claim sentence from section 4 on success.
 
 Supported command failures MUST return nonzero exit codes with stable, content-safe diagnostics. Diagnostics MUST identify logical fields and digest prefixes without printing raw prompt, candidate, JD, or evidence content.
@@ -364,7 +368,7 @@ Tests MUST reject at least:
 - a route bundle bound to the wrong compilation digest;
 - a decoder that drops or invents a block;
 - an unregistered mode, route, tool, output contract, or budget action;
-- absolute, traversal, case-colliding, Unicode-confusable, symlink, junction, or reparse-point source paths;
+- absolute, traversal, case-colliding, Unicode-confusable, symbolic-link, directory-junction, or realpath-escaping source paths;
 - oversized strings, arrays, nesting, source files, or output bundles;
 - malformed UTF-8, JSON, schema versions, or unknown fields;
 - non-empty or overlapping output directories;
@@ -373,6 +377,8 @@ Tests MUST reject at least:
 - diagnostics that expose raw protected content.
 
 Tests MUST include focused regression cases proving mixed, stale, or falsely relabeled evidence fails. Validation MUST fail closed rather than downgrading these cases to warnings.
+
+The V1 child-process-free portability boundary covers symbolic links and directory junctions exposed by Node.js filesystem APIs, plus any resolved-path escape. Other Windows reparse subclasses that Node.js reports as ordinary files or directories are outside this V1 claim and remain unsupported and unverified.
 
 ## 15. Freeze and review protocol
 
