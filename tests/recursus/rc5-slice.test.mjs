@@ -26,8 +26,9 @@ function cleanup(root) {
   rmSync(root, { force: true, maxRetries: 10, recursive: true, retryDelay: 50 });
 }
 
-async function providerFreeTransportProbe() {
-  return structuredClone(RC5_INTERNALS_FOR_TESTS.expectedPinnedTransportProbe());
+async function providerFreeTransportProbe({ requests }) {
+  const captures = RC5_INTERNALS_FOR_TESTS.expectedProviderFreePayloadCaptures(requests);
+  return structuredClone(RC5_INTERNALS_FOR_TESTS.expectedPinnedTransportProbe(captures));
 }
 
 function prepareProviderFree(outputRoot) {
@@ -46,22 +47,25 @@ async function expectCode(promise, code) {
   await assert.rejects(promise, (error) => error instanceof RC5SliceError && error.code === code);
 }
 
-test('prepare validates ordered-parts requests and stops at the pinned transport incompatibility', async () => {
+test('prepare validates the compatible pinned adapter without starting a provider call', async () => {
   const root = tempRoot();
   try {
     const result = await prepareProviderFree(root);
-    assert.equal(result.compatibility, 'rebuild_required');
+    assert.equal(result.compatibility, 'compatible');
     assert.equal(result.interface_status, 'validated_provider_free');
-    assert.equal(result.provider_call_permitted, false);
-    assert.equal(result.recommendation, 'REBUILD');
+    assert.equal(result.provider_call_permitted, true);
+    assert.equal(result.recommendation, 'not_decided');
     const plan = JSON.parse(readFileSync(path.join(root, 'slice-plan.json'), 'utf8'));
     assert.deepEqual(plan.case_order, RC5_CASE_ORDER);
     assert.equal(plan.accepted_inputs.integrity, 'pass');
     assert.equal(plan.policy.model_facing_tools.length, 0);
-    assert.equal(plan.compatibility.provider_call_permitted, false);
+    assert.equal(plan.compatibility.provider_call_permitted, true);
+    assert.equal(plan.compatibility.status, 'compatible');
     assert.equal(plan.compatibility.interface.status, 'validated_provider_free');
-    assert.ok(plan.compatibility.reasons.includes('RC5_DIRECT_ADAPTER_SYSTEM_ROLE_DOWNCAST'));
-    assert.ok(plan.compatibility.reasons.includes('RC5_TRAILING_SYSTEM_ORDER_UNSUPPORTED'));
+    assert.deepEqual(plan.compatibility.reasons, []);
+    assert.equal(plan.compatibility.transport.status, 'compatible');
+    assert.equal(plan.transport_probe.provider_calls, 0);
+    assert.equal(plan.transport_probe.payload_captures.length, 3);
     for (const item of plan.cases) {
       assert.equal(item.treatment.compile_count, 1);
       assert.equal(item.treatment.target_id, 'recursus-direct-v1');
@@ -79,27 +83,22 @@ test('prepare validates ordered-parts requests and stops at the pinned transport
   }
 });
 
-test('authorized run fails closed before invoking a provider when the pinned transport cannot preserve ordered roles', async () => {
+test('authorized run stops before provider execution because no executor is registered', async () => {
   const root = tempRoot();
   try {
     await prepareProviderFree(root);
-    await expectCode(runSliceCase({ caseId: 'FACT-01', outputRoot: root, providerAuthority: RC5_PROVIDER_AUTHORITY }), 'RC5_ROUTE_INCOMPATIBLE');
+    await expectCode(runSliceCase({ caseId: 'FACT-01', outputRoot: root, providerAuthority: RC5_PROVIDER_AUTHORITY }), 'RC5_EXECUTOR_UNIMPLEMENTED');
     assert.equal(readFileSync(path.join(root, 'slice-plan.json')).length > 0, true);
   } finally {
     cleanup(root);
   }
 });
 
-test('summarize records REBUILD with zero calls and does not invent treatment observations', async () => {
+test('summarize refuses a decision when compatible preparation has no treatment attempts', async () => {
   const root = tempRoot();
   try {
     await prepareProviderFree(root);
-    const result = await summarizeSlice({ outputRoot: root });
-    assert.deepEqual(result, { provider_call_count: 0, recommendation: 'REBUILD' });
-    const summary = JSON.parse(readFileSync(path.join(root, 'summary.json'), 'utf8'));
-    assert.equal(summary.observation_rows.length, 0);
-    assert.ok(summary.cases.every((item) => item.completion === 'not_run'));
-    assert.match(readFileSync(path.join(root, 'decision.md'), 'utf8'), /\*\*Recommendation:\*\* REBUILD/u);
+    await expectCode(summarizeSlice({ outputRoot: root }), 'RC5_DECISION_INCOMPLETE');
   } finally {
     cleanup(root);
   }
@@ -186,20 +185,86 @@ test('ordered-parts requests preserve all nine bundle parts and reject semantic 
   }
 });
 
-test('transport assessment rejects a probe that claims compatible capabilities without the pinned source result', async () => {
+test('provider-free final-wire validation rejects payload, fetch, identity, and no-retry drift', async () => {
   const root = tempRoot();
   try {
     await prepareProviderFree(root);
     const plan = JSON.parse(readFileSync(path.join(root, 'slice-plan.json'), 'utf8'));
     const requests = plan.cases.map((item) => JSON.parse(readFileSync(path.join(root, ...item.treatment.request_path.split('/')), 'utf8')));
-    const claimedCompatible = structuredClone(RC5_INTERNALS_FOR_TESTS.expectedPinnedTransportProbe());
-    claimedCompatible.capabilities.ordered_system_user_messages_v1 = true;
-    claimedCompatible.capabilities.system_messages_preserve_role = true;
-    claimedCompatible.capabilities.trailing_system_message = true;
-    assert.throws(
-      () => RC5_INTERNALS_FOR_TESTS.assessOrderedPartsTransport(claimedCompatible, requests),
-      { code: 'RC5_RUNTIME_PROBE' },
-    );
+    const expectedCaptures = RC5_INTERNALS_FOR_TESTS.expectedProviderFreePayloadCaptures(requests);
+    const endpoint = expectedCaptures[0].endpoint;
+    const makeObservation = () => {
+      const payloads = requests.map((request) => RC5_INTERNALS_FOR_TESTS.expectedWirePayload(request));
+      return {
+        capabilities: { ordered_system_user_messages_v1: true },
+        http_request_count: requests.length,
+        payloads,
+        provider_calls: 0,
+        retry_probe: {
+          completed: false,
+          http_request_count: 1,
+          payload: structuredClone(payloads[0]),
+          provider_calls: 0,
+          url: endpoint,
+        },
+        urls: requests.map(() => endpoint),
+      };
+    };
+    const observation = makeObservation();
+    assert.deepEqual(RC5_INTERNALS_FOR_TESTS.validateProviderFreePayloadProbe(observation, requests), expectedCaptures);
+    const probe = RC5_INTERNALS_FOR_TESTS.expectedPinnedTransportProbe(expectedCaptures);
+    const assessment = RC5_INTERNALS_FOR_TESTS.assessOrderedPartsTransport(probe, requests);
+    assert.equal(assessment.status, 'compatible');
+    assert.equal(assessment.provider_call_permitted, true);
+
+    const wireMutations = [
+      ['endpoint', (value) => { value.urls[0] = 'https://example.test/responses'; }],
+      ['instructions', (value) => { value.payloads[0].instructions = 'hidden'; }],
+      ['tools', (value) => { value.payloads[0].tools = []; }],
+      ['message order', (value) => { [value.payloads[0].input[0], value.payloads[0].input[1]] = [value.payloads[0].input[1], value.payloads[0].input[0]]; }],
+      ['message content', (value) => { value.payloads[0].input[4].content[0].text += ' '; }],
+      ['message role', (value) => { value.payloads[0].input[0].role = 'user'; }],
+      ['system aggregation', (value) => { value.payloads[0].instructions = value.payloads[0].input.pop().content[0].text; }],
+      ['maximum token cap', (value) => { value.payloads[0].max_output_tokens = 4001; }],
+      ['capability', (value) => { value.capabilities.ordered_system_user_messages_v1 = false; }],
+      ['payload count', (value) => { value.payloads.pop(); }],
+      ['fetch count', (value) => { value.http_request_count += 1; }],
+      ['provider call count', (value) => { value.provider_calls = 1; }],
+      ['retry completion', (value) => { value.retry_probe.completed = true; }],
+      ['retry fetch count', (value) => { value.retry_probe.http_request_count = 2; }],
+      ['retry provider calls', (value) => { value.retry_probe.provider_calls = 1; }],
+      ['retry endpoint', (value) => { value.retry_probe.url = 'https://example.test/responses'; }],
+      ['retry payload', (value) => { value.retry_probe.payload.input[0].role = 'user'; }],
+    ];
+    for (const [label, mutate] of wireMutations) {
+      const changed = makeObservation();
+      mutate(changed);
+      assert.throws(
+        () => RC5_INTERNALS_FOR_TESTS.validateProviderFreePayloadProbe(changed, requests),
+        (error) => error?.code === 'RC5_RUNTIME_PROBE',
+        label,
+      );
+    }
+
+    const probeMutations = [
+      ['capability drift', (value) => { value.capabilities.ordered_system_user_messages_v1 = false; }],
+      ['adapter source drift', (value) => { value.adapter.source.sha256 = 'b'.repeat(64); }],
+      ['image identity drift', (value) => { value.image.id = 'sha256:' + 'b'.repeat(64); }],
+      ['payload capture count', (value) => { value.payload_captures.pop(); }],
+      ['payload fetch count', (value) => { value.payload_captures[0].provider_free_http_requests = 2; }],
+      ['retry no-retry count', (value) => { value.retry_probe.provider_free_http_requests = 2; }],
+      ['retry provider count', (value) => { value.retry_probe.provider_calls = 1; }],
+      ['retry completion drift', (value) => { value.retry_probe.completed = true; }],
+    ];
+    for (const [label, mutate] of probeMutations) {
+      const changed = structuredClone(probe);
+      mutate(changed);
+      assert.throws(
+        () => RC5_INTERNALS_FOR_TESTS.assessOrderedPartsTransport(changed, requests),
+        (error) => error?.code === 'RC5_RUNTIME_PROBE',
+        label,
+      );
+    }
   } finally {
     cleanup(root);
   }
@@ -272,7 +337,7 @@ test('result validation rejects timeout false-completion, incomplete completion,
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, external_mutations: ['tracker_write'] }), { code: 'RC5_EXTERNAL_MUTATION' });
 });
 
-test('CLI requires exact authority and reports the incompatible transport without provider work', async () => {
+test('CLI requires exact authority and reports the unimplemented executor without provider work', async () => {
   const root = tempRoot();
   try {
     const stdout = captureStream();
@@ -284,7 +349,7 @@ test('CLI requires exact authority and reports the incompatible transport withou
     assert.match(stderr.text(), /RC5_PROVIDER_AUTHORITY/u);
     const authorizedError = captureStream();
     assert.equal(await runRC5SliceCli({ argv: ['run', '--case', 'FACT-01', '--output-root', root, '--provider-authority'], services, stdout: stdout.stream, stderr: authorizedError.stream }), 1);
-    assert.match(authorizedError.text(), /RC5_ROUTE_INCOMPATIBLE/u);
+    assert.match(authorizedError.text(), /RC5_EXECUTOR_UNIMPLEMENTED/u);
   } finally {
     cleanup(root);
   }

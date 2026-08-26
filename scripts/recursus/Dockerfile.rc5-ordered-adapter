@@ -1,0 +1,13 @@
+FROM recursus-rc3-v17:final@sha256:2338e4b828a094194ba7a20562bc20a97410f95112773e53fd3807def9979ecf
+
+USER root
+COPY --chown=65532:65532 package.json README.md COMPATIBILITY.md THIRD_PARTY_NOTICES.md cordis.patch.yml /opt/recursus-profile/node_modules/deepseek-openai-codex/
+COPY --chown=65532:65532 lib/ /opt/recursus-profile/node_modules/deepseek-openai-codex/lib/
+RUN chmod -R go-w /opt/recursus-profile/node_modules/deepseek-openai-codex
+USER 65532:65532
+WORKDIR /opt/rc3
+ENTRYPOINT ["/usr/local/bin/node"]
+
+LABEL org.opencontainers.image.revision="2fc02090af1632b86ee1175a6720904dfd71081c" \
+      io.opencnid.recursus.adapter-capability="ordered_system_user_messages_v1" \
+      io.opencnid.recursus.parent-image="sha256:2338e4b828a094194ba7a20562bc20a97410f95112773e53fd3807def9979ecf"
