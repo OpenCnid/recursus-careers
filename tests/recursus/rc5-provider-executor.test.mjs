@@ -832,6 +832,12 @@ test('production result evidence is collected before cleanup and reconciled only
   assert.equal(source.includes('function collectResult('), false);
 });
 
+test('provider-free simulator authority requires an exact DNS alias', () => {
+  const source = readFileSync(new URL('../../lib/recursus/rc5-provider-executor.mjs', import.meta.url), 'utf8');
+  assert.match(source, /Aliases\.some\(\(alias\) => alias === 'chatgpt\.com'\)/u);
+  assert.doesNotMatch(source, /Aliases\?\.includes\('chatgpt\.com'\)/u);
+});
+
 test('worker timeout accepts cleanup headroom and rejects limits above registered authority', () => {
   const { validateWorkerTimeout } = RC5_PROVIDER_WORKER_INTERNALS_FOR_TESTS;
   assert.equal(validateWorkerTimeout(535_000, MAX_TIMEOUT_MS), true);
