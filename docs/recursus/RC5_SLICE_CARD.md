@@ -26,6 +26,8 @@ The treatment must consume the RC-4 compiled bundle. It may not construct a hidd
 
 Start with the accepted RC-3 V17 component lock: Recursus `d6d25dda3951e46fe1b03ec3cecc3f348bfe2346`, DSH `e52c224fe00954fb7e8cda19eb2411dceef15989`, direct adapter `5232102d0cc8bd55d5bf27b6eb203efbf6ada8a9`, model `gpt-5.6-sol`, and `xhigh` reasoning. Reuse the immutable V17 runtime material without modifying or rerunning the V17 evidence route. If that configuration cannot accept the RC-4 bundle, stop with `REBUILD` rather than silently substituting another route.
 
+The current RC-5 rebuild continuation layers reviewed direct-adapter revision `2fc02090af1632b86ee1175a6720904dfd71081c` on the exact accepted V17 image. Provider-free preparation must require its machine-readable `ordered_system_user_messages_v1` capability and exact built source bytes. This mutable continuation does not alter V17, freeze a successor route, or prove that the live provider accepts a trailing system input item.
+
 ## Cases and fixed baseline
 
 Run in this order and stop early when the decision is clear:
@@ -46,6 +48,8 @@ Mutable RC-5 implementation belongs only in:
 
 - `lib/recursus/rc5-slice.mjs`;
 - `scripts/recursus/rc5-slice.mjs`;
+- `scripts/recursus/rc5-provider-free-payload-probe.cjs`;
+- `scripts/recursus/Dockerfile.rc5-ordered-adapter`;
 - `tests/recursus/rc5-slice.test.mjs`; and
 - the minimum existing system-path or documentation registries required by repository checks.
 
