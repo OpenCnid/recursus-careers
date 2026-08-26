@@ -97,9 +97,49 @@ test('test-only prepare is explicitly ineligible for provider execution', async 
     assert.equal(plan.compatibility.executor.status, 'injected_test_only');
     assert.equal(plan.executor_probe.status, 'injected_test_only');
     assert.equal(plan.executor_probe.provider_calls, 0);
-    assert.equal(plan.executor_probe.credential_mounted, false);
-    assert.equal(plan.executor_probe.network, 'none');
-    assert.equal(plan.executor_probe.captures.length, 3);
+    assert.equal(plan.executor_probe.credential_mounted, 'synthetic_only');
+    assert.equal(plan.executor_probe.network, 'docker_internal_simulator');
+    assert.equal(plan.executor_probe.exact_container_run, true);
+    assert.equal(plan.executor_probe.tls_validation_exercised, false);
+    assert.equal(plan.executor_probe.production_fetch_tls_leg_exercised, false);
+    assert.deepEqual(plan.executor_probe.authority_manifest, {
+      id: 'rc5-container-run-authority-v1',
+      sha256: 'f8744737196faadb09582bf72ea3de2d43f494a73133d46239dfbe8d5e19f2b7',
+    });
+    assert.deepEqual(plan.executor_probe.worker_source, {
+      byte_count: 51_024,
+      path: '/opt/rc5/rc5-provider-worker.mjs',
+      sha256: '9dfed83838f8069e5940b48af3a61c4404a0f649c2cdbcd147c74976e87f22bf',
+    });
+    assert.deepEqual(plan.executor_probe.proxy_source, {
+      byte_count: 9_399,
+      path: '/opt/rc5/rc5-route-proxy.mjs',
+      sha256: '0f4348017e62663a69f388a6b3862e64ce3c9a8dc236f221a56684029f8be470',
+    });
+    assert.deepEqual(plan.executor_probe.simulator_source, {
+      byte_count: 18_237,
+      path: '/opt/rc5/rc5-provider-free-payload-probe.cjs',
+      sha256: '4157b37a8ec97c93250da2b060b7324233276bd39490eb9bff231cb95292332e',
+    });
+    assert.deepEqual(plan.executor_probe.image, {
+      id: 'sha256:6ebf9db128e1385659e0bfa8d86321e3c9936d142b49d4ef828d5aadcd5e086e',
+      reference: 'recursus-rc5-bounded-executor:2fc0209',
+      worker_source: plan.executor_probe.worker_source,
+    });
+    assert.equal(plan.executor_probe.captures.length, 6);
+    for (const [index, capture] of plan.executor_probe.captures.entries()) {
+      const successful = index % 2 === 0;
+      const caseIndex = Math.floor(index / 2);
+      assert.equal(capture.scenario_id, RC5_CASE_ORDER[caseIndex]);
+      assert.equal(capture.transport_mode, successful ? 'provider_free_success' : 'provider_free_failure');
+      assert.equal(capture.simulator_response_status, successful ? 200 : 503);
+      assert.equal(capture.completion, successful ? 'completed' : 'failed');
+      assert.equal(capture.finish_reason, successful ? 'stop' : 'error');
+      assert.equal(capture.direct_adapter_invocations, 1);
+      assert.equal(capture.provider_request_count, 1);
+      assert.equal(capture.oauth_refresh_count, 0);
+      assert.equal(capture.payload_sha256, plan.transport_probe.payload_captures[caseIndex].payload_sha256);
+    }
     for (const item of plan.cases) {
       assert.equal(item.treatment.compile_count, 1);
       assert.equal(item.treatment.target_id, 'recursus-direct-v1');
