@@ -20,9 +20,9 @@ export default function JobsHistory() {
     <div className="mx-auto max-w-4xl px-6 py-10">
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="font-display text-2xl tracking-tight text-landing">Workers</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-landing">Batch runs</h1>
           <p className="mt-1 text-sm text-muted">
-            Every evaluation you ran — a persistent log. <span className="tabular-nums">{jobs.length}</span> total.
+            Evaluation workers and their results — a persistent local log. <span className="tabular-nums">{jobs.length}</span> total.
           </p>
         </div>
         {jobs.some((j) => j.status !== "running") && (
@@ -37,7 +37,7 @@ export default function JobsHistory() {
 
       {jobs.length === 0 ? (
         <div className="mt-8 rounded-2xl border border-dashed border-border bg-surface/30 px-6 py-12 text-center text-sm text-muted">
-          No workers yet. Hit <span className="text-foreground">Evaluate</span> on an inbox posting to spin one up.
+          No batch runs yet. Select jobs from Discover or the inbox, then start an evaluation.
         </div>
       ) : (
         <ul className="mt-6 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface/40">

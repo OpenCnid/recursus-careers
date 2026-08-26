@@ -29,6 +29,15 @@ const WEB_FIELD = {
   score: "score", status: "status", pdf: "pdf", report: "report", notes: "notes",
 };
 
+// Exact canonical headers are part of the web Application schema, not an alias
+// mirror. They let the reader understand a standard modern tracker when it is
+// pointed at an older/data-only root that predates tracker-aliases.json. Custom,
+// localized and legacy header names still come exclusively from the shared file.
+const CANONICAL_HEADERS = {
+  "#": "num", num: "num", date: "date", company: "company", via: "via", role: "role",
+  location: "location", score: "score", status: "status", pdf: "pdf", report: "report", notes: "notes",
+};
+
 /** @type {Map<string, {mtimeMs: number, size: number, aliases: Record<string, string>}>} */
 const aliasCache = new Map();
 
@@ -41,9 +50,9 @@ const aliasCache = new Map();
  * system update that rewrites the alias table is picked up on the next request
  * instead of after a server restart. Failures are NEVER cached: a
  * missing/corrupt file (core checkout predating the JSON) yields an empty
- * table — no header row is then detected and parseApplications falls back to
- * the legacy fixed column order — and the cache entry is cleared so a later
- * recovered file is loaded immediately.
+ * table. parseApplications can still recognize exact canonical headers before
+ * falling back to the legacy fixed order. The cache entry is cleared so a
+ * later recovered file is loaded immediately.
  * @param {string} rootDir - career-ops root (careerOpsRoot() on the web side).
  * @returns {Record<string, string>}
  */
@@ -120,7 +129,8 @@ export function detectColumnMap(lines, aliases) {
  */
 export function parseApplications(md, rootDir) {
   const lines = md.split("\n");
-  const map = detectColumnMap(lines, loadHeaderAliases(rootDir));
+  const sharedAliases = loadHeaderAliases(rootDir);
+  const map = detectColumnMap(lines, Object.keys(sharedAliases).length ? sharedAliases : CANONICAL_HEADERS);
   const mappedWidth = map ? Math.max(...Object.values(map)) + 1 : 0;
   const rows = [];
   for (const raw of lines) {
