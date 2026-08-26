@@ -16,7 +16,7 @@ The actual route ran only through the explicit V17 capture command. It used a co
 
 | Area | Purpose | Start here |
 | --- | --- | --- |
-| Delivery | Defines the fast, bounded delivery loop and the next disposable product slice | [RC-5 slice card](RC5_SLICE_CARD.md), then [RC-5 Codex kickoff prompt](RC5_NEXT_TASK_PROMPT.md) |
+| Delivery | Defines the fast, bounded delivery loop and the next disposable product slice | [RC-5 slice card](RC5_SLICE_CARD.md); the [initial kickoff prompt](RC5_NEXT_TASK_PROMPT.md) is historical |
 | Benchmarks | Defines the comparison routes, scenarios, metrics, controls, and advancement rules | [Benchmark overview](benchmarks/README.md) |
 | Architecture | Defines ownership, runtime boundaries, intended differences, and prompt compilation | [Architecture overview](architecture/README.md) |
 | Features | Records feature ownership, maturity, evidence, limitations, and advancement criteria | [Feature documentation](features/README.md) |
@@ -33,7 +33,7 @@ Supporting documents:
 
 - [Recursus Careers roadmap](ROADMAP.md)
 - [RC-5 disposable `oferta` slice card](RC5_SLICE_CARD.md)
-- [Codex kickoff prompt for RC-5](RC5_NEXT_TASK_PROMPT.md)
+- [Historical initial Codex kickoff prompt for RC-5](RC5_NEXT_TASK_PROMPT.md)
 - [Accepted RC-4 compiled prompt and context parity specification](SPEC.md)
 - [Historical Codex kickoff prompt for RC-4](RC4_NEXT_TASK_PROMPT.md)
 - [RC-3 source and component selection](RC3_SOURCE_SELECTION.md)

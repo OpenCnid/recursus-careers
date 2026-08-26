@@ -26,7 +26,7 @@ function parse(argv) {
       values.providerAuthority = RC5_PROVIDER_AUTHORITY;
       continue;
     }
-    if (!['--output-root', '--case', '--docker-executable'].includes(token) || values[token] !== undefined) {
+    if (!['--output-root', '--case', '--credential-home', '--docker-executable'].includes(token) || values[token] !== undefined) {
       throw new RC5SliceError('RC5_ARGUMENT', 'An unknown or repeated option was supplied.', 2);
     }
     const value = tokens[index + 1];
@@ -41,11 +41,17 @@ function parse(argv) {
     throw new RC5SliceError('RC5_ARGUMENT', 'Prepare requires an explicit Docker executable for the provider-free pinned-image probe.', 2);
   }
   if (command === 'run' && values['--case'] === undefined) throw new RC5SliceError('RC5_ARGUMENT', 'The case is required.', 2);
+  if (command === 'run' && (values['--docker-executable'] === undefined || values['--credential-home'] === undefined)) {
+    throw new RC5SliceError('RC5_ARGUMENT', 'Run requires explicit Docker executable and dedicated credential-home paths.', 2);
+  }
   if (command !== 'run' && (values['--case'] !== undefined || values.providerAuthority !== undefined)) {
     throw new RC5SliceError('RC5_ARGUMENT', 'Run-only options were supplied to another command.', 2);
   }
-  if (command !== 'prepare' && values['--docker-executable'] !== undefined) {
-    throw new RC5SliceError('RC5_ARGUMENT', 'The Docker executable is a prepare-only option.', 2);
+  if (command !== 'run' && values['--credential-home'] !== undefined) {
+    throw new RC5SliceError('RC5_ARGUMENT', 'The credential home is a run-only option.', 2);
+  }
+  if (command === 'summarize' && values['--docker-executable'] !== undefined) {
+    throw new RC5SliceError('RC5_ARGUMENT', 'The Docker executable is not used by summarize.', 2);
   }
   return { command, values };
 }
@@ -58,12 +64,13 @@ export async function runRC5SliceCli({ argv = [], services = {}, stdout = proces
       result = await prepareSlice({
         dockerExecutable: values['--docker-executable'],
         outputRoot: values['--output-root'],
-        transportProbe: services.transportProbe,
       });
     }
     else if (command === 'run') {
       result = await runSliceCase({
         caseId: values['--case'],
+        credentialHome: values['--credential-home'],
+        dockerExecutable: values['--docker-executable'],
         outputRoot: values['--output-root'],
         providerAuthority: values.providerAuthority,
       });

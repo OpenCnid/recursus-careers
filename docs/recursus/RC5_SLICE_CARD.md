@@ -17,7 +17,7 @@ For each selected case:
 1. Load the accepted synthetic candidate and job sources.
 2. Compile the accepted RC-4 `oferta` fixture once.
 3. Use the resulting `recursus-direct-v1` delivery bundle as the treatment input.
-4. Execute one bounded Recursus plus DSH direct-adapter request with no model-facing tools.
+4. Execute one bounded request from the accepted RC-4 Recursus compiler output through the pinned DSH direct adapter, with no model-facing tools.
 5. Capture one Markdown tailored-summary artifact plus reported usage and timing.
 6. Compare it with the selected accepted Career Ops through Claude Code reference output.
 7. Record usefulness, completion, corrections, latency, usage, and friction.
@@ -26,7 +26,7 @@ The treatment must consume the RC-4 compiled bundle. It may not construct a hidd
 
 Start with the accepted RC-3 V17 component lock: Recursus `d6d25dda3951e46fe1b03ec3cecc3f348bfe2346`, DSH `e52c224fe00954fb7e8cda19eb2411dceef15989`, direct adapter `5232102d0cc8bd55d5bf27b6eb203efbf6ada8a9`, model `gpt-5.6-sol`, and `xhigh` reasoning. Reuse the immutable V17 runtime material without modifying or rerunning the V17 evidence route. If that configuration cannot accept the RC-4 bundle, stop with `REBUILD` rather than silently substituting another route.
 
-The current RC-5 rebuild continuation layers reviewed direct-adapter revision `2fc02090af1632b86ee1175a6720904dfd71081c` on the exact accepted V17 image. Provider-free preparation must require its machine-readable `ordered_system_user_messages_v1` capability and exact built source bytes. This mutable continuation does not alter V17, freeze a successor route, or prove that the live provider accepts a trailing system input item.
+The current RC-5 rebuild continuation layers reviewed direct-adapter revision `2fc02090af1632b86ee1175a6720904dfd71081c` on the exact accepted V17 image, then layers bounded executor image `sha256:9b9c9e77482ce9e474f3dcd18301d16efbf279cb2918ddeb5a794ad6d960c887` above it. Provider-free preparation must require the adapter's machine-readable `ordered_system_user_messages_v1` capability, exact built source bytes, the exact executor worker and one-tunnel proxy sources, and durable create-only reservation and dispatch records. The executor directly invokes the pinned adapter; it does not claim to run the accepted V17 DSH agent loop or Recursus harness. The Recursus contribution in this slice is the accepted RC-4 compiler and ordered delivery bundle. This mutable continuation does not alter V17, freeze a successor route, or prove that the live provider accepts a trailing system input item.
 
 ## Cases and fixed baseline
 
@@ -47,9 +47,13 @@ The scenario manifests live under `evals/recursus/career-bench-v1/scenarios/`. T
 Mutable RC-5 implementation belongs only in:
 
 - `lib/recursus/rc5-slice.mjs`;
+- `lib/recursus/rc5-provider-executor.mjs`;
+- `lib/recursus/rc5-provider-worker.mjs`;
 - `scripts/recursus/rc5-slice.mjs`;
 - `scripts/recursus/rc5-provider-free-payload-probe.cjs`;
 - `scripts/recursus/Dockerfile.rc5-ordered-adapter`;
+- `scripts/recursus/Dockerfile.rc5-bounded-executor`;
+- `tests/recursus/rc5-provider-executor.test.mjs`;
 - `tests/recursus/rc5-slice.test.mjs`; and
 - the minimum existing system-path or documentation registries required by repository checks.
 
@@ -80,7 +84,7 @@ Without that message, stop after provider-free preparation and report the ready 
 
 ## Build and test loop
 
-1. Build a provider-free `prepare` path that validates all fixed inputs, compiles the three RC-4 fixtures, proves the treatment uses each `recursus-direct-v1` bundle, resolves the accepted baseline artifacts, and writes an inspectable plan below an empty disposable root.
+1. Build a provider-free `prepare` path that validates all fixed inputs, compiles the three RC-4 fixtures, proves the treatment uses each `recursus-direct-v1` bundle, resolves the accepted baseline artifacts, validates the exact bounded executor through networkless success and 503/no-retry probes, and writes an inspectable plan below an empty disposable root.
 2. Add focused positive and failure-path tests for input identity, output containment, non-empty output rejection, accepted-artifact immutability, hidden-prompt bypass, tool exposure, external mutation, credential leakage, call count, timeout, and retry denial.
 3. Run focused tests and one provider-free preparation.
 4. If authorized, execute `FACT-01` once and inspect the complete result immediately.
@@ -108,6 +112,8 @@ Usefulness scoring:
 - `2`: useful with no more than minor editing;
 - `1`: useful core, but substantial correction or restructuring is needed; and
 - `0`: not useful, misleading, unsafe, or incomplete.
+
+The provider-free summarizer records `not_decided` until the operator supplies canonical `operator-observations.json` in the disposable output root with the ordered usefulness, relative-result, correction, latency-acceptability, friction-acceptability-or-justification, critical-failure, explicit-stop, and friction judgments. A critical failure or explicit stop is applied immediately and blocks later provider calls. Provider execution never assigns its own usefulness score. The summarizer then applies the rule below to recommend a label; the user still owns the final decision.
 
 The user owns the final decision. The implementing agent provides a recommendation and the evidence for it.
 

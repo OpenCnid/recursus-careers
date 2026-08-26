@@ -1,0 +1,20 @@
+FROM recursus-rc5-ordered-adapter:2fc0209@sha256:11f4d4b9777b13ec29430bd682e0cb6b46f715e3ead28736c87a94f89f89aa01
+
+USER root
+RUN mkdir -p /opt/rc5
+COPY --chown=65532:65532 lib/recursus/rc5-provider-worker.mjs /opt/rc5/rc5-provider-worker.mjs
+RUN node -e "const fs=require('node:fs');const source=fs.readFileSync('/opt/rc3/recursus-route-proxy-v17.mjs','utf8');const derived=source.replaceAll('maxTunnels: 2','maxTunnels: 1').replace('rc3-proxy-v17','rc5-proxy-v1');if(derived===source||derived.includes('maxTunnels: 2')||!derived.includes('rc5-proxy-v1'))process.exit(1);fs.writeFileSync('/opt/rc5/rc5-route-proxy.mjs',derived);" && chmod 0555 /opt/rc5 && chmod 0444 /opt/rc5/rc5-provider-worker.mjs /opt/rc5/rc5-route-proxy.mjs
+USER 65532:65532
+WORKDIR /opt/rc3
+ENTRYPOINT ["/usr/local/bin/node"]
+
+LABEL org.opencontainers.image.revision="rc5-bounded-provider-executor-v1" \
+      org.opencontainers.image.base.name="recursus-rc5-ordered-adapter:2fc0209" \
+      org.opencontainers.image.base.digest="sha256:11f4d4b9777b13ec29430bd682e0cb6b46f715e3ead28736c87a94f89f89aa01" \
+      io.opencnid.recursus.parent-image="sha256:11f4d4b9777b13ec29430bd682e0cb6b46f715e3ead28736c87a94f89f89aa01" \
+      io.opencnid.recursus.rc5-provider-worker.path="/opt/rc5/rc5-provider-worker.mjs" \
+      io.opencnid.recursus.rc5-provider-worker.byte-count="42010" \
+      io.opencnid.recursus.rc5-provider-worker.sha256="c3b4fe03457438a337c5a818f73a066d0c5b7b21cb3e67b6180a7515d3c634e7" \
+      io.opencnid.recursus.rc5-proxy.path="/opt/rc5/rc5-route-proxy.mjs" \
+      io.opencnid.recursus.rc5-proxy.byte-count="9399" \
+      io.opencnid.recursus.rc5-proxy.sha256="0f4348017e62663a69f388a6b3862e64ce3c9a8dc236f221a56684029f8be470"
