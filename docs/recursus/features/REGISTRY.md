@@ -23,7 +23,7 @@ This registry is the initial truth table for Recursus Careers. It should change 
 | Feature | Primary owner | Component status | Recursus Careers integration | Available through Recursus Careers | Intended enablement | Blocking milestone or work | Advancement evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Compiled prompt and context contract | `recursus-careers` | implemented | offline compiler boundary only | No | required | RC-5 disposable product slice | RC-4 V2 passed 100 percent of registered structural assertions across both offline targets on exact reviewed head `f086626ef344b59fa466e13eeeb3eccc1acd97fd`; product integration and behavioral evidence remain absent |
-| Disposable end-to-end product slice | `recursus-careers` | planned | not started | No | next learning step | RC-5 | Three to five representative jobs compared with ordinary Career Ops, ending in `KEEP`, `REBUILD`, or `DELETE`; no benchmark or superiority claim |
+| Disposable end-to-end product slice | `recursus-careers` | scaffolded | provider-free preparation and fail-closed decision path only | No | rebuild candidate | RC-5: register a DSH request interface that consumes RC-4 ordered system/user parts and enforces the 4,000-token slice cap | First candidate compiled all three accepted RC-4 `oferta` bundles exactly once, then returned `REBUILD` before FACT-01 because accepted V17 cannot consume them without an unregistered semantic transformation; zero provider calls and no treatment observation row, so no benchmark or superiority claim |
 | Durable project-scoped run graph | `recursus-runtime` | specified | not integrated | No | required | Recursus Milestone 2 | Restart, replay, concurrency, and recovery suite |
 | Process, child, timer, and provider supervision | `recursus-runtime` | specified | not integrated | No | required | Recursus Milestone 3 | Explicit reconnect, lost-state, cancellation, and orphan tests |
 | Evidence-gated completion | `recursus-runtime` and `recursus-careers` | specified | not integrated | No | required | Recursus Milestone 4 plus Career Ops gate definitions | Mandatory gates block premature and stale completion |
@@ -52,7 +52,7 @@ This registry is the initial truth table for Recursus Careers. It should change 
 At the accepted RC-4 boundary there is:
 
 - no accepted product integration of the V17 evaluation bridge into Career Ops;
-- no Recursus Careers product integration or RC-5 learning result yet;
+- no Recursus Careers product integration or kept RC-5 learning result; the first scaffolded candidate returned `REBUILD` before a provider request;
 - no Claude Code feature-parity result;
 - no Recursus Careers RLM, Honcho, or Dovetail ablation;
 - no same-model runtime comparison;

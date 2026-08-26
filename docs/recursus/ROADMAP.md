@@ -205,6 +205,8 @@ Exit evidence:
 - No application is submitted, no message is sent, and no other external mutation occurs without separate explicit authorization.
 - The decision note explains what is kept, rebuilt, or deleted and why. It makes no public superiority or release claim.
 
+Current note: the first RC-5 implementation candidate completed provider-free preparation for `FACT-01`, `FACT-03`, and `SAFE-01`, compiling each accepted RC-4 `oferta` fixture exactly once to its `recursus-direct-v1` bundle. It returned `REBUILD` before the first provider request because the accepted V17 capture surface accepts its fixed single-user-message bridge rather than the RC-4 ordered system/user delivery parts, and V17's 4,096-token setting exceeds RC-5's 4,000-token cap. The candidate made zero provider calls, produced no treatment observation row, and changed no accepted RC-1 through RC-4 evidence. RC-5 remains `next`; a rebuild requires a registered DSH request interface that consumes the RC-4 bundle without an unregistered transformation.
+
 ### RC-6: Promotion hardening and durable completion
 
 Conditional follow-up: schedule RC-6 only after RC-5 returns `KEEP`, and only for the workflow surface proposed for support. A disposable slice may use simpler bounded recovery if that is enough to answer the product question.
