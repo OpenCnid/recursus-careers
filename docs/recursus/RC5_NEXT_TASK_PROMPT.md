@@ -1,6 +1,8 @@
 # Codex kickoff prompt for RC-5 disposable `oferta` slice
 
-Status: ready to give to a fresh Codex session
+Status: historical initial kickoff; superseded by the active bounded-executor continuation in `RC5_SLICE_CARD.md`
+
+Do not use this prompt to start a fresh RC-5 implementation. It predates the ordered-message adapter repair, the bounded executor files, and the host-isolation constraints used by the active continuation. The slice card and the active user's exact authority are the current instruction surfaces.
 
 This prompt authorizes implementation, local verification, a feature-branch commit, push, a pull request, and waiting for exact-head checks. It does not authorize a provider invocation or pull-request merge. To run the three treatment cases in the same session, append the exact provider-authorization sentence from [RC5_SLICE_CARD.md](RC5_SLICE_CARD.md#provider-authority) when starting the session.
 

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -10,10 +10,10 @@ import {
   RC5_PROVIDER_AUTHORITY,
   RC5SliceError,
   assertDisposableRoot,
-  prepareSlice,
   runSliceCase,
   summarizeSlice,
 } from '../../lib/recursus/rc5-slice.mjs';
+import { canonicalJsonV1 } from '../../lib/recursus/prompt-context-v1.mjs';
 import { runRC5SliceCli } from '../../scripts/recursus/rc5-slice.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..');
@@ -26,13 +26,39 @@ function cleanup(root) {
   rmSync(root, { force: true, maxRetries: 10, recursive: true, retryDelay: 50 });
 }
 
-async function providerFreeTransportProbe({ requests }) {
-  const captures = RC5_INTERNALS_FOR_TESTS.expectedProviderFreePayloadCaptures(requests);
-  return structuredClone(RC5_INTERNALS_FOR_TESTS.expectedPinnedTransportProbe(captures));
+function prepareProviderFree(outputRoot) {
+  return RC5_INTERNALS_FOR_TESTS.prepareSliceForTests({ outputRoot });
 }
 
-function prepareProviderFree(outputRoot) {
-  return prepareSlice({ outputRoot, transportProbe: providerFreeTransportProbe });
+function writeCanonicalTestJson(filePath, value) {
+  writeFileSync(filePath, canonicalJsonV1(value));
+}
+
+function operatorObservation(scenarioId, overrides = {}) {
+  return {
+    baseline_usefulness: 1,
+    correction_summary: 'No factual or safety correction required.',
+    critical_failure: false,
+    factual_or_safety_correction_count: 0,
+    friction_acceptable_or_justified: true,
+    latency_acceptable: true,
+    operator_friction: 'No material operator friction observed.',
+    relative_result: 'win',
+    scenario_id: scenarioId,
+    stop_slice: false,
+    treatment_usefulness: 2,
+    ...overrides,
+  };
+}
+
+function allFileText(root) {
+  const values = [];
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    const target = path.join(root, entry.name);
+    if (entry.isDirectory()) values.push(...allFileText(target));
+    else if (entry.isFile() && !statSync(target).isSymbolicLink()) values.push(readFileSync(target, 'utf8'));
+  }
+  return values;
 }
 
 function captureStream() {
@@ -47,25 +73,33 @@ async function expectCode(promise, code) {
   await assert.rejects(promise, (error) => error instanceof RC5SliceError && error.code === code);
 }
 
-test('prepare validates the compatible pinned adapter without starting a provider call', async () => {
+test('test-only prepare is explicitly ineligible for provider execution', async () => {
   const root = tempRoot();
   try {
     const result = await prepareProviderFree(root);
-    assert.equal(result.compatibility, 'compatible');
-    assert.equal(result.interface_status, 'validated_provider_free');
-    assert.equal(result.provider_call_permitted, true);
+    assert.equal(result.compatibility, 'provider_free_test_only');
+    assert.equal(result.interface_status, 'injected_test_only');
+    assert.equal(result.provider_call_permitted, false);
     assert.equal(result.recommendation, 'not_decided');
     const plan = JSON.parse(readFileSync(path.join(root, 'slice-plan.json'), 'utf8'));
     assert.deepEqual(plan.case_order, RC5_CASE_ORDER);
+    assert.equal(plan.execution_eligibility, 'test_only');
+    assert.equal(plan.probe_mode, 'injected_test_only');
     assert.equal(plan.accepted_inputs.integrity, 'pass');
     assert.equal(plan.policy.model_facing_tools.length, 0);
-    assert.equal(plan.compatibility.provider_call_permitted, true);
-    assert.equal(plan.compatibility.status, 'compatible');
-    assert.equal(plan.compatibility.interface.status, 'validated_provider_free');
-    assert.deepEqual(plan.compatibility.reasons, []);
-    assert.equal(plan.compatibility.transport.status, 'compatible');
+    assert.equal(plan.compatibility.provider_call_permitted, false);
+    assert.equal(plan.compatibility.status, 'provider_free_test_only');
+    assert.equal(plan.compatibility.interface.status, 'injected_test_only');
+    assert.deepEqual(plan.compatibility.reasons, ['PROBE_INJECTION_TEST_ONLY']);
+    assert.equal(plan.compatibility.transport.status, 'injected_test_only');
     assert.equal(plan.transport_probe.provider_calls, 0);
     assert.equal(plan.transport_probe.payload_captures.length, 3);
+    assert.equal(plan.compatibility.executor.status, 'injected_test_only');
+    assert.equal(plan.executor_probe.status, 'injected_test_only');
+    assert.equal(plan.executor_probe.provider_calls, 0);
+    assert.equal(plan.executor_probe.credential_mounted, false);
+    assert.equal(plan.executor_probe.network, 'none');
+    assert.equal(plan.executor_probe.captures.length, 3);
     for (const item of plan.cases) {
       assert.equal(item.treatment.compile_count, 1);
       assert.equal(item.treatment.target_id, 'recursus-direct-v1');
@@ -83,24 +117,244 @@ test('prepare validates the compatible pinned adapter without starting a provide
   }
 });
 
-test('authorized run stops before provider execution because no executor is registered', async () => {
+test('summarize records a provider-free not-decided state without inventing attempts', async () => {
   const root = tempRoot();
   try {
     await prepareProviderFree(root);
-    await expectCode(runSliceCase({ caseId: 'FACT-01', outputRoot: root, providerAuthority: RC5_PROVIDER_AUTHORITY }), 'RC5_EXECUTOR_UNIMPLEMENTED');
-    assert.equal(readFileSync(path.join(root, 'slice-plan.json')).length > 0, true);
+    assert.deepEqual(await summarizeSlice({ outputRoot: root }), {
+      case_slots_consumed: 0,
+      pending_reservation_count: 0,
+      provider_call_count: 0,
+      recommendation: 'not_decided',
+    });
+    const summary = JSON.parse(readFileSync(path.join(root, 'summary-partial-0-0.json'), 'utf8'));
+    assert.equal(summary.observation_rows.length, 0);
+    assert.ok(summary.cases.every((item) => item.completion === 'not_run'));
+    assert.equal(existsSync(path.join(root, 'summary.json')), false);
+    assert.equal(existsSync(path.join(root, 'decision.md')), false);
   } finally {
     cleanup(root);
   }
 });
 
-test('summarize refuses a decision when compatible preparation has no treatment attempts', async () => {
-  const root = tempRoot();
+test('operator observations enforce strict stop and friction decisions without provider execution', async () => {
+  const roots = [];
   try {
-    await prepareProviderFree(root);
-    await expectCode(summarizeSlice({ outputRoot: root }), 'RC5_DECISION_INCOMPLETE');
+    const observations = RC5_CASE_ORDER.map((scenarioId) => operatorObservation(scenarioId));
+
+    const root = tempRoot();
+    roots.push(root);
+    const { root: physicalRoot } = await completePureCases(root);
+    const observationsPath = path.join(root, 'operator-observations.json');
+    writeCanonicalTestJson(observationsPath, { observations, schema_version: '1.0.0' });
+    assert.deepEqual(await RC5_INTERNALS_FOR_TESTS.readOperatorObservations(physicalRoot), observations);
+    assert.deepEqual(await summarizeSlice({ outputRoot: root }), {
+      case_slots_consumed: 3,
+      pending_reservation_count: 0,
+      provider_call_count: 3,
+      recommendation: 'KEEP',
+    });
+
+    const frictionRoot = tempRoot('rc5-friction-');
+    roots.push(frictionRoot);
+    await completePureCases(frictionRoot);
+    const unacceptableFriction = structuredClone(observations);
+    unacceptableFriction[1].friction_acceptable_or_justified = false;
+    unacceptableFriction[1].operator_friction = 'Observed friction was unacceptable and not justified.';
+    writeCanonicalTestJson(path.join(frictionRoot, 'operator-observations.json'), {
+      observations: unacceptableFriction,
+      schema_version: '1.0.0',
+    });
+    assert.equal((await summarizeSlice({ outputRoot: frictionRoot })).recommendation, 'REBUILD');
+
+    const stopRoot = tempRoot('rc5-stop-');
+    roots.push(stopRoot);
+    await completePureCases(stopRoot, 1);
+    const stopObservation = [{ ...observations[0], stop_slice: true }];
+    writeCanonicalTestJson(path.join(stopRoot, 'operator-observations.json'), {
+      observations: stopObservation,
+      schema_version: '1.0.0',
+    });
+    assert.equal((await summarizeSlice({ outputRoot: stopRoot })).recommendation, 'REBUILD');
+    const stopLatchPath = path.join(stopRoot, 'slice-stop.json');
+    const stopLatch = JSON.parse(readFileSync(stopLatchPath, 'utf8'));
+    assert.equal(stopLatch.state, 'stopped');
+    assert.equal(stopLatch.reason, 'operator_explicit_stop');
+    assert.equal(stopLatch.recommendation, 'REBUILD');
+    await expectCode(runSliceCase({
+      caseId: 'FACT-03',
+      outputRoot: stopRoot,
+      providerAuthority: RC5_PROVIDER_AUTHORITY,
+    }), 'RC5_SLICE_STOPPED');
+    writeCanonicalTestJson(path.join(stopRoot, 'operator-observations.json'), {
+      observations: [observations[0]],
+      schema_version: '1.0.0',
+    });
+    await expectCode(runSliceCase({
+      caseId: 'FACT-03',
+      outputRoot: stopRoot,
+      providerAuthority: RC5_PROVIDER_AUTHORITY,
+    }), 'RC5_SLICE_STOPPED');
+    rmSync(path.join(stopRoot, 'operator-observations.json'));
+    await expectCode(runSliceCase({
+      caseId: 'FACT-03',
+      outputRoot: stopRoot,
+      providerAuthority: RC5_PROVIDER_AUTHORITY,
+    }), 'RC5_SLICE_STOPPED');
+    assert.equal(existsSync(stopLatchPath), true);
+
+    const criticalRoot = tempRoot('rc5-critical-');
+    roots.push(criticalRoot);
+    await completePureCases(criticalRoot, 1);
+    const criticalObservation = [{ ...observations[0], critical_failure: true }];
+    writeCanonicalTestJson(path.join(criticalRoot, 'operator-observations.json'), {
+      observations: criticalObservation,
+      schema_version: '1.0.0',
+    });
+    assert.equal((await summarizeSlice({ outputRoot: criticalRoot })).recommendation, 'DELETE');
+
+    const zeroUsefulnessRoot = tempRoot('rc5-zero-usefulness-');
+    roots.push(zeroUsefulnessRoot);
+    await completePureCases(zeroUsefulnessRoot, 1);
+    const zeroUsefulnessObservation = [operatorObservation('FACT-01', {
+      stop_slice: true,
+      treatment_usefulness: 0,
+    })];
+    writeCanonicalTestJson(path.join(zeroUsefulnessRoot, 'operator-observations.json'), {
+      observations: zeroUsefulnessObservation,
+      schema_version: '1.0.0',
+    });
+    assert.equal((await summarizeSlice({ outputRoot: zeroUsefulnessRoot })).recommendation, 'DELETE');
+    const zeroUsefulnessLatch = JSON.parse(readFileSync(path.join(zeroUsefulnessRoot, 'slice-stop.json'), 'utf8'));
+    assert.equal(zeroUsefulnessLatch.reason, 'operator_zero_usefulness');
+    assert.equal(zeroUsefulnessLatch.recommendation, 'DELETE');
+    await expectCode(runSliceCase({
+      caseId: 'FACT-03',
+      outputRoot: zeroUsefulnessRoot,
+      providerAuthority: RC5_PROVIDER_AUTHORITY,
+    }), 'RC5_SLICE_STOPPED');
+
+    const malformed = structuredClone(observations);
+    malformed[0].unknown_field = true;
+    writeCanonicalTestJson(observationsPath, { observations: malformed, schema_version: '1.0.0' });
+    await expectCode(RC5_INTERNALS_FOR_TESTS.readOperatorObservations(physicalRoot), 'RC5_OPERATOR_OBSERVATION');
+
+    const credentialShaped = structuredClone(observations);
+    credentialShaped[0].correction_summary = 'API_KEY=synthetic-secret-value-123456';
+    writeCanonicalTestJson(observationsPath, { observations: credentialShaped, schema_version: '1.0.0' });
+    await expectCode(RC5_INTERNALS_FOR_TESTS.readOperatorObservations(physicalRoot), 'RC5_OPERATOR_OBSERVATION');
+
+    const zeroWithoutStop = structuredClone(observations);
+    zeroWithoutStop[0].treatment_usefulness = 0;
+    writeCanonicalTestJson(observationsPath, { observations: zeroWithoutStop, schema_version: '1.0.0' });
+    await expectCode(RC5_INTERNALS_FOR_TESTS.readOperatorObservations(physicalRoot), 'RC5_OPERATOR_OBSERVATION');
   } finally {
-    cleanup(root);
+    for (const root of roots) cleanup(root);
+  }
+});
+
+test('each completed predecessor requires an operator observation before the next case', async () => {
+  const roots = [];
+  try {
+    const fact03Root = tempRoot('rc5-fact03-observation-');
+    roots.push(fact03Root);
+    await completePureCases(fact03Root, 1);
+    await expectCode(runSliceCase({
+      caseId: 'FACT-03',
+      outputRoot: fact03Root,
+      providerAuthority: RC5_PROVIDER_AUTHORITY,
+    }), 'RC5_OPERATOR_OBSERVATION_REQUIRED');
+    assert.deepEqual(readdirSync(path.join(fact03Root, 'runtime')), []);
+
+    const safe01Root = tempRoot('rc5-safe01-observation-');
+    roots.push(safe01Root);
+    await completePureCases(safe01Root, 2);
+    writeCanonicalTestJson(path.join(safe01Root, 'operator-observations.json'), {
+      observations: [operatorObservation('FACT-01')],
+      schema_version: '1.0.0',
+    });
+    await expectCode(runSliceCase({
+      caseId: 'SAFE-01',
+      outputRoot: safe01Root,
+      providerAuthority: RC5_PROVIDER_AUTHORITY,
+    }), 'RC5_OPERATOR_OBSERVATION_REQUIRED');
+    assert.deepEqual(readdirSync(path.join(safe01Root, 'runtime')), []);
+  } finally {
+    for (const root of roots) cleanup(root);
+  }
+});
+
+test('public run path permanently fails closed on partial reservation, dispatch, or attempt remnants', async () => {
+  const roots = [];
+  const partialJson = '{"schema_version":"1.0.0"';
+  try {
+    const reservationRoot = tempRoot('rc5-partial-reservation-');
+    roots.push(reservationRoot);
+    await preparedExecution(reservationRoot);
+    writeFileSync(path.join(reservationRoot, 'reservations', 'FACT-01.json'), partialJson);
+    for (const caseId of ['FACT-01', 'FACT-03']) {
+      await expectCode(runSliceCase({
+        caseId,
+        outputRoot: reservationRoot,
+        providerAuthority: RC5_PROVIDER_AUTHORITY,
+      }), 'RC5_RESERVATION_PENDING');
+    }
+    assert.deepEqual(readdirSync(path.join(reservationRoot, 'reservations')), ['FACT-01.json']);
+    assert.deepEqual(readdirSync(path.join(reservationRoot, 'runtime')), []);
+
+    const dispatchRoot = tempRoot('rc5-partial-dispatch-');
+    roots.push(dispatchRoot);
+    const dispatchState = await preparedExecution(dispatchRoot);
+    await RC5_INTERNALS_FOR_TESTS.reserveCase({
+      caseId: 'FACT-01',
+      clock: () => new Date('2026-08-26T12:00:00.000Z'),
+      plan: dispatchState.plan,
+      request: dispatchState.requests[0],
+      root: dispatchState.root,
+      runtimeId: 'RC5-EXEC-PARTIAL-DISPATCH',
+    });
+    writeFileSync(path.join(dispatchRoot, 'dispatches', 'FACT-01.json'), partialJson);
+    for (const caseId of ['FACT-01', 'FACT-03']) {
+      await expectCode(runSliceCase({
+        caseId,
+        outputRoot: dispatchRoot,
+        providerAuthority: RC5_PROVIDER_AUTHORITY,
+      }), 'RC5_RESERVATION_PENDING');
+    }
+    assert.deepEqual(readdirSync(path.join(dispatchRoot, 'reservations')), ['FACT-01.json']);
+    assert.deepEqual(readdirSync(path.join(dispatchRoot, 'dispatches')), ['FACT-01.json']);
+    assert.deepEqual(readdirSync(path.join(dispatchRoot, 'runtime')), []);
+
+    const attemptRoot = tempRoot('rc5-partial-attempt-');
+    roots.push(attemptRoot);
+    const attemptState = await preparedExecution(attemptRoot);
+    const reservation = await RC5_INTERNALS_FOR_TESTS.reserveCase({
+      caseId: 'FACT-01',
+      clock: () => new Date('2026-08-26T12:00:00.000Z'),
+      plan: attemptState.plan,
+      request: attemptState.requests[0],
+      root: attemptState.root,
+      runtimeId: 'RC5-EXEC-PARTIAL-ATTEMPT',
+    });
+    await RC5_INTERNALS_FOR_TESTS.dispatchCase({
+      clock: () => new Date('2026-08-26T12:00:01.000Z'),
+      reservation,
+      root: attemptState.root,
+    });
+    writeFileSync(path.join(attemptRoot, 'attempts', 'FACT-01.json'), partialJson);
+    for (const caseId of ['FACT-01', 'FACT-03']) {
+      await expectCode(runSliceCase({
+        caseId,
+        outputRoot: attemptRoot,
+        providerAuthority: RC5_PROVIDER_AUTHORITY,
+      }), 'RC5_JSON_READ');
+    }
+    assert.deepEqual(readdirSync(path.join(attemptRoot, 'reservations')), ['FACT-01.json']);
+    assert.deepEqual(readdirSync(path.join(attemptRoot, 'dispatches')), ['FACT-01.json']);
+    assert.deepEqual(readdirSync(path.join(attemptRoot, 'attempts')), ['FACT-01.json']);
+    assert.deepEqual(readdirSync(path.join(attemptRoot, 'runtime')), []);
+  } finally {
+    for (const root of roots) cleanup(root);
   }
 });
 
@@ -307,24 +561,201 @@ test('missing accepted input, hidden prompt bypass, and task promotion are rejec
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.inspectTreatmentBundle(promoted, { blocks: promoted.parts.map((part) => part.semantic_envelope) }, 'FACT-01'), { code: 'RC5_TASK_PROMOTION' });
 });
 
-test('call ledger rejects wrong order, retry, and a fourth call', () => {
-  const completed = (scenarioId) => ({ output_tokens: 10, scenario_id: scenarioId, wall_ms: 10 });
-  assert.throws(() => RC5_INTERNALS_FOR_TESTS.assertCallLedger([], 'FACT-03'), { code: 'RC5_CASE_ORDER' });
-  assert.throws(() => RC5_INTERNALS_FOR_TESTS.assertCallLedger([completed('FACT-01')], 'FACT-01'), { code: 'RC5_RETRY_FORBIDDEN' });
-  assert.throws(() => RC5_INTERNALS_FOR_TESTS.assertCallLedger([{ ...completed('FACT-01'), completion: 'timed_out' }], 'FACT-01'), { code: 'RC5_RETRY_FORBIDDEN' });
-  assert.throws(() => RC5_INTERNALS_FOR_TESTS.assertCallLedger(RC5_CASE_ORDER.map(completed), 'SAFE-01'), { code: 'RC5_CALL_BUDGET' });
+function boundedExecutorResult(overrides = {}) {
+  return {
+    artifact: '# result',
+    completion: 'completed',
+    direct_adapter_invocations: 1,
+    external_mutations: [],
+    finish_reason: 'stop',
+    input_tokens: 200,
+    oauth_refresh_count: 0,
+    output_tokens: 100,
+    provider_request_count: 1,
+    responses_endpoint: 'https://chatgpt.com/backend-api/codex/responses',
+    schema_version: '1.0.0',
+    trusted_completed: true,
+    wall_ms: 100,
+    ...overrides,
+  };
+}
+
+async function preparedExecution(root) {
+  await prepareProviderFree(root);
+  const state = await RC5_INTERNALS_FOR_TESTS.readPlan(root);
+  await RC5_INTERNALS_FOR_TESTS.ensureExecutionDirectories(state.root);
+  return state;
+}
+
+async function completePureCases(root, count = RC5_CASE_ORDER.length) {
+  const state = await preparedExecution(root);
+  const clock = () => new Date('2026-08-26T12:00:00.000Z');
+  for (const [index, caseId] of RC5_CASE_ORDER.slice(0, count).entries()) {
+    const reservation = await RC5_INTERNALS_FOR_TESTS.reserveCase({
+      caseId,
+      clock,
+      plan: state.plan,
+      request: state.requests[index],
+      root: state.root,
+      runtimeId: `RC5-EXEC-OBSERVATION-${caseId}`,
+    });
+    const dispatch = await RC5_INTERNALS_FOR_TESTS.dispatchCase({ clock, reservation, root: state.root });
+    await RC5_INTERNALS_FOR_TESTS.persistExecutionResult(
+      state.root,
+      reservation,
+      dispatch,
+      boundedExecutorResult(),
+    );
+  }
+  return state;
+}
+
+test('reservation and dispatch are durable before terminal persistence and enforce case order', async () => {
+  const root = tempRoot();
+  try {
+    const { plan, requests, root: physicalRoot } = await preparedExecution(root);
+    const clock = () => new Date('2026-08-26T12:00:00.000Z');
+    const reservation = await RC5_INTERNALS_FOR_TESTS.reserveCase({
+      caseId: 'FACT-01', clock, plan, request: requests[0], root: physicalRoot, runtimeId: 'RC5-EXEC-TEST-FACT-01',
+    });
+    const reservationPath = path.join(root, 'reservations', 'FACT-01.json');
+    assert.deepEqual(JSON.parse(readFileSync(reservationPath, 'utf8')), reservation);
+    assert.equal(RC5_INTERNALS_FOR_TESTS.validateReservation(reservation), true);
+    assert.equal(existsSync(path.join(root, 'dispatches', 'FACT-01.json')), false);
+    assert.equal(existsSync(path.join(root, 'attempts', 'FACT-01.json')), false);
+    assert.throws(
+      () => RC5_INTERNALS_FOR_TESTS.assertCallLedger([reservation], [], [], 'FACT-01'),
+      { code: 'RC5_RESERVATION_PENDING' },
+    );
+
+    const dispatch = await RC5_INTERNALS_FOR_TESTS.dispatchCase({ clock, reservation, root: physicalRoot });
+    assert.deepEqual(JSON.parse(readFileSync(path.join(root, 'dispatches', 'FACT-01.json'), 'utf8')), dispatch);
+    assert.equal(RC5_INTERNALS_FOR_TESTS.validateDispatch(dispatch), true);
+    assert.throws(
+      () => RC5_INTERNALS_FOR_TESTS.assertCallLedger([reservation], [dispatch], [], 'FACT-01'),
+      { code: 'RC5_RESERVATION_PENDING' },
+    );
+
+    const attempt = await RC5_INTERNALS_FOR_TESTS.persistExecutionResult(
+      physicalRoot, reservation, dispatch, boundedExecutorResult(),
+    );
+    assert.equal(RC5_INTERNALS_FOR_TESTS.validateAttemptResult(attempt), true);
+    assert.deepEqual(JSON.parse(readFileSync(path.join(root, 'attempts', 'FACT-01.json'), 'utf8')), attempt);
+    assert.equal(readFileSync(path.join(root, 'artifacts', 'FACT-01.md'), 'utf8'), '# result');
+    assert.throws(
+      () => RC5_INTERNALS_FOR_TESTS.assertCallLedger([reservation], [dispatch], [attempt], 'FACT-01'),
+      { code: 'RC5_RETRY_FORBIDDEN' },
+    );
+    assert.equal(RC5_INTERNALS_FOR_TESTS.assertCallLedger([reservation], [dispatch], [attempt], 'FACT-03'), true);
+  } finally {
+    cleanup(root);
+  }
 });
 
-test('result validation rejects timeout false-completion, incomplete completion, oversized output, credentials, and external mutation', () => {
+test('exclusive reservation denies concurrent consumption of one case', async () => {
+  const root = tempRoot();
+  try {
+    const { plan, requests, root: physicalRoot } = await preparedExecution(root);
+    const clock = () => new Date('2026-08-26T12:00:00.000Z');
+    const results = await Promise.allSettled([
+      RC5_INTERNALS_FOR_TESTS.reserveCase({ caseId: 'FACT-01', clock, plan, request: requests[0], root: physicalRoot, runtimeId: 'RC5-EXEC-CONCURRENT-A' }),
+      RC5_INTERNALS_FOR_TESTS.reserveCase({ caseId: 'FACT-01', clock, plan, request: requests[0], root: physicalRoot, runtimeId: 'RC5-EXEC-CONCURRENT-B' }),
+    ]);
+    assert.equal(results.filter((item) => item.status === 'fulfilled').length, 1);
+    const rejected = results.find((item) => item.status === 'rejected');
+    assert.equal(rejected?.reason?.code, 'RC5_RETRY_FORBIDDEN');
+    const reservation = results.find((item) => item.status === 'fulfilled').value;
+    assert.equal(readdirSync(path.join(root, 'reservations')).length, 1);
+    assert.throws(
+      () => RC5_INTERNALS_FOR_TESTS.assertCallLedger([reservation], [], [], 'FACT-01'),
+      { code: 'RC5_RESERVATION_PENDING' },
+    );
+  } finally {
+    cleanup(root);
+  }
+});
+
+test('failed and timed-out terminal attempts permanently stop later calls', async () => {
+  for (const [completion, finishReason] of [['failed', 'error'], ['timed_out', 'aborted']]) {
+    const root = tempRoot(`rc5-${completion}-`);
+    try {
+      const { plan, requests, root: physicalRoot } = await preparedExecution(root);
+      const clock = () => new Date('2026-08-26T12:00:00.000Z');
+      const reservation = await RC5_INTERNALS_FOR_TESTS.reserveCase({
+        caseId: 'FACT-01', clock, plan, request: requests[0], root: physicalRoot, runtimeId: `RC5-EXEC-${completion}`,
+      });
+      const dispatch = await RC5_INTERNALS_FOR_TESTS.dispatchCase({ clock, reservation, root: physicalRoot });
+      const attempt = await RC5_INTERNALS_FOR_TESTS.persistExecutionResult(physicalRoot, reservation, dispatch, boundedExecutorResult({
+        artifact: null,
+        completion,
+        finish_reason: finishReason,
+        trusted_completed: false,
+      }));
+      assert.equal(attempt.completion, completion);
+      assert.equal(attempt.artifact, null);
+      assert.throws(
+        () => RC5_INTERNALS_FOR_TESTS.assertCallLedger([reservation], [dispatch], [attempt], 'FACT-01'),
+        { code: 'RC5_SLICE_STOPPED' },
+      );
+      assert.throws(
+        () => RC5_INTERNALS_FOR_TESTS.assertCallLedger([reservation], [dispatch], [attempt], 'FACT-03'),
+        { code: 'RC5_SLICE_STOPPED' },
+      );
+    } finally {
+      cleanup(root);
+    }
+  }
+});
+
+test('credential-shaped executor output is rejected before artifact or attempt persistence', async () => {
+  const root = tempRoot();
+  const secret = 'OPENAI_CODEX_OAUTH=synthetic-secret-value-123456';
+  try {
+    const { plan, requests, root: physicalRoot } = await preparedExecution(root);
+    const clock = () => new Date('2026-08-26T12:00:00.000Z');
+    const reservation = await RC5_INTERNALS_FOR_TESTS.reserveCase({
+      caseId: 'FACT-01', clock, plan, request: requests[0], root: physicalRoot, runtimeId: 'RC5-EXEC-CREDENTIAL-DENIAL',
+    });
+    const dispatch = await RC5_INTERNALS_FOR_TESTS.dispatchCase({ clock, reservation, root: physicalRoot });
+    await expectCode(
+      RC5_INTERNALS_FOR_TESTS.persistExecutionResult(physicalRoot, reservation, dispatch, boundedExecutorResult({ artifact: secret })),
+      'RC5_CREDENTIAL_LEAK',
+    );
+    assert.equal(existsSync(path.join(root, 'artifacts', 'FACT-01.md')), false);
+    assert.equal(existsSync(path.join(root, 'attempts', 'FACT-01.json')), false);
+    assert.equal(allFileText(root).some((text) => text.includes(secret)), false);
+    assert.throws(
+      () => RC5_INTERNALS_FOR_TESTS.assertCallLedger([reservation], [dispatch], [], 'FACT-01'),
+      { code: 'RC5_RESERVATION_PENDING' },
+    );
+  } finally {
+    cleanup(root);
+  }
+});
+
+test('attempt schema rejects false completion, invalid identity, excessive results, and external mutation', () => {
   const valid = {
-    artifact: '# result',
+    artifact: {
+      byte_count: 8,
+      media_type: 'text/markdown',
+      path: 'artifacts/FACT-01.md',
+      sha256: 'a'.repeat(64),
+    },
     attempt_id: 'RC5-ATTEMPT-FACT-01-R01',
     completion: 'completed',
+    direct_adapter_invocations: 1,
+    dispatch_id: 'RC5-DISPATCH-FACT-01-R01',
     external_mutations: [],
+    finish_reason: 'stop',
+    input_tokens: 200,
+    oauth_refresh_count: 0,
     output_tokens: 100,
+    provider_request_count: 1,
     request_digest: 'a'.repeat(64),
     reservation_id: 'RC5-RESERVATION-FACT-01-R01',
+    responses_endpoint: 'https://chatgpt.com/backend-api/codex/responses',
     scenario_id: 'FACT-01',
+    schema_version: '1.0.0',
     trusted_completed: true,
     usefulness: 'not_evaluated',
     wall_ms: 100,
@@ -333,23 +764,45 @@ test('result validation rejects timeout false-completion, incomplete completion,
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, completion: 'timed_out' }), { code: 'RC5_FALSE_COMPLETION' });
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, trusted_completed: false }), { code: 'RC5_FALSE_COMPLETION' });
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, output_tokens: 4001 }), { code: 'RC5_RESULT_BUDGET' });
-  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, artifact: 'OPENAI_CODEX_OAUTH=secretvalue123' }), { code: 'RC5_CREDENTIAL_LEAK' });
+  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, dispatch_id: 'wrong' }), { code: 'RC5_RESULT_INVALID' });
+  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, artifact: { ...valid.artifact, byte_count: 65_537 } }), { code: 'RC5_RESULT_BUDGET' });
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, external_mutations: ['tracker_write'] }), { code: 'RC5_EXTERNAL_MUTATION' });
+  RC5_INTERNALS_FOR_TESTS.validateAttemptResult({
+    ...valid,
+    artifact: null,
+    completion: 'timed_out',
+    finish_reason: 'aborted',
+    trusted_completed: false,
+  });
 });
 
-test('CLI requires exact authority and reports the unimplemented executor without provider work', async () => {
+test('CLI run validates arguments and authority before reaching runtime', async () => {
   const root = tempRoot();
   try {
-    const stdout = captureStream();
-    const stderr = captureStream();
-    const services = { transportProbe: providerFreeTransportProbe };
-    assert.equal(await runRC5SliceCli({ argv: ['prepare', '--output-root', root, '--docker-executable', process.execPath], services, stdout: stdout.stream, stderr: stderr.stream }), 0);
-    assert.equal(stderr.text(), '');
-    assert.equal(await runRC5SliceCli({ argv: ['run', '--case', 'FACT-01', '--output-root', root], services, stdout: stdout.stream, stderr: stderr.stream }), 2);
-    assert.match(stderr.text(), /RC5_PROVIDER_AUTHORITY/u);
-    const authorizedError = captureStream();
-    assert.equal(await runRC5SliceCli({ argv: ['run', '--case', 'FACT-01', '--output-root', root, '--provider-authority'], services, stdout: stdout.stream, stderr: authorizedError.stream }), 1);
-    assert.match(authorizedError.text(), /RC5_EXECUTOR_UNIMPLEMENTED/u);
+    const argumentStdout = captureStream();
+    const argumentStderr = captureStream();
+    assert.equal(await runRC5SliceCli({
+      argv: ['run', '--case', 'FACT-01', '--output-root', root],
+      stdout: argumentStdout.stream,
+      stderr: argumentStderr.stream,
+    }), 2);
+    assert.match(argumentStderr.text(), /RC5_ARGUMENT/u);
+
+    const authorityStdout = captureStream();
+    const authorityStderr = captureStream();
+    assert.equal(await runRC5SliceCli({
+      argv: [
+        'run',
+        '--case', 'FACT-01',
+        '--output-root', root,
+        '--docker-executable', path.join(root, 'not-used-docker.exe'),
+        '--credential-home', path.join(root, 'not-used-credentials'),
+      ],
+      stdout: authorityStdout.stream,
+      stderr: authorityStderr.stream,
+    }), 2);
+    assert.match(authorityStderr.text(), /RC5_PROVIDER_AUTHORITY/u);
+    assert.deepEqual(readdirSync(root), []);
   } finally {
     cleanup(root);
   }

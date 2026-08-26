@@ -40,7 +40,7 @@ Build only enough of the real path to answer the product question. Test as soon 
 
 Full preregistration, frozen evidence packages, repeat matrices, cross-platform acceptance, and causal ablations are promotion work. They are required before a supported product path, release, public comparative claim, or sensitive data, action, or security expansion. They are not prerequisites for a disposable learning slice. Accepted evidence remains immutable when a slice is rebuilt or deleted.
 
-The active contract is the [RC-5 disposable `oferta` slice card](RC5_SLICE_CARD.md). A fresh implementation session starts from the [RC-5 Codex kickoff prompt](RC5_NEXT_TASK_PROMPT.md). The accepted [RC-4 specification](SPEC.md) remains historical and does not govern RC-5.
+The active contract is the [RC-5 disposable `oferta` slice card](RC5_SLICE_CARD.md). The initial [RC-5 Codex kickoff prompt](RC5_NEXT_TASK_PROMPT.md) is historical and superseded by the bounded-executor continuation. The accepted [RC-4 specification](SPEC.md) remains historical and does not govern RC-5.
 
 Acceptance history preserves the reviewed pre-acceptance state without overriding the active milestone map:
 
@@ -188,7 +188,7 @@ Current note: RC-4 V2 registration `RC4-PROMPT-CONTEXT-2026-08-25-V2` is the acc
 
 ### RC-5: Disposable end-to-end value slice
 
-Active slice: [three-case disposable `oferta` contract](RC5_SLICE_CARD.md). Next session: [RC-5 Codex kickoff prompt](RC5_NEXT_TASK_PROMPT.md).
+Active slice: [three-case disposable `oferta` contract](RC5_SLICE_CARD.md). The initial [RC-5 Codex kickoff prompt](RC5_NEXT_TASK_PROMPT.md) is retained only as historical kickoff material.
 
 Outcome:
 
@@ -205,7 +205,7 @@ Exit evidence:
 - No application is submitted, no message is sent, and no other external mutation occurs without separate explicit authorization.
 - The decision note explains what is kept, rebuilt, or deleted and why. It makes no public superiority or release claim.
 
-Current note: the first two RC-5 provider-free candidates returned `REBUILD` before FACT-01 because accepted V17 could not preserve RC-4's nine ordered system/user parts. The rebuild continuation now pins direct-adapter revision `2fc02090af1632b86ee1175a6720904dfd71081c` in a derived image whose parent is the exact accepted V17 image. The mutable interface `RC5-DSH-ORDERED-PARTS-DRAFT@0.0.0-draft` preserves `S,S,S,S,U,U,U,U,S`; enforces 4,000 output tokens, no tools, one call per case, and no retry; and requires `ordered_system_user_messages_v1`. Network-isolated fake-fetch capture validates the complete final payload for all three cases, including the exact endpoint, absent `instructions` and tools, and a one-request failing-path no-retry check. This establishes provider-free transport compatibility only. The next implementation step is to register and validate a bounded provider executor with durable pre-call reservation; only then should fresh authority be obtained for FACT-01. Live trailing-system acceptance and product usefulness remain unproven, so no `KEEP`, `REBUILD`, or frozen successor route is claimed. RC-5 remains `next`; RC-6 does not start until RC-5 returns `KEEP`.
+Current note: the first two RC-5 provider-free candidates returned `REBUILD` before FACT-01 because accepted V17 could not preserve RC-4's nine ordered system/user parts. The rebuild continuation pins direct-adapter revision `2fc02090af1632b86ee1175a6720904dfd71081c` in a derived image whose parent is the exact accepted V17 image. The mutable interface `RC5-DSH-ORDERED-PARTS-DRAFT@0.0.0-draft` preserves `S,S,S,S,U,U,U,U,S`; enforces 4,000 output tokens, no tools, one call per case, and no retry; and requires `ordered_system_user_messages_v1`. Bounded executor image `sha256:9b9c9e77482ce9e474f3dcd18301d16efbf279cb2918ddeb5a794ad6d960c887` is now registered with exact worker and one-tunnel proxy source identities, immutable image use, a ten-minute host deadline with reserved cleanup headroom, and durable create-only reservation and dispatch records. Two fresh provider-free preparations were byte-identical across all 13 files and share plan digest `9af508cf31529f70c49c0086d8e4a5fc33433586c1954d0ebbe4582bf060fc69`; each ran networkless success plus 503/no-retry worker probes for all three cases with no credential mount and zero provider calls. This establishes provider-free transport and executor compatibility only. Fresh exact authority is now required before FACT-01. Live trailing-system acceptance and product usefulness remain unproven, so no `KEEP`, `REBUILD`, or frozen successor route is claimed. RC-5 remains `next`; RC-6 does not start until RC-5 returns `KEEP`.
 
 ### RC-6: Promotion hardening and durable completion
 
