@@ -26,7 +26,7 @@ function parse(argv) {
       values.providerAuthority = RC5_PROVIDER_AUTHORITY;
       continue;
     }
-    if (!['--output-root', '--case'].includes(token) || values[token] !== undefined) {
+    if (!['--output-root', '--case', '--docker-executable'].includes(token) || values[token] !== undefined) {
       throw new RC5SliceError('RC5_ARGUMENT', 'An unknown or repeated option was supplied.', 2);
     }
     const value = tokens[index + 1];
@@ -37,18 +37,30 @@ function parse(argv) {
     index += 1;
   }
   if (values['--output-root'] === undefined) throw new RC5SliceError('RC5_ARGUMENT', 'The output root is required.', 2);
+  if (command === 'prepare' && values['--docker-executable'] === undefined) {
+    throw new RC5SliceError('RC5_ARGUMENT', 'Prepare requires an explicit Docker executable for the provider-free pinned-image probe.', 2);
+  }
   if (command === 'run' && values['--case'] === undefined) throw new RC5SliceError('RC5_ARGUMENT', 'The case is required.', 2);
   if (command !== 'run' && (values['--case'] !== undefined || values.providerAuthority !== undefined)) {
     throw new RC5SliceError('RC5_ARGUMENT', 'Run-only options were supplied to another command.', 2);
   }
+  if (command !== 'prepare' && values['--docker-executable'] !== undefined) {
+    throw new RC5SliceError('RC5_ARGUMENT', 'The Docker executable is a prepare-only option.', 2);
+  }
   return { command, values };
 }
 
-export async function runRC5SliceCli({ argv = [], stdout = process.stdout, stderr = process.stderr } = {}) {
+export async function runRC5SliceCli({ argv = [], services = {}, stdout = process.stdout, stderr = process.stderr } = {}) {
   try {
     const { command, values } = parse(argv);
     let result;
-    if (command === 'prepare') result = await prepareSlice({ outputRoot: values['--output-root'] });
+    if (command === 'prepare') {
+      result = await prepareSlice({
+        dockerExecutable: values['--docker-executable'],
+        outputRoot: values['--output-root'],
+        transportProbe: services.transportProbe,
+      });
+    }
     else if (command === 'run') {
       result = await runSliceCase({
         caseId: values['--case'],
