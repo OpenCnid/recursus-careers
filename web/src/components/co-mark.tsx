@@ -1,24 +1,17 @@
-import { instrumentSerif } from "@/lib/fonts";
+import { BriefcaseBusiness } from "lucide-react";
 
-// Brand mark — lowercase "co" on brand orange in Instrument Serif. Matches the
-// favicon (src/app/icon.tsx) and the career-ops-docs home one-for-one so the
-// app reads as a sibling. Dual meaning: "co" of career-ops AND "co" of
-// companies — the word the manifesto inverts ("…AI to choose companies").
+// Compact product mark used by the desktop shell, mobile header and assistant.
 export function CoMark({ size = 28 }: { size?: number }) {
   return (
     <span
       aria-hidden="true"
-      className={`${instrumentSerif.className} inline-flex shrink-0 items-center justify-center rounded-md bg-brand text-white`}
+      className="inline-flex shrink-0 items-center justify-center rounded-lg border border-brand/25 bg-brand-soft text-brand shadow-[inset_0_0_18px_rgba(69,200,255,0.12)]"
       style={{
         width: size,
         height: size,
-        fontSize: Math.round(size * 0.78),
-        letterSpacing: "0.01em",
-        lineHeight: 1,
-        paddingBottom: Math.round(size * 0.08),
       }}
     >
-      co
+      <BriefcaseBusiness style={{ width: Math.round(size * 0.5), height: Math.round(size * 0.5) }} />
     </span>
   );
 }

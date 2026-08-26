@@ -120,7 +120,7 @@ export function PipelineView({
     <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8 max-sm:pb-24">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-2xl tracking-tight text-landing">Pipeline</h1>
+          <h1 className="font-display text-2xl font-semibold tracking-tight text-landing">Jobs</h1>
           <p className="mt-1 text-sm text-muted">
             <span className="tabular-nums">{pendingInbox.length}</span> in inbox ·{" "}
             <span className="tabular-nums">{applications.length}</span> tracked
@@ -266,7 +266,7 @@ function InboxEmpty({ count, filtered }: { count: number; filtered: boolean }) {
         <span className="size-2.5 rounded-full bg-foreground/15" aria-hidden="true" />
         <span className="size-2.5 rounded-full bg-foreground/15" aria-hidden="true" />
         <span className="size-2.5 rounded-full bg-foreground/15" aria-hidden="true" />
-        <span className="ml-3 font-mono text-xs tracking-wide text-muted">career-ops · inbox</span>
+        <span className="ml-3 font-mono text-xs tracking-wide text-muted">recursus · jobs inbox</span>
       </div>
       <div className="px-6 py-10 text-center">
         <p className="font-display text-lg">

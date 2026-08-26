@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { pipelineSummary } from "@/lib/career-ops";
 import { canonStatus, scoreNum } from "@/lib/format";
 import { cumulativeTiles } from "@/lib/funnel-tiles.mjs";
@@ -47,14 +48,18 @@ export default function Analytics() {
   // told "Interviews follow replies — keep follow-ups warm"). Mirrors
   // everInterview/everOffer in stats.mjs's computeFunnel().
   const { interviews, offers } = cumulativeTiles(applications.map((a) => canonStatus(a.status)));
+  const strongWaiting = applications.filter((a) => scoreNum(a.score) >= 4 && canonStatus(a.status).includes("EVALUATED") && !a.pdf.includes("✅")).length;
+  const missingStatus = applications.filter((a) => !a.status || a.status === "—").length;
+  const missingReports = applications.filter((a) => scoreNum(a.score) > 0 && (!a.report || a.report === "—")).length;
+  const missingPdfs = applications.filter((a) => scoreNum(a.score) >= 4 && !a.pdf.includes("✅")).length;
+  const healthIssues = missingStatus + missingReports + missingPdfs;
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-10">
-      <h1 className="font-display text-2xl tracking-tight text-landing">Analytics</h1>
-      <p className="mt-1 text-sm text-muted">Across {total} tracked evaluations.</p>
+    <div className="mx-auto max-w-[86rem] px-5 py-7 sm:px-7 lg:px-8">
+      <h1 className="font-display text-3xl font-semibold tracking-tight text-landing">Job search analytics</h1>
+      <p className="mt-1 text-sm text-muted">Conversion, score patterns, and data health across {total} tracked evaluations.</p>
 
-      {/* headline stats */}
-      <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat value={total} label="evaluated" />
         <Stat value={avg ? avg.toFixed(2) : "—"} label="avg score" />
         <Stat
@@ -69,38 +74,62 @@ export default function Analytics() {
         />
       </div>
 
-      <Section title="Pipeline by stage">
-        {stageCounts.map((s) => (
-          <Bar
-            key={s.key}
-            label={s.label}
-            value={s.n}
-            pct={(s.n / maxStage) * 100}
-            total={total}
-            tone={s.key === "OFFER" ? "positive" : "neutral"}
-          />
-        ))}
-      </Section>
+      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,.7fr)]">
+        <div className="grid gap-4">
+          <Section title="Current stage mix" subtitle="Where every tracked application is now">
+            {stageCounts.map((s) => (
+              <Bar
+                key={s.key}
+                label={s.label}
+                value={s.n}
+                pct={(s.n / maxStage) * 100}
+                total={total}
+                tone={s.key === "OFFER" ? "positive" : "neutral"}
+              />
+            ))}
+          </Section>
 
-      <Section title="Score distribution">
-        {buckets.map((b) => (
-          <Bar key={b.label} label={b.label} value={b.n} pct={(b.n / maxBucket) * 100} total={scores.length} />
-        ))}
-      </Section>
+          <Section title="Score distribution" subtitle="The report score remains holistic, not an arithmetic formula">
+            {buckets.map((b) => (
+              <Bar key={b.label} label={b.label} value={b.n} pct={(b.n / maxBucket) * 100} total={scores.length} />
+            ))}
+          </Section>
+        </div>
 
-      <Section title="Top companies" id="companies">
-        {topCompanies.map(([name, n]) => (
-          <Bar key={name} label={name} value={n} pct={(n / maxCompany) * 100} />
-        ))}
-      </Section>
+        <aside className="grid gap-4">
+          <section className="rounded-xl border border-brand-secondary/35 bg-brand-secondary/10 p-4">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-secondary">Biggest bottleneck</p>
+            <h2 className="mt-2 text-lg font-semibold text-foreground">
+              {strongWaiting > 0 ? `${strongWaiting} strong job${strongWaiting === 1 ? " is" : "s are"} waiting before the tailored PDF` : "No strong evaluations are stalled"}
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-muted">Jobs scoring 4.0 or higher should either advance through review or receive an explicit outcome.</p>
+            <Link href="/pipeline?tab=EVALUATED&min=4" className="mt-4 inline-flex rounded-lg bg-brand px-3 py-2 text-sm font-semibold text-brand-foreground hover:bg-brand-200">Review waiting jobs</Link>
+          </section>
+
+          <section className="rounded-xl border border-border bg-surface/65 p-4">
+            <div className="flex items-start justify-between gap-3"><div><h2 className="text-base font-semibold">Pipeline health</h2><p className="mt-0.5 text-xs text-muted">Completeness of tracker artifacts</p></div><span className={healthIssues > 0 ? "text-xs font-medium text-brand-secondary" : "text-xs font-medium text-brand-text"}>{healthIssues} issues</span></div>
+            <div className="mt-3 divide-y divide-border">
+              <HealthRow label="Tracker rows" value={missingStatus ? `${missingStatus} missing status` : "Complete"} issue={missingStatus > 0} />
+              <HealthRow label="Evaluation reports" value={missingReports ? `${missingReports} missing` : "Complete"} issue={missingReports > 0} />
+              <HealthRow label="Application PDFs" value={missingPdfs ? `${missingPdfs} pending` : "Current"} issue={missingPdfs > 0} />
+            </div>
+          </section>
+
+          <Section title="Top companies" subtitle="Most frequently evaluated" id="companies">
+            {topCompanies.map(([name, n]) => (
+              <Bar key={name} label={name} value={n} pct={(n / maxCompany) * 100} />
+            ))}
+          </Section>
+        </aside>
+      </div>
     </div>
   );
 }
 
 function Stat({ value, label, hint }: { value: number | string; label: string; hint?: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-surface/50 p-4">
-      <div className="text-3xl font-semibold tabular-nums">{value}</div>
+    <div className="rounded-xl border border-border bg-surface/65 p-4">
+      <div className="text-2xl font-semibold tabular-nums">{value}</div>
       <div className="mt-1 text-xs text-faint">{label}</div>
       {hint && (
         <Link href="/" className="mt-2 block text-xs text-muted transition-colors hover:text-brand">
@@ -111,12 +140,24 @@ function Stat({ value, label, hint }: { value: number | string; label: string; h
   );
 }
 
-function Section({ title, children, id }: { title: string; children: React.ReactNode; id?: string }) {
+function Section({ title, subtitle, children, id }: { title: string; subtitle?: string; children: React.ReactNode; id?: string }) {
   return (
-    <section id={id} className="mt-10 scroll-mt-8">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-muted">{title}</h2>
+    <section id={id} className="scroll-mt-8 rounded-xl border border-border bg-surface/65 p-4">
+      <h2 className="text-base font-semibold text-foreground">{title}</h2>
+      {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
       <div className="mt-4 space-y-2.5">{children}</div>
     </section>
+  );
+}
+
+function HealthRow({ label, value, issue }: { label: string; value: string; issue: boolean }) {
+  const Icon = issue ? AlertCircle : CheckCircle2;
+  return (
+    <div className="flex items-center gap-2 py-2.5 text-xs">
+      <Icon className={issue ? "size-4 text-brand-secondary" : "size-4 text-brand"} />
+      <span className="font-medium text-foreground">{label}</span>
+      <span className="ml-auto text-right text-muted">{value}</span>
+    </div>
   );
 }
 

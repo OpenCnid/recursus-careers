@@ -95,7 +95,7 @@ function isAllowedPath(p: string): boolean {
   if (/^(https?:)?\/\//i.test(p)) return false;
   const path = p.split(/[?#]/)[0];
   if (path === "/") return true;
-  return /^\/(explore|pipeline|portals|analytics|cv|config|apply|jobs)(\/[^/]+)?$/.test(path);
+  return /^\/(explore|pipeline|portals|searches|followups|contacts|interviews|library|analytics|cv|config|apply|jobs)(\/[^/]+)?$/.test(path);
 }
 
 function genBatchId(): string {

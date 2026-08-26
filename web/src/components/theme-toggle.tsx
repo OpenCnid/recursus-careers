@@ -19,7 +19,7 @@ export function ThemeToggle({ className }: { className?: string }) {
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
     // keep the browser chrome (Safari status bar / Dynamic Island) tinted to match
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", next ? "#0a0a0a" : "#f7f6f3");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", next ? "#090e1a" : "#f3f6fb");
     try {
       localStorage.setItem(KEY, next ? "dark" : "light");
     } catch {
