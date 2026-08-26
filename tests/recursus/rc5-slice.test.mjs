@@ -93,6 +93,7 @@ test('test-only prepare is explicitly ineligible for provider execution', async 
     assert.deepEqual(plan.compatibility.reasons, ['PROBE_INJECTION_TEST_ONLY']);
     assert.equal(plan.compatibility.transport.status, 'injected_test_only');
     assert.equal(plan.transport_probe.provider_calls, 0);
+    assert.deepEqual(plan.transport_probe.diagnostic_probes, RC5_INTERNALS_FOR_TESTS.expectedAdapterDiagnosticProbes());
     assert.equal(plan.transport_probe.payload_captures.length, 3);
     assert.equal(plan.compatibility.executor.status, 'injected_test_only');
     assert.equal(plan.executor_probe.status, 'injected_test_only');
@@ -107,9 +108,9 @@ test('test-only prepare is explicitly ineligible for provider execution', async 
       sha256: 'f8744737196faadb09582bf72ea3de2d43f494a73133d46239dfbe8d5e19f2b7',
     });
     assert.deepEqual(plan.executor_probe.worker_source, {
-      byte_count: 51_024,
+      byte_count: 56_988,
       path: '/opt/rc5/rc5-provider-worker.mjs',
-      sha256: '9dfed83838f8069e5940b48af3a61c4404a0f649c2cdbcd147c74976e87f22bf',
+      sha256: 'df7aed70c3fa72de0ecd8c973c0dab24b7ca414053918c6a144462377a039c8a',
     });
     assert.deepEqual(plan.executor_probe.proxy_source, {
       byte_count: 9_399,
@@ -117,12 +118,12 @@ test('test-only prepare is explicitly ineligible for provider execution', async 
       sha256: '0f4348017e62663a69f388a6b3862e64ce3c9a8dc236f221a56684029f8be470',
     });
     assert.deepEqual(plan.executor_probe.simulator_source, {
-      byte_count: 18_237,
+      byte_count: 22_678,
       path: '/opt/rc5/rc5-provider-free-payload-probe.cjs',
-      sha256: '4157b37a8ec97c93250da2b060b7324233276bd39490eb9bff231cb95292332e',
+      sha256: '933bf6767b5a44a97960d049ed9ba62361b2ef15442db6af5bbf61602e48f8db',
     });
     assert.deepEqual(plan.executor_probe.image, {
-      id: 'sha256:6ebf9db128e1385659e0bfa8d86321e3c9936d142b49d4ef828d5aadcd5e086e',
+      id: 'sha256:f6ebef6ba4017ed84bd24e869449563fc7d77e7969ad581efef2a068cdd3b527',
       reference: 'recursus-rc5-bounded-executor:2fc0209',
       worker_source: plan.executor_probe.worker_source,
     });
@@ -134,9 +135,13 @@ test('test-only prepare is explicitly ineligible for provider execution', async 
       assert.equal(capture.transport_mode, successful ? 'provider_free_success' : 'provider_free_failure');
       assert.equal(capture.simulator_response_status, successful ? 200 : 503);
       assert.equal(capture.completion, successful ? 'completed' : 'failed');
+      assert.equal(capture.error_category, successful ? null : 'UNAVAILABLE');
+      assert.equal(capture.failure_stage, successful ? null : 'adapter_terminal');
       assert.equal(capture.finish_reason, successful ? 'stop' : 'error');
       assert.equal(capture.direct_adapter_invocations, 1);
       assert.equal(capture.provider_request_count, 1);
+      assert.equal(capture.response_http_status, successful ? 200 : 503);
+      assert.equal(capture.response_http_status, capture.simulator_response_status);
       assert.equal(capture.oauth_refresh_count, 0);
       assert.equal(capture.payload_sha256, plan.transport_probe.payload_captures[caseIndex].payload_sha256);
     }
@@ -491,6 +496,7 @@ test('provider-free final-wire validation rejects payload, fetch, identity, and 
       const payloads = requests.map((request) => RC5_INTERNALS_FOR_TESTS.expectedWirePayload(request));
       return {
         capabilities: { ordered_system_user_messages_v1: true },
+        diagnostic_probes: RC5_INTERNALS_FOR_TESTS.expectedAdapterDiagnosticProbes(),
         http_request_count: requests.length,
         payloads,
         provider_calls: 0,
@@ -510,6 +516,23 @@ test('provider-free final-wire validation rejects payload, fetch, identity, and 
     const assessment = RC5_INTERNALS_FOR_TESTS.assessOrderedPartsTransport(probe, requests);
     assert.equal(assessment.status, 'compatible');
     assert.equal(assessment.provider_call_permitted, true);
+    const boundedProbe = RC5_INTERNALS_FOR_TESTS.expectedBoundedExecutorProbe(requests);
+    assert.equal(RC5_INTERNALS_FOR_TESTS.validateBoundedExecutorProbe(boundedProbe, plan.cases, probe), true);
+    for (const [label, mutate] of [
+      ['diagnostic status', (value) => { value.captures[1].response_http_status = 500; }],
+      ['diagnostic category', (value) => { value.captures[1].error_category = 'INTEGRATION'; }],
+      ['diagnostic stage', (value) => { value.captures[1].failure_stage = 'adapter_throw'; }],
+      ['diagnostic omission', (value) => { delete value.captures[1].response_http_status; }],
+      ['diagnostic hidden body', (value) => { value.captures[1].response_body = 'RC5_PRIVATE_SENTINEL'; }],
+    ]) {
+      const changed = structuredClone(boundedProbe);
+      mutate(changed);
+      assert.throws(
+        () => RC5_INTERNALS_FOR_TESTS.validateBoundedExecutorProbe(changed, plan.cases, probe),
+        { code: 'RC5_EXECUTOR_PROBE' },
+        label,
+      );
+    }
 
     const wireMutations = [
       ['endpoint', (value) => { value.urls[0] = 'https://example.test/responses'; }],
@@ -524,6 +547,13 @@ test('provider-free final-wire validation rejects payload, fetch, identity, and 
       ['payload count', (value) => { value.payloads.pop(); }],
       ['fetch count', (value) => { value.http_request_count += 1; }],
       ['provider call count', (value) => { value.provider_calls = 1; }],
+      ['diagnostic status', (value) => { value.diagnostic_probes[2].response_http_status = 422; }],
+      ['diagnostic category', (value) => { value.diagnostic_probes[2].error_category = 'INTEGRATION'; }],
+      ['diagnostic stage', (value) => { value.diagnostic_probes[1].failure_stage = 'adapter_throw'; }],
+      ['diagnostic request count', (value) => { value.diagnostic_probes[3].http_request_count = 2; }],
+      ['diagnostic provider count', (value) => { value.diagnostic_probes[4].provider_calls = 1; }],
+      ['diagnostic hidden error', (value) => { value.diagnostic_probes[5].error_message = 'RC5_PRIVATE_SENTINEL'; }],
+      ['diagnostic omission', (value) => { value.diagnostic_probes.pop(); }],
       ['retry completion', (value) => { value.retry_probe.completed = true; }],
       ['retry fetch count', (value) => { value.retry_probe.http_request_count = 2; }],
       ['retry provider calls', (value) => { value.retry_probe.provider_calls = 1; }],
@@ -606,12 +636,15 @@ function boundedExecutorResult(overrides = {}) {
     artifact: '# result',
     completion: 'completed',
     direct_adapter_invocations: 1,
+    error_category: null,
     external_mutations: [],
+    failure_stage: null,
     finish_reason: 'stop',
     input_tokens: 200,
     oauth_refresh_count: 0,
     output_tokens: 100,
     provider_request_count: 1,
+    response_http_status: 200,
     responses_endpoint: 'https://chatgpt.com/backend-api/codex/responses',
     schema_version: '1.0.0',
     trusted_completed: true,
@@ -728,7 +761,10 @@ test('failed and timed-out terminal attempts permanently stop later calls', asyn
       const attempt = await RC5_INTERNALS_FOR_TESTS.persistExecutionResult(physicalRoot, reservation, dispatch, boundedExecutorResult({
         artifact: null,
         completion,
+        error_category: completion === 'timed_out' ? 'TIMEOUT' : 'UNAVAILABLE',
+        failure_stage: completion === 'timed_out' ? 'worker_timeout' : 'adapter_terminal',
         finish_reason: finishReason,
+        response_http_status: completion === 'timed_out' ? null : 503,
         trusted_completed: false,
       }));
       assert.equal(attempt.completion, completion);
@@ -785,7 +821,9 @@ test('attempt schema rejects false completion, invalid identity, excessive resul
     completion: 'completed',
     direct_adapter_invocations: 1,
     dispatch_id: 'RC5-DISPATCH-FACT-01-R01',
+    error_category: null,
     external_mutations: [],
+    failure_stage: null,
     finish_reason: 'stop',
     input_tokens: 200,
     oauth_refresh_count: 0,
@@ -793,6 +831,7 @@ test('attempt schema rejects false completion, invalid identity, excessive resul
     provider_request_count: 1,
     request_digest: 'a'.repeat(64),
     reservation_id: 'RC5-RESERVATION-FACT-01-R01',
+    response_http_status: 200,
     responses_endpoint: 'https://chatgpt.com/backend-api/codex/responses',
     scenario_id: 'FACT-01',
     schema_version: '1.0.0',
@@ -807,11 +846,24 @@ test('attempt schema rejects false completion, invalid identity, excessive resul
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, dispatch_id: 'wrong' }), { code: 'RC5_RESULT_INVALID' });
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, artifact: { ...valid.artifact, byte_count: 65_537 } }), { code: 'RC5_RESULT_BUDGET' });
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, external_mutations: ['tracker_write'] }), { code: 'RC5_EXTERNAL_MUTATION' });
+  for (const key of ['response_http_status', 'error_category', 'failure_stage']) {
+    const omitted = { ...valid };
+    delete omitted[key];
+    assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult(omitted), { code: 'RC5_RESULT_INVALID' }, `omitted ${key}`);
+  }
+  for (const status of [99, 600, 200.5, '200']) {
+    assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, response_http_status: status }), { code: 'RC5_RESULT_INVALID' });
+  }
+  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, error_category: 'RAW_ERROR' }), { code: 'RC5_RESULT_INVALID' });
+  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, failure_stage: 'response_body' }), { code: 'RC5_RESULT_INVALID' });
   RC5_INTERNALS_FOR_TESTS.validateAttemptResult({
     ...valid,
     artifact: null,
     completion: 'timed_out',
+    error_category: 'TIMEOUT',
+    failure_stage: 'worker_timeout',
     finish_reason: 'aborted',
+    response_http_status: null,
     trusted_completed: false,
   });
 });

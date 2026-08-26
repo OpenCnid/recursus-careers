@@ -98,6 +98,106 @@ function requestPayload(init) {
   return JSON.parse(body);
 }
 
+const DIAGNOSTIC_PROBE_SPECS = Object.freeze([
+  Object.freeze({ caseId: 'valid_200', kind: 'success', status: 200 }),
+  Object.freeze({ caseId: 'malformed_200', kind: 'malformed', status: 200 }),
+  Object.freeze({ caseId: 'http_400', kind: 'http', status: 400 }),
+  Object.freeze({ caseId: 'http_401', kind: 'http', status: 401 }),
+  Object.freeze({ caseId: 'http_403', kind: 'http', status: 403 }),
+  Object.freeze({ caseId: 'http_429', kind: 'http', status: 429 }),
+  Object.freeze({ caseId: 'http_503', kind: 'http', status: 503 }),
+  Object.freeze({ caseId: 'fetch_rejection', kind: 'fetch_rejection', status: null }),
+]);
+
+const SAFE_ERROR_CATEGORIES = new Set([
+  'ABORTED', 'AUTH', 'INTEGRATION', 'INVALID_REQUEST', 'MALFORMED_RESPONSE', 'PERMISSION', 'RATE_LIMIT', 'TIMEOUT', 'UNAVAILABLE',
+]);
+
+function diagnosticStatusCategory(status) {
+  if (status === null || (status >= 200 && status <= 299)) return null;
+  if (status === 400) return 'INVALID_REQUEST';
+  if (status === 401) return 'AUTH';
+  if (status === 402 || status === 403) return 'PERMISSION';
+  if (status === 408) return 'TIMEOUT';
+  if (status === 429) return 'RATE_LIMIT';
+  if (status >= 500 && status <= 599) return 'UNAVAILABLE';
+  return 'INTEGRATION';
+}
+
+async function runAdapterDiagnosticProbe(adapterModule, generateOptions, spec, expectedPayload) {
+  let fetchOutcome = 'not_observed';
+  let httpRequestCount = 0;
+  let payloadMatchesPrimary = false;
+  let responseHttpStatus = null;
+  globalThis.fetch = async (url, init) => {
+    httpRequestCount += 1;
+    if (httpRequestCount > 1 || String(url) !== 'https://chatgpt.com/backend-api/codex/responses') {
+      throw new Error('provider-free diagnostic authority rejected');
+    }
+    payloadMatchesPrimary = canonicalJson(requestPayload(init)) === canonicalJson(expectedPayload);
+    if (spec.kind === 'fetch_rejection') {
+      fetchOutcome = 'rejected';
+      throw new Error('network connection failed RC5_PRIVATE_FETCH_EXCEPTION_A7Q2');
+    }
+    fetchOutcome = 'response';
+    responseHttpStatus = spec.status;
+    const body = spec.kind === 'success'
+      ? successEvents()
+      : spec.kind === 'malformed'
+        ? 'data: {"type":"response.created","response":{"id":"resp_rc5_truncated","output":[],"status":"in_progress"}}\n\n'
+        : `RC5_PRIVATE_HTTP_BODY_${spec.status}`;
+    return new Response(body, {
+      headers: {
+        'content-type': spec.kind === 'http' ? 'text/plain' : 'text/event-stream',
+        'x-private-diagnostic': `RC5_PRIVATE_HTTP_HEADER_${spec.caseId}`,
+      },
+      status: spec.status,
+    });
+  };
+
+  const adapter = new adapterModule.OpenAICodexAdapter({ credentials: credentialStore, timeoutMs: 5_000 });
+  let adapterOutcome = 'throw';
+  let completed = false;
+  let failureCode = null;
+  let finishReason = 'error';
+  try {
+    for await (const chunk of adapter.stream(generateOptions)) {
+      if (chunk?.type !== 'finish') continue;
+      adapterOutcome = 'terminal';
+      completed = chunk.reason?.kind === 'stop';
+      failureCode = chunk.reason?.failure?.code ?? null;
+      finishReason = completed ? 'stop' : chunk.reason?.kind === 'error' || chunk.reason?.kind === 'aborted' ? 'error' : 'malformed';
+    }
+  } catch {
+    adapterOutcome = 'throw';
+  } finally {
+    adapter.dispose();
+  }
+  const statusCategory = diagnosticStatusCategory(responseHttpStatus);
+  const errorCategory = completed
+    ? null
+    : fetchOutcome === 'rejected'
+      ? 'UNAVAILABLE'
+      : statusCategory ?? (SAFE_ERROR_CATEGORIES.has(failureCode) ? failureCode : 'INTEGRATION');
+  const failureStage = completed
+    ? null
+    : fetchOutcome === 'rejected'
+      ? 'fetch_transport'
+      : adapterOutcome === 'terminal' ? 'adapter_terminal' : 'adapter_throw';
+  return Object.freeze({
+    adapter_outcome: adapterOutcome,
+    case_id: spec.caseId,
+    completion: completed ? 'completed' : 'failed',
+    error_category: errorCategory,
+    failure_stage: failureStage,
+    finish_reason: finishReason,
+    http_request_count: httpRequestCount,
+    payload_matches_primary: payloadMatchesPrimary,
+    provider_calls: 0,
+    response_http_status: responseHttpStatus,
+  });
+}
+
 function canonicalJson(value) {
   if (value === null || typeof value === 'boolean' || typeof value === 'number' || typeof value === 'string') {
     return JSON.stringify(value);
@@ -420,8 +520,19 @@ async function main() {
   }
   retryAdapter.dispose();
 
+  const diagnosticProbes = [];
+  for (const spec of DIAGNOSTIC_PROBE_SPECS) {
+    diagnosticProbes.push(await runAdapterDiagnosticProbe(
+      adapterModule,
+      input.requests[0].dsh_generate_options,
+      spec,
+      payloads[0],
+    ));
+  }
+
   process.stdout.write(JSON.stringify({
     capabilities: adapterModule.OPENAI_CODEX_TRANSPORT_CAPABILITIES,
+    diagnostic_probes: diagnosticProbes,
     http_request_count: httpRequestCount,
     payloads,
     provider_calls: 0,

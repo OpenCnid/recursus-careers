@@ -35,8 +35,12 @@ const {
 } = RC5_PROVIDER_EXECUTOR_INTERNALS_FOR_TESTS;
 
 const {
+  classifyHttpStatus,
+  collectStream,
+  createFetchGuard,
   invocationAuthority,
   parseProviderFreeHttpResponse,
+  resolveFailureDiagnostic,
   validateContainerInvocationObservation,
 } = RC5_PROVIDER_WORKER_INTERNALS_FOR_TESTS;
 
@@ -402,12 +406,15 @@ test('worker-result validation keeps live and provider-free transport modes disj
   const resultFor = (transportMode) => ({
     completion: transportMode === 'provider_free_failure' ? 'failed' : 'completed',
     direct_adapter_invocations: 1,
+    error_category: transportMode === 'provider_free_failure' ? 'UNAVAILABLE' : null,
     external_mutations: [],
+    failure_stage: transportMode === 'provider_free_failure' ? 'adapter_terminal' : null,
     finish_reason: transportMode === 'provider_free_failure' ? 'error' : 'stop',
     input_tokens: transportMode === 'provider_free_failure' ? 'not_reported' : 7,
     oauth_refresh_count: 0,
     output_tokens: transportMode === 'provider_free_failure' ? 'not_reported' : 2,
     provider_request_count: 1,
+    response_http_status: transportMode === 'provider_free_failure' ? 503 : 200,
     responses_endpoint: RC5_PROVIDER_EXECUTOR_INTERNALS_FOR_TESTS.RESPONSES_ENDPOINT,
     schema_version: '1.0.0',
     transport_mode: transportMode,
@@ -429,6 +436,173 @@ test('worker-result validation keeps live and provider-free transport modes disj
       );
     }
   }
+});
+
+test('safe diagnostics classify fake HTTP responses without retaining bodies, headers, or retries', async () => {
+  const rows = [
+    [200, null, null],
+    [400, 'INVALID_REQUEST', 'adapter_terminal'],
+    [401, 'AUTH', 'adapter_terminal'],
+    [403, 'PERMISSION', 'adapter_terminal'],
+    [429, 'RATE_LIMIT', 'adapter_terminal'],
+    [503, 'UNAVAILABLE', 'adapter_terminal'],
+  ];
+  for (const [status, expectedCategory, expectedStage] of rows) {
+    const bodySentinel = `RC5_PRIVATE_BODY_${status}`;
+    const headerSentinel = `RC5_PRIVATE_HEADER_${status}`;
+    let requests = 0;
+    const guard = createFetchGuard(async () => {
+      requests += 1;
+      return new Response(bodySentinel, { headers: { 'x-private-diagnostic': headerSentinel }, status });
+    });
+    const response = await guard.fetch('https://chatgpt.com/backend-api/codex/responses', { method: 'POST' });
+    const observation = guard.snapshot();
+    const diagnostic = resolveFailureDiagnostic({
+      completion: status === 200 ? 'completed' : 'failed',
+      errorCategory: status === 200 ? null : 'INTEGRATION',
+      failureStage: status === 200 ? null : 'adapter_terminal',
+    }, observation);
+    assert.equal(classifyHttpStatus(status), expectedCategory);
+    assert.equal(diagnostic.responseHttpStatus, status);
+    assert.equal(diagnostic.errorCategory, expectedCategory);
+    assert.equal(diagnostic.failureStage, expectedStage);
+    assert.equal(observation.responses, 1);
+    assert.equal(observation.responsesOutcome, 'response');
+    assert.equal(requests, 1);
+    assert.equal(await response.text(), bodySentinel, 'guard must not consume the response body');
+    const persisted = canonicalJsonV1({
+      error_category: diagnostic.errorCategory,
+      failure_stage: diagnostic.failureStage,
+      response_http_status: diagnostic.responseHttpStatus,
+    });
+    assert.equal(persisted.includes(bodySentinel), false);
+    assert.equal(persisted.includes(headerSentinel), false);
+  }
+});
+
+test('safe diagnostics distinguish fetch rejection, adapter failure, and worker validation', async () => {
+  const fetchSecret = 'RC5_FETCH_EXCEPTION_PRIVATE_A7Q2';
+  let requests = 0;
+  const guard = createFetchGuard(async () => {
+    requests += 1;
+    throw new Error(fetchSecret);
+  });
+  await assert.rejects(
+    guard.fetch('https://chatgpt.com/backend-api/codex/responses', { method: 'POST' }),
+    { message: fetchSecret },
+  );
+  const fetchDiagnostic = resolveFailureDiagnostic({
+    completion: 'failed', errorCategory: 'INTEGRATION', failureStage: 'adapter_terminal',
+  }, guard.snapshot());
+  assert.deepEqual(fetchDiagnostic, {
+    errorCategory: 'UNAVAILABLE', failureStage: 'fetch_transport', responseHttpStatus: null,
+  });
+  assert.equal(requests, 1);
+  assert.equal(canonicalJsonV1(fetchDiagnostic).includes(fetchSecret), false);
+
+  const adapterSecret = 'RC5_ADAPTER_EXCEPTION_PRIVATE_B8R3';
+  const adapterFailure = await collectStream({
+    async * stream() {
+      const error = new Error(adapterSecret);
+      error.code = 'MALFORMED_RESPONSE';
+      throw error;
+    },
+  }, {}, 1_000);
+  assert.equal(adapterFailure.completion, 'failed');
+  assert.equal(adapterFailure.errorCategory, 'MALFORMED_RESPONSE');
+  assert.equal(adapterFailure.failureStage, 'adapter_throw');
+  assert.deepEqual(resolveFailureDiagnostic(adapterFailure, {
+    responseHttpStatus: 200, responses: 1, responsesOutcome: 'response',
+  }), {
+    errorCategory: 'MALFORMED_RESPONSE', failureStage: 'adapter_throw', responseHttpStatus: 200,
+  }, 'malformed 200 remains distinct from an HTTP rejection');
+
+  const workerSecret = 'RC5_UNKNOWN_CHUNK_PRIVATE_C9S4';
+  const workerFailure = await collectStream({
+    async * stream() { yield { private: workerSecret, type: 'unknown' }; },
+  }, {}, 1_000);
+  assert.equal(workerFailure.completion, 'failed');
+  assert.equal(workerFailure.errorCategory, 'MALFORMED_RESPONSE');
+  assert.equal(workerFailure.failureStage, 'worker_validation');
+  assert.deepEqual(resolveFailureDiagnostic(workerFailure, {
+    responseHttpStatus: 200, responses: 1, responsesOutcome: 'response',
+  }), {
+    errorCategory: 'MALFORMED_RESPONSE', failureStage: 'worker_validation', responseHttpStatus: 200,
+  });
+
+  const adapterPersisted = canonicalJsonV1({
+    error_category: adapterFailure.errorCategory,
+    failure_stage: adapterFailure.failureStage,
+  });
+  const workerPersisted = canonicalJsonV1({
+    error_category: workerFailure.errorCategory,
+    failure_stage: workerFailure.failureStage,
+  });
+  assert.equal(adapterPersisted.includes(adapterSecret), false);
+  assert.equal(workerPersisted.includes(workerSecret), false);
+
+  const pendingGuard = createFetchGuard(() => new Promise(() => {}));
+  void pendingGuard.fetch('https://chatgpt.com/backend-api/codex/responses', { method: 'POST' });
+  assert.throws(() => resolveFailureDiagnostic({
+    completion: 'failed', errorCategory: 'INTEGRATION', failureStage: 'adapter_throw',
+  }, pendingGuard.snapshot()), { code: 'FETCH_RESPONSE' }, 'a counted request cannot persist before fetch observation settles');
+});
+
+test('worker-result diagnostics are closed, bounded, and reject hidden error material', () => {
+  const request = { execution: { max_output_tokens: 4_000 } };
+  const valid = {
+    completion: 'failed',
+    direct_adapter_invocations: 1,
+    error_category: 'UNAVAILABLE',
+    external_mutations: [],
+    failure_stage: 'adapter_terminal',
+    finish_reason: 'error',
+    input_tokens: 'not_reported',
+    oauth_refresh_count: 0,
+    output_tokens: 'not_reported',
+    provider_request_count: 1,
+    response_http_status: 503,
+    responses_endpoint: RC5_PROVIDER_EXECUTOR_INTERNALS_FOR_TESTS.RESPONSES_ENDPOINT,
+    schema_version: '1.0.0',
+    transport_mode: 'provider_free_failure',
+    trusted_completed: false,
+    wall_ms: 10,
+  };
+  const validate = (value) => RC5_PROVIDER_EXECUTOR_INTERNALS_FOR_TESTS.validateWorkerResult(
+    Buffer.from(canonicalJsonV1(value)), request, 'provider_free_failure',
+  );
+  assert.deepEqual(validate(valid), valid);
+  for (const key of ['response_http_status', 'error_category', 'failure_stage']) {
+    const omitted = { ...valid };
+    delete omitted[key];
+    assert.throws(() => validate(omitted), { code: 'RC5_WORKER_OUTPUT' }, `omitted ${key}`);
+  }
+  for (const status of [99, 600, 503.5, '503']) {
+    assert.throws(() => validate({ ...valid, response_http_status: status }), { code: 'RC5_WORKER_OUTPUT' }, `status ${status}`);
+  }
+  assert.throws(() => validate({ ...valid, error_category: 'RAW_PROVIDER_ERROR' }), { code: 'RC5_WORKER_OUTPUT' });
+  assert.throws(() => validate({ ...valid, failure_stage: 'provider_body' }), { code: 'RC5_WORKER_OUTPUT' });
+  for (const key of ['response_body', 'response_headers', 'error_message', 'error_stack', 'cause', 'request_id', 'retry_delay']) {
+    assert.throws(() => validate({ ...valid, [key]: 'RC5_PRIVATE_SENTINEL' }), { code: 'RC5_WORKER_OUTPUT' }, key);
+  }
+  const completed = {
+    ...valid,
+    completion: 'completed',
+    error_category: null,
+    failure_stage: null,
+    finish_reason: 'stop',
+    input_tokens: 1,
+    output_tokens: 1,
+    response_http_status: 200,
+    transport_mode: 'provider_free_success',
+    trusted_completed: true,
+  };
+  const validateSuccess = (value) => RC5_PROVIDER_EXECUTOR_INTERNALS_FOR_TESTS.validateWorkerResult(
+    Buffer.from(canonicalJsonV1(value)), request, 'provider_free_success',
+  );
+  assert.deepEqual(validateSuccess(completed), completed);
+  assert.throws(() => validateSuccess({ ...completed, error_category: 'INTEGRATION' }), { code: 'RC5_WORKER_OUTPUT' });
+  assert.throws(() => validateSuccess({ ...completed, failure_stage: 'adapter_terminal' }), { code: 'RC5_WORKER_OUTPUT' });
 });
 
 function providerFreeResponseFrame(status, reason, body, headers = {}) {
