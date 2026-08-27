@@ -2,7 +2,7 @@
 
 Status: anomaly-disclosure three-case comparison complete; user decision `KEEP`
 
-This unversioned card is the lightweight execution contract for RC-5. The accepted [RC-4 specification](SPEC.md) remains historical and unchanged. RC-5 is a disposable product experiment, not a frozen benchmark package or a release candidate.
+This unversioned card is the lightweight execution contract for RC-5. The accepted [RC-4 specification](RC4_SPEC.md) remains historical and does not govern RC-5. RC-5 is a disposable product experiment, not a frozen benchmark package or a release candidate.
 
 ## Product question
 

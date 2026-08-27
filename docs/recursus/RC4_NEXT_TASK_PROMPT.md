@@ -1,15 +1,15 @@
 # Codex kickoff prompt for RC-4 compiled prompt and context parity
 
-Status: ready to give to a fresh Codex session. This prompt authorizes implementation, verification, a feature-branch commit, push, and a pull request. It does not authorize a provider invocation, RC-5 work, or pull-request merge.
+Status: accepted historical handoff; RC-4 completed through PR #6. Do not execute this prompt as the current task.
 
-Copy the complete prompt below into the new session.
+The prompt below preserves the RC-4 implementation instructions. Its specification references now point to the explicitly archived [RC4_SPEC.md](RC4_SPEC.md). The active milestone contract is [SPEC.md](SPEC.md).
 
 ```text
 Work in this repository:
 
 D:\OpenCnid\recursus-careers
 
-Implement roadmap milestone RC-4, Compiled prompt and context parity, exactly as bounded by `docs/recursus/SPEC.md`. Use multi-agents for parallel, bounded reviews and non-overlapping implementation work. Publish the completed work on a feature branch, open a pull request against `OpenCnid/recursus-careers` main, and wait for all required checks on the exact PR head. Do not merge the pull request. Do not begin RC-5.
+Implement roadmap milestone RC-4, Compiled prompt and context parity, exactly as bounded by `docs/recursus/RC4_SPEC.md`. Use multi-agents for parallel, bounded reviews and non-overlapping implementation work. Publish the completed work on a feature branch, open a pull request against `OpenCnid/recursus-careers` main, and wait for all required checks on the exact PR head. Do not merge the pull request. Do not begin RC-5.
 
 The goal is an offline, dependency-free, versioned compiler that turns the four registered Career Ops pilot mode contracts (`oferta`, `pdf`, `cover`, and `email`) into one canonical `CompiledPrompt` representation and two inspectable route-delivery bundles: `co-claude-code-reference-v1` and `recursus-direct-v1`. Decode both bundles and prove structural semantic parity under registered adapter rules.
 
@@ -19,7 +19,7 @@ Mandatory preservation and acceptance gate before editing:
 
 1. Run `git status --short` before any mutation and preserve every existing user change.
 2. The previous preparation session may have left these intentional, user-authorized RC-4 documentation changes uncommitted:
-   - `docs/recursus/SPEC.md`
+   - `docs/recursus/RC4_SPEC.md`
    - `docs/recursus/README.md`
    - `docs/recursus/RC4_NEXT_TASK_PROMPT.md`
    Audit and preserve them. Do not overwrite them with the historical RC-1 specification or RC-3 prompt.
@@ -48,7 +48,7 @@ Read these files completely in this order. The primary agent must do this person
 5. `docs/recursus/AGENTS.md`
 6. `docs/recursus/README.md`
 7. `docs/recursus/ROADMAP.md`
-8. `docs/recursus/SPEC.md`
+8. `docs/recursus/RC4_SPEC.md`
 9. `docs/recursus/architecture/README.md`
 10. `docs/recursus/architecture/PROMPT_CONTEXT_CONTRACT.md`
 11. `docs/recursus/architecture/INTENDED_DIFFERENCES.md`
@@ -100,7 +100,7 @@ Adjust those assignments when module boundaries make a different split safer. Do
 
 Binding implementation rules:
 
-- Treat `docs/recursus/SPEC.md` as the binding RC-4 contract.
+- Treat `docs/recursus/RC4_SPEC.md` as the binding RC-4 contract.
 - Keep RC-4 fully provider-free, browser-free, plugin-free, OAuth-free, telemetry-free, offline, and child-process free except where repository verification itself requires an existing local process command.
 - Never call Claude Code, Codex CLI, Recursus, DSH, the direct adapter transport, a provider SDK, or a model.
 - Never read credentials, provider environment variables, environment dumps, personal profiles, reports, trackers, browser state, caches, or unrelated repositories.
