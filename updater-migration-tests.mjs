@@ -44,6 +44,7 @@ function extractArray(name) {
 const systemPaths = extractArray('SYSTEM_PATHS');
 const userPaths = extractArray('USER_PATHS');
 const bootstrapPaths = extractArray('BOOTSTRAP_PATHS');
+const deprecatedSystemPaths = extractArray('DEPRECATED_SYSTEM_PATHS');
 
 // Every concrete (non-directory) manifest entry (SYSTEM_PATHS or
 // BOOTSTRAP_PATHS) must exist in the working tree. A path deleted upstream
@@ -62,6 +63,20 @@ for (const [listName, entries] of [['SYSTEM_PATHS', systemPaths], ['BOOTSTRAP_PA
     } else {
       fail(`${listName} entry missing from tree (stale manifest entry, #2002): ${entry}`);
     }
+  }
+}
+
+const removedReadmes = [
+  'README.ar.md', 'README.cn.md', 'README.da.md', 'README.de.md',
+  'README.es.md', 'README.fr.md', 'README.hi.md', 'README.ja.md',
+  'README.ko-KR.md', 'README.pl.md', 'README.pt-BR.md', 'README.ru.md',
+  'README.ta.md', 'README.tr.md', 'README.ua.md', 'README.zh-TW.md',
+];
+for (const path of removedReadmes) {
+  if (deprecatedSystemPaths.includes(path) && !existsSync(path)) {
+    pass(`DEPRECATED_SYSTEM_PATHS prunes removed translation: ${path}`);
+  } else {
+    fail(`DEPRECATED_SYSTEM_PATHS must list a deleted translation: ${path}`);
   }
 }
 
@@ -89,11 +104,6 @@ const requiredSystemPaths = [
   'updater-migration-tests.mjs',
   'verify-recursus-benchmark.mjs',
   'lib/recursus-benchmark.mjs',
-  'README.ar.md',
-  'README.de.md',
-  'README.hi.md',
-  'README.ja.md',
-  'README.ua.md',
   'CHANGELOG.md',
   'CODE_OF_CONDUCT.md',
   'GOVERNANCE.md',

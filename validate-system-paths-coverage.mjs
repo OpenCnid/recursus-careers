@@ -5,9 +5,10 @@
  * auto-updater layer split.
  *
  * Every tracked file in the repo must be covered by either SYSTEM_PATHS
- * (system layer, fetched on `update-system.mjs apply`) or USER_PATHS
- * (user-owned, never touched). Anything else is a coverage gap: it
- * lives in the repo but the auto-updater won't propagate it to
+ * (system layer, fetched on `update-system.mjs apply`), USER_PATHS
+ * (user-owned, never touched), or DEPRECATED_SYSTEM_PATHS (intentional
+ * deletions retained only as updater tombstones). Anything else is a coverage
+ * gap: it lives in the repo but the auto-updater won't propagate it to
  * clients on `apply`. That breaks them on the next test run.
  *
  * Run: node validate-system-paths-coverage.mjs
@@ -32,6 +33,7 @@ const source = readFileSync(sourcePath, 'utf-8');
 
 const SYSTEM_PATHS = extractArrayFromSource(source, 'SYSTEM_PATHS');
 const USER_PATHS = extractArrayFromSource(source, 'USER_PATHS');
+const DEPRECATED_SYSTEM_PATHS = extractArrayFromSource(source, 'DEPRECATED_SYSTEM_PATHS');
 
 if (SYSTEM_PATHS.length === 0 || USER_PATHS.length === 0) {
   console.error('FAIL: SYSTEM_PATHS or USER_PATHS not found in update-system.mjs');
@@ -51,7 +53,7 @@ try {
   process.exit(1);
 }
 
-const ALL_PATHS = [...SYSTEM_PATHS, ...USER_PATHS, ...LOCAL_PATHS];
+const ALL_PATHS = [...SYSTEM_PATHS, ...USER_PATHS, ...DEPRECATED_SYSTEM_PATHS, ...LOCAL_PATHS];
 
 const EXCLUDES = [
   '.coderabbit.yaml',
@@ -115,6 +117,7 @@ if (process.argv.includes('--self-test')) {
 
   // Test exact matches in SYSTEM_PATHS / USER_PATHS
   assert(covered('CLAUDE.md') === true, 'CLAUDE.md must be covered (exact match)');
+  assert(covered('README.es.md') === true, 'README.es.md must be covered by an updater tombstone');
   assert(covered('.claude/settings.json') === true, '.claude/settings.json must be covered (USER_PATHS exact match, #1408)');
   assert(covered('.claude/hooks/pre-push-backup.sh') === true, '.claude/hooks/ scripts must be covered (USER_PATHS dir prefix match, same class as #1408)');
 
@@ -172,8 +175,18 @@ if (tracked.length === 0) {
 
 const orphans = tracked.filter((f) => !covered(f));
 
+const resurrectedDeprecatedPaths = tracked.filter((f) =>
+  DEPRECATED_SYSTEM_PATHS.includes(f) && existsSync(join(ROOT, f)),
+);
+
+if (resurrectedDeprecatedPaths.length > 0) {
+  console.error('Deprecated system paths must stay deleted:');
+  for (const path of resurrectedDeprecatedPaths) console.error(`  ${path}`);
+  process.exit(1);
+}
+
 if (orphans.length > 0) {
-  console.error('Coverage gap — tracked files not in SYSTEM_PATHS or USER_PATHS:');
+  console.error('Coverage gap — tracked files not in SYSTEM_PATHS, USER_PATHS, or DEPRECATED_SYSTEM_PATHS:');
   for (const orphan of orphans) console.error(`  ${orphan}`);
   console.error('');
   console.error('Add each path to update-system.mjs SYSTEM_PATHS (if system layer)');
@@ -181,5 +194,5 @@ if (orphans.length > 0) {
   process.exit(1);
 }
 
-console.log(`OK: ${tracked.length} tracked files covered by SYSTEM_PATHS or USER_PATHS`);
+console.log(`OK: ${tracked.length} tracked files covered by the updater path policy`);
 process.exit(0);
