@@ -350,22 +350,6 @@ export const SYSTEM_PATHS = [
   'MAINTAINERS.md',
   'ARCHITECTURE.md',
   'README.md',
-  'README.ar.md',
-  'README.cn.md',
-  'README.da.md',
-  'README.de.md',
-  'README.es.md',
-  'README.fr.md',
-  'README.hi.md',
-  'README.ja.md',
-  'README.ko-KR.md',
-  'README.pl.md',
-  'README.pt-BR.md',
-  'README.ru.md',
-  'README.ta.md',
-  'README.ua.md',
-  'README.zh-TW.md',
-  'README.tr.md',
   'CHANGELOG.md',
   'CODE_OF_CONDUCT.md',
   'CONTRIBUTORS.md',
@@ -409,6 +393,28 @@ export const SYSTEM_PATHS = [
   'seed-fixture.mjs',
   'test-fixtures/',
   'upgrade-tests.mjs',
+];
+
+// Former system-owned files that must be pruned when an older installation
+// updates. Keep these separate from SYSTEM_PATHS so the updater does not try
+// to check out files that intentionally no longer exist upstream.
+const DEPRECATED_SYSTEM_PATHS = [
+  'README.ar.md',
+  'README.cn.md',
+  'README.da.md',
+  'README.de.md',
+  'README.es.md',
+  'README.fr.md',
+  'README.hi.md',
+  'README.ja.md',
+  'README.ko-KR.md',
+  'README.pl.md',
+  'README.pt-BR.md',
+  'README.ru.md',
+  'README.ta.md',
+  'README.tr.md',
+  'README.ua.md',
+  'README.zh-TW.md',
 ];
 
 const BOOTSTRAP_PATHS = [
@@ -1809,7 +1815,13 @@ async function apply() {
       }
       if (remoteFiles.size > 0) {
         const localFiles = git('ls-files').split('\n').filter(Boolean);
-        for (const f of staleSystemFiles(localFiles, remoteFiles, SYSTEM_PATHS, USER_PATHS, preservedSet)) {
+        for (const f of staleSystemFiles(
+          localFiles,
+          remoteFiles,
+          [...SYSTEM_PATHS, ...DEPRECATED_SYSTEM_PATHS],
+          USER_PATHS,
+          preservedSet,
+        )) {
           try {
             unlinkSync(join(ROOT, f));
             updated.push(f);
@@ -2126,7 +2138,7 @@ function rollback() {
     // that but is a larger change; tracked separately if it ever bites.
     const restored = [];
     const removed = [];
-    for (const path of SYSTEM_PATHS) {
+    for (const path of [...SYSTEM_PATHS, ...DEPRECATED_SYSTEM_PATHS]) {
       try {
         git('checkout', latest, '--', path);
         restored.push(path);
