@@ -24,7 +24,10 @@ import {
   inspectRunState,
   recoverRunState,
 } from '../../lib/recursus/rc6-run-state.mjs';
+import { RC6_VALIDATION_EXECUTOR_IMAGE_ID } from '../../lib/recursus/rc6-validation-executor.mjs';
 import { runRC6RunStateCli } from '../../scripts/recursus/rc6-run-state.mjs';
+
+const EXACT_EVIDENCE_MODE = 'rc6_validation_executor_exact_provider_free';
 
 function tempRoot(prefix = 'rc6-run-state-') {
   return mkdtempSync(path.join(tmpdir(), prefix));
@@ -47,7 +50,7 @@ function fakeExecutor(options = {}) {
       inspection_error_count: 0,
     },
     exact_container_run: false,
-    executor_image_id: 'sha256:8fd2be8c533c812abda166305d0399b72515258ec8f0039569ba2ff1d5176179',
+    executor_image_id: RC6_VALIDATION_EXECUTOR_IMAGE_ID,
     provider_calls: 0,
     request_digest: options.request?.request_digest?.value,
     result: {
@@ -121,6 +124,84 @@ function retainedBytes(root) {
   return rows;
 }
 
+const EXPECTED_FAULT_ROWS = Object.freeze([
+  ['before-reservation', 'safely_resumable', 0, 0, 0, 0, 'unverified', 0, null, {}],
+  ['after-reservation', 'safely_resumable', 0, 0, 0, 0, 'unverified', 0, null, {}],
+  ['after-dispatch', 'indeterminate_stopped', 1, 0, 0, 1, 'unverified', 1, null, {}],
+  ['after-simulated-request', 'indeterminate_stopped', 1, 1, 0, 1, 'unverified', 1, null, {}],
+  ['after-seal', 'already_complete', 1, 1, 1, 1, 'verified', 1, null, {}],
+  ['after-artifact', 'already_complete', 1, 1, 1, 1, 'verified', 1, null, {}],
+  ['after-terminal', 'already_complete', 1, 1, 1, 1, 'verified', 0, null, {}],
+
+  ['malformed-state', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_STATE_INVALID', {}],
+  ['truncated-state', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_STATE_INVALID', {}],
+  ['unknown-field-state', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_SEAL_INVALID', {}],
+  ['duplicate-key-state', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_STATE_NONCANONICAL', {}],
+  ['reordered-state', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_STATE_NONCANONICAL', {}],
+  ['oversized-state', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_STATE_INVALID', {}],
+
+  ['stale-plan', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_RETAINED_STATE', {}],
+  ['stale-request', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_RETAINED_STATE', {}],
+  ['stale-source', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_RETAINED_STATE', {}],
+  ['stale-route', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_RETAINED_STATE', {}],
+  ['stale-provider', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_RETAINED_STATE', {}],
+  ['stale-adapter', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_RUN_PLAN', {}],
+  ['stale-image', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_RUN_PLAN', {}],
+  ['stale-model', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_RETAINED_STATE', {}],
+  ['stale-permission', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_PERMISSION_POLICY', {}],
+  ['stale-authority', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_RUN_PLAN', {}],
+  ['adapter-projection-drift', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_ADAPTER_PROJECTION', {}],
+  ['retained-request-drift', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_RETAINED_STATE', {}],
+  ['automatic-retry-state', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_SEAL_INVALID', {
+    usage_mutation_count: 3,
+    usage_mutations_denied: true,
+  }],
+
+  ['artifact-omission', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_ARTIFACT_INVALID', {}],
+  ['artifact-byte-drift', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_ARTIFACT_INVALID', {}],
+  ['artifact-hash-mismatch', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_ARTIFACT_INVALID', {}],
+  ['artifact-path-escape', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_PATH_ESCAPE', {}],
+  ['artifact-media-type-drift', 'fail_closed', 1, 1, 0, 0, 'verified', 0, 'RC6_ARTIFACT_INVALID', {}],
+  ['artifact-replacement-race', 'fail_closed', 1, 1, 0, 0, 'verified', 1, 'RC6_ARTIFACT_INVALID', {
+    replacement_observed: true,
+  }],
+
+  ['cleanup-failure', 'fail_closed', 1, 1, 0, 0, 'failed', 0, 'RC6_CLEANUP_UNVERIFIED', {}],
+  ['container-residue', 'fail_closed', 1, 1, 0, 0, 'failed', 0, 'RC6_CLEANUP_UNVERIFIED', {}],
+  ['network-residue', 'fail_closed', 1, 1, 0, 0, 'failed', 0, 'RC6_CLEANUP_UNVERIFIED', {}],
+  ['credential-lock-residue', 'fail_closed', 1, 1, 0, 0, 'failed', 0, 'RC6_CLEANUP_UNVERIFIED', {}],
+
+  ['recovery-race', 'already_complete', 1, 1, 1, 1, 'verified', 1, null, {
+    cross_process: true,
+    loser_classification: 'fail_closed',
+    loser_diagnostic_code: 'RC6_RECOVERY_LOCK_HELD',
+  }],
+  ['repeated-inspect-recover', 'already_complete', 1, 1, 1, 1, 'verified', 0, null, {
+    inspect_count: 3,
+    recover_count: 3,
+    retained_bytes_unchanged: true,
+  }],
+  ['second-dispatch', 'already_complete', 1, 1, 1, 1, 'verified', 0, null, {
+    duplicate_dispatch_denied: true,
+  }],
+  ['automatic-retry-attempt', 'already_complete', 1, 1, 1, 1, 'verified', 0, null, {
+    retry_attempt_denied: true,
+  }],
+]);
+
+const EXPECTED_FAULTS = Object.freeze(EXPECTED_FAULT_ROWS.map(([fault]) => fault));
+const EXPECTED_FAULTS_BY_NAME = new Map(EXPECTED_FAULT_ROWS.map((row) => [row[0], row]));
+const EXPECTED_CAPTURE_TOTALS = Object.freeze({
+  artifact_count: 7,
+  automatic_retries: 0,
+  cleanup_states: Object.freeze({ failed: 4, unverified: 4, verified: 32 }),
+  dispatch_count: 38,
+  operator_steps: 6,
+  provider_call_count: 0,
+  simulated_request_count: 37,
+  terminal_count: 9,
+});
+
 function canonicalMutation(filePath, mutate, digestKey = null) {
   const value = JSON.parse(readFileSync(filePath, 'utf8'));
   mutate(value);
@@ -176,7 +257,7 @@ test('prepared and reserved checkpoints are safely resumable without dispatch or
         cleanup_state: 'unverified',
         diagnostic_code: null,
         dispatch_count: 0,
-        evidence_mode: 'docker_exact_provider_free',
+        evidence_mode: EXACT_EVIDENCE_MODE,
         permission_policy_id: RC6_PERMISSION_POLICY_ID,
         provider_call_count: 0,
         run_id: first.run_id,
@@ -254,31 +335,44 @@ test('sealed-result, artifact-publication, and terminal checkpoints recover to o
   }
 });
 
-test('malformed, stale, cleanup-failed, and artifact-drift states fail closed with bounded diagnostics', async () => {
-  const expected = new Map([
-    ['malformed-state', 'RC6_STATE_INVALID'],
-    ['stale-identity', 'RC6_SEAL_INVALID'],
-    ['cleanup-failure', 'RC6_CLEANUP_UNVERIFIED'],
-    ['artifact-drift', 'RC6_ARTIFACT_INVALID'],
-  ]);
-  for (const [fault, code] of expected) {
-    const root = tempRoot(`rc6-${fault}-`);
-    try {
-      const result = await exerciseTest({ fault, outputRoot: root });
-      assert.equal(result.classification, 'fail_closed');
-      assert.equal(result.diagnostic_code, code);
-      assert.equal(result.dispatch_count, 1);
-      assert.equal(result.simulated_request_count, 1);
-      assert.equal(result.provider_call_count, 0);
-      assert.equal(result.automatic_retries, 0);
-      assert.ok(Buffer.byteLength(canonicalJsonV1(result), 'utf8') < 1_024);
-      assert.deepEqual(await recoverRunState({ outputRoot: root }), result);
-    } finally { cleanup(root); }
+test('every registered mutation fails closed with its bounded diagnostic and exact zero-replay counts', async (t) => {
+  const expected = EXPECTED_FAULT_ROWS.filter(([, classification]) => classification === 'fail_closed');
+  for (const [fault, , dispatches, requests, artifacts, terminals, cleanupState, , code, faultAssertions] of expected) {
+    await t.test(fault, async () => {
+      const root = tempRoot('rc6-mutation-');
+      try {
+        const result = await exerciseTest({ fault, outputRoot: root });
+        assert.equal(result.classification, 'fail_closed');
+        assert.equal(result.diagnostic_code, code);
+        assert.equal(result.dispatch_count, dispatches);
+        assert.equal(result.simulated_request_count, requests);
+        assert.equal(result.provider_call_count, 0);
+        assert.equal(result.automatic_retries, 0);
+        assert.equal(result.artifact_count, artifacts);
+        assert.equal(result.terminal_count, terminals);
+        assert.equal(result.cleanup_state, cleanupState);
+        if (Object.keys(faultAssertions).length === 0) assert.equal(result.fault_assertions, undefined);
+        else assert.deepEqual(result.fault_assertions, faultAssertions);
+        assert.ok(Buffer.byteLength(canonicalJsonV1(result), 'utf8') < 2_048);
+        const { fault_assertions: _faultAssertions, ...persistedObservation } = result;
+        assert.deepEqual(await recoverRunState({ outputRoot: root }), persistedObservation);
+      } finally { cleanup(root); }
+    });
   }
 });
 
-test('concurrent recovery and attempted duplicate dispatch produce one artifact and terminal identity', async () => {
-  for (const fault of ['recovery-race', 'second-dispatch']) {
+test('cross-process recovery, repeated observation, duplicate dispatch, and retry denial retain one terminal identity', async () => {
+  const expectedAssertions = new Map([
+    ['recovery-race', {
+      cross_process: true,
+      loser_classification: 'fail_closed',
+      loser_diagnostic_code: 'RC6_RECOVERY_LOCK_HELD',
+    }],
+    ['repeated-inspect-recover', { inspect_count: 3, recover_count: 3, retained_bytes_unchanged: true }],
+    ['second-dispatch', { duplicate_dispatch_denied: true }],
+    ['automatic-retry-attempt', { retry_attempt_denied: true }],
+  ]);
+  for (const [fault, assertions] of expectedAssertions) {
     const root = tempRoot(`rc6-${fault}-`);
     try {
       const result = await exerciseTest({ fault, outputRoot: root });
@@ -290,9 +384,7 @@ test('concurrent recovery and attempted duplicate dispatch produce one artifact 
       assert.equal(readdirSync(path.join(root, 'artifacts')).length, 1);
       assert.equal(readdirSync(path.join(root, 'attempts')).length, 1);
       assert.equal(readdirSync(path.join(root, 'locks')).length, 0);
-      if (fault === 'recovery-race') {
-        assert.deepEqual(result.race_results, ['already_complete', 'fail_closed']);
-      }
+      assert.deepEqual(result.fault_assertions, assertions);
     } finally { cleanup(root); }
   }
 });
@@ -377,12 +469,15 @@ test('canonical state reader rejects structural and identity mutations before pu
       ['adapter-projection', 'adapter-projection.json', (file) => canonicalMutation(file, (value) => { value.final_wire.tools_field = 'present'; }, 'projection_sha256')],
       ['authority', 'run-plan.json', (file) => canonicalMutation(file, (value) => { value.authority.authority_id = 'changed'; }, 'run_plan_sha256')],
       ['retry', 'sealed-results/FACT-01.json', (file) => canonicalMutation(file, (value) => { value.automatic_retries = 1; }, 'sealed_result_sha256')],
+      ['negative-input-tokens', 'sealed-results/FACT-01.json', (file) => canonicalMutation(file, (value) => { value.input_tokens = -1; }, 'sealed_result_sha256'), 'RC6_USAGE_INVALID'],
+      ['excessive-output-tokens', 'sealed-results/FACT-01.json', (file) => canonicalMutation(file, (value) => { value.output_tokens = 1_000_001; value.output_token_target_exceeded = true; }, 'sealed_result_sha256'), 'RC6_USAGE_INVALID'],
+      ['inconsistent-output-token-target', 'sealed-results/FACT-01.json', (file) => canonicalMutation(file, (value) => { value.output_token_target_exceeded = true; }, 'sealed_result_sha256'), 'RC6_USAGE_INVALID'],
       ['container-residue', 'cleanup/FACT-01.json', (file) => canonicalMutation(file, (value) => { value.container_residue_count = 1; }, 'cleanup_sha256')],
       ['network-residue', 'cleanup/FACT-01.json', (file) => canonicalMutation(file, (value) => { value.network_residue_count = 1; }, 'cleanup_sha256')],
       ['credential-lock-residue', 'cleanup/FACT-01.json', (file) => canonicalMutation(file, (value) => { value.credential_lock_residue_count = 1; }, 'cleanup_sha256')],
       ['retained-request', 'retained-rc5/requests/FACT-01.dsh-request.json', (file) => canonicalMutation(file, (value) => { value.unknown = true; })],
     ];
-    for (const [name, relative, mutate] of mutations) {
+    for (const [name, relative, mutate, diagnosticCode] of mutations) {
       const root = tempRoot(`rc6-mutation-${name}-`);
       roots.push(root);
       cleanup(root);
@@ -390,7 +485,8 @@ test('canonical state reader rejects structural and identity mutations before pu
       mutate(path.join(root, ...relative.split('/')));
       const result = await inspectRunState({ outputRoot: root });
       assert.equal(result.classification, 'fail_closed', name);
-      assert.match(result.diagnostic_code, /^RC6_/u, name);
+      if (diagnosticCode === undefined) assert.match(result.diagnostic_code, /^RC6_/u, name);
+      else assert.equal(result.diagnostic_code, diagnosticCode, name);
       assert.equal(result.provider_call_count, 0, name);
       assert.equal(result.automatic_retries, 0, name);
     }
@@ -434,28 +530,20 @@ test('two independent provider-free fault matrix captures retain byte-identical 
     for (const root of roots) captures.push(await exerciseTest({ fault: 'matrix', outputRoot: root }));
     assert.deepEqual(captures[0], captures[1]);
     assert.equal(captures[0].evidence_mode, 'injected_test_only');
+    assert.deepEqual(RC6_REGISTERED_FAULTS, EXPECTED_FAULTS);
+    assert.deepEqual(captures[0].fault_order, EXPECTED_FAULTS);
     assert.equal(captures[0].cases.length, RC6_REGISTERED_FAULTS.length);
+    assert.equal(captures[0].cases.length, 40);
     assert.equal(captures[0].provider_calls, 0);
+    assert.deepEqual(captures[0].capture_totals, EXPECTED_CAPTURE_TOTALS);
     assert.equal(readFileSync(path.join(roots[0], 'fault-matrix-capture.json'), 'utf8'),
       readFileSync(path.join(roots[1], 'fault-matrix-capture.json'), 'utf8'));
-    const expected = new Map([
-      ['before-reservation', ['safely_resumable', 0, 0, 0, 0, 'unverified', 0]],
-      ['after-reservation', ['safely_resumable', 0, 0, 0, 0, 'unverified', 0]],
-      ['after-dispatch', ['indeterminate_stopped', 1, 0, 0, 1, 'unverified', 1]],
-      ['after-simulated-request', ['indeterminate_stopped', 1, 1, 0, 1, 'unverified', 1]],
-      ['after-seal', ['already_complete', 1, 1, 1, 1, 'verified', 1]],
-      ['after-artifact', ['already_complete', 1, 1, 1, 1, 'verified', 1]],
-      ['after-terminal', ['already_complete', 1, 1, 1, 1, 'verified', 0]],
-      ['malformed-state', ['fail_closed', 1, 1, 0, 0, 'verified', 0]],
-      ['stale-identity', ['fail_closed', 1, 1, 0, 0, 'verified', 0]],
-      ['artifact-drift', ['fail_closed', 1, 1, 0, 0, 'verified', 0]],
-      ['cleanup-failure', ['fail_closed', 1, 1, 0, 0, 'failed', 0]],
-      ['recovery-race', ['already_complete', 1, 1, 1, 1, 'verified', 1]],
-      ['second-dispatch', ['already_complete', 1, 1, 1, 1, 'verified', 0]],
-    ]);
     const completedArtifactHashes = new Set();
     for (const item of captures[0].cases) {
-      const [classification, dispatches, requests, artifacts, terminals, cleanupState, operatorSteps] = expected.get(item.fault);
+      const expected = EXPECTED_FAULTS_BY_NAME.get(item.fault);
+      assert.ok(expected, item.fault);
+      const [, classification, dispatches, requests, artifacts, terminals, cleanupState, operatorSteps, diagnosticCode,
+        faultAssertions] = expected;
       assert.equal(item.observation.classification, classification, item.fault);
       assert.equal(item.observation.dispatch_count, dispatches, item.fault);
       assert.equal(item.observation.simulated_request_count, requests, item.fault);
@@ -463,9 +551,11 @@ test('two independent provider-free fault matrix captures retain byte-identical 
       assert.equal(item.observation.terminal_count, terminals, item.fault);
       assert.equal(item.observation.cleanup_state, cleanupState, item.fault);
       assert.equal(item.operator_steps, operatorSteps, item.fault);
+      assert.equal(item.observation.diagnostic_code, diagnosticCode, item.fault);
       assert.equal(item.observation.provider_call_count, 0, item.fault);
       assert.equal(item.observation.automatic_retries, 0, item.fault);
       assert.equal(item.observation.evidence_mode, 'injected_test_only', item.fault);
+      assert.deepEqual(item.fault_assertions, faultAssertions, item.fault);
       if (artifacts === 1) completedArtifactHashes.add(item.observation.artifact_sha256);
       else assert.equal(item.observation.artifact_sha256, null, item.fault);
     }
@@ -493,7 +583,9 @@ test('CLI keeps inspect/recover networkless and rejects provider or credential-s
       stderr: captureStream().stream,
       stdout: preparedOut.stream,
     }), 0);
-    assert.equal(JSON.parse(preparedOut.text()).classification, 'safely_resumable');
+    const preparedObservation = JSON.parse(preparedOut.text());
+    assert.equal(preparedObservation.classification, 'safely_resumable');
+    assert.equal(preparedObservation.evidence_mode, EXACT_EVIDENCE_MODE);
 
     const inspectOut = captureStream();
     assert.equal(await runRC6RunStateCli({
@@ -546,7 +638,7 @@ test('public exercise rejects injected executors and cannot mint Docker-exact ev
     await assert.rejects(RC6_INTERNALS_FOR_TESTS.sealResult(exactState, {}, {}, {}), { code: 'RC6_TEST_ONLY_STATE' });
     await assert.rejects(RC6_INTERNALS_FOR_TESTS.publishTerminal(exactState), { code: 'RC6_TEST_ONLY_STATE' });
     await assert.rejects(RC6_INTERNALS_FOR_TESTS.recoverRunStateForTests({ outputRoot: root }), { code: 'RC6_TEST_ONLY_STATE' });
-    await assert.rejects(RC6_INTERNALS_FOR_TESTS.prepareRun(root, 'before-reservation', 'docker_exact_provider_free'), {
+    await assert.rejects(RC6_INTERNALS_FOR_TESTS.prepareRun(root, 'before-reservation', EXACT_EVIDENCE_MODE), {
       code: 'RC6_ARGUMENT',
     });
   } finally { cleanup(root); }

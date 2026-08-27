@@ -11,6 +11,7 @@
 
 # Source and config
 *.mjs   text eol=lf
+lib/recursus/rc6-synthetic-credentials-local.mjs text eol=lf whitespace=-blank-at-eof
 *.js    text eol=lf
 *.ts    text eol=lf
 *.tsx   text eol=lf
