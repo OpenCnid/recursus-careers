@@ -107,15 +107,16 @@ const readTextLF = (path) => normalizeEol(readFile(path));
 const TESTS_DIR = join(ROOT, 'tests');
 
 // Most discovered suites fit the shared 30-second child budget. The Recursus
-// benchmark, RC-2 reference, RC-3 execution-bridge, and RC-5 slice suites perform repeated
-// byte-level reconciliation and need a larger bounded allowance on Windows CI.
+// benchmark, RC-2 reference, RC-3 execution-bridge, and RC-5/RC-6 suites perform repeated
+// byte-level reconciliation and need a larger bounded allowance on Windows CI. RC-6 runs
+// two complete 40-case persistence captures and therefore has its own five-minute bound.
 const DISCOVERED_TEST_TIMEOUTS_MS = new Map([
   ['recursus/benchmark-foundation.test.mjs', 120_000],
   ['recursus/execution-bridge-v16.test.mjs', 120_000],
   ['recursus/execution-bridge-v17.test.mjs', 120_000],
   ['recursus/prompt-context-v1.test.mjs', 120_000],
   ['recursus/rc5-slice.test.mjs', 120_000],
-  ['recursus/rc6-run-state.test.mjs', 120_000],
+  ['recursus/rc6-run-state.test.mjs', 300_000],
   ['recursus/reference-capture.test.mjs', 120_000],
 ]);
 

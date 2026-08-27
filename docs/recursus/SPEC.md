@@ -1,6 +1,6 @@
 # RC-6 retained-surface promotion hardening specification
 
-Status: active mutable implementation contract; provider-free draft implemented, promotion review pending
+Status: active mutable implementation contract; validation-executor local promotion gates passed, exact-head CI and publication pending
 
 Roadmap milestone: [RC-6](ROADMAP.md#rc-6-promotion-hardening-and-durable-completion)
 
@@ -41,6 +41,55 @@ The RC-5 live summary has SHA-256 `a69a18dcdc1e939577cee66f3de4ad2b3f6884be8efca
 
 Those external live bytes are immutable historical evidence. RC-6 MUST NOT copy them into the repository, mutate them, reuse their consumed call slots, or reinterpret `KEEP` as production readiness.
 
+### 3.1 RC6-DEV-VALIDATION-EXECUTOR-V1 registration and local result
+
+The original fixed-image Docker-exact gate is `not_run / blocked`: executor image `sha256:8fd2be8c533c812abda166305d0399b72515258ec8f0039569ba2ff1d5176179` is not available on the replacement validation host, and it was not executed there. Image availability is not provider-free proof that the retained production container needs to change. RC-5 `KEEP`, its code and request semantics, the image identity above, and all historical evidence remain unchanged.
+
+RC-6 remains `in progress` and records a validation-only `REBUILD` under this distinct registration. The validation-executor fault matrix passed locally; exact-head CI and publication remain pending:
+
+- decision ID: `RC6-DEV-VALIDATION-EXECUTOR-V1`;
+- evidence mode: `rc6_validation_executor_exact_provider_free`;
+- merged RC-6 implementation: PR #19 head `2f13cf4649324a95cadc445f7faf8cdee6714dd8`, merged as `e9260576735bed0412fabb2a1dab41362e9ecab8`;
+- corrected durable run-state implementation `lib/recursus/rc6-run-state.mjs`: 82,514 bytes, SHA-256 `07cd41269c203a0a1b7162a3570c3a215dce8c0382eeb5bb7571f87bcafc6b1b`;
+- validation wrapper `lib/recursus/rc6-validation-executor.mjs`: 116,709 bytes, SHA-256 `e7ff3ed131c1965ebd51005e7ea91b504c70ee25ae0683d73198706c88a051e3`;
+- validation Dockerfile `scripts/recursus/Dockerfile.rc6-validation-executor`: 4,983 bytes, SHA-256 `20bbef26dc72c7dfa5ff820eb850501a087cdbc7481e2182d9b675c83feb589a`;
+- validation-only synthetic credential source `lib/recursus/rc6-synthetic-credentials-local.mjs`: 2,569 bytes, SHA-256 `afbcaf09efdcdcb365c45db7e1da1e65bcb2b14c5acd28a262913eebe2cb3a2b`;
+- validation executor: `RC6-OFERTA-DOCKER-VALIDATION-EXECUTOR-V1`;
+- validation image ID: `sha256:f65533481fe622cb80e47636e6da61691238f25bb420568e7c8828e2ae6b6ec1`;
+- base image ID: `sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df`;
+- selected external, uncommitted recovery archive: `F:\OpenCnid\rc6-docker-exact-rebuild-20260827\rc6-validation-executor-f6553348.tar`, 189,639,168 bytes, SHA-256 `6aadd5e980bb95b1da5125bb66dd862f653d21aa148f394b2a54b6e43fda23a7`;
+- adapter context SHA-256: `9222f8062771d7b4e7c17bf2e91869fe92207bc198736a08aa2ff52ee1a6cb92`;
+- retained worker: 75,569 bytes, SHA-256 `065fe2f438bbb9845a1cfec6060045b3d5e726a4a627470d198f22c9156d4296`;
+- retained proxy: 9,399 bytes, SHA-256 `d954e9a2c4149dff01c5bb65b3bfece4bfbd3724db9b68ab21deb7f2da3d470d`;
+- retained provider-free simulator: 28,540 bytes, SHA-256 `98337ae5d08ca2f68a4ac94e80a1492930e92c3a33b685b0c5d20d1eaccde6af`;
+- retained adapter source: 71,526 bytes, SHA-256 `569ab649694658c20b67c904bc9b1e1317ce2d038b0853385c546283f866e6d0`;
+- retained container-run authority SHA-256: `e284b3117d56e4961f16c58f218d5bc004563b963060070dbc3818df29eb0063`;
+- Docker Desktop `4.69.0 (224084)`, client and server `29.4.0`, context `desktop-linux`; and
+- Windows `docker.exe`: 43,100,080 bytes, SHA-256 `805149723eb721d3cbb944c441423c01a4f4fcd6968a81e57bc1781441762a85`.
+
+Two exact no-cache builds did not produce the same image identity: the selected build is `sha256:f65533481fe622cb80e47636e6da61691238f25bb420568e7c8828e2ae6b6ec1` and the independent build is `sha256:7cd04373c7831ab42940884751b33235c31dc153e0dfa34943c54f0cc5ce1ba3`. The selected archive hash registers a recoverable byte stream for this validation lane; it is not reproducible-build proof, retained RC-5 image provenance, or evidence that the original RC-5 executor ran.
+
+The validation-only synthetic credential shim accepts only the exact synthetic credential document encoded by its registered source, at the exact canonical regular-file boundary it enforces. No dependency was downloaded or installed for this substitution. The shim cannot validate live credential-provider behavior and is not equivalent to accepted `@deepseek-ai/dsh-credentials-local` behavior or to the original RC-5 image. It MUST NOT be used to read, validate, emulate, or make a claim about any live credential store.
+
+Corrective preregistration amendment `RC6-DEV-VALIDATION-EXECUTOR-V1-A1` invalidates the earlier `matrix-a` and `matrix-b` captures for promotion after red-team review found two host-boundary gaps. The amended run-state validates the retained completed-usage schema after restart and fault 26, `automatic-retry-state`, additionally proves three recomputed-digest usage mutations fail through both `inspect` and `recover`. The amended public validation wrapper applies the disposable-root and protected-segment boundary before Docker validation or any generated write. The closed 40-fault order, image, Dockerfile, adapter, shim, authority, and Docker-host identities do not change. Replacement captures MUST use new external roots and the corrected source identities above; no prior capture may be relabeled as amended evidence.
+
+The pre-amendment external `matrix-a` and `matrix-b` captures remain superseded diagnostics and are invalid for promotion. Two fresh external, uncommitted amended captures at `F:\OpenCnid\rc6-docker-exact-rebuild-20260827\matrix-c` and `F:\OpenCnid\rc6-docker-exact-rebuild-20260827\matrix-d` retained byte-identical deterministic `fault-matrix-capture.json` files. Each amended file is 23,477 bytes with SHA-256 `f0807d59b4771faa92ee26383058e3cae45429424270b67a38c3392b3da09921` and embedded `capture_sha256` `40f56c958cff8413806779cd76a95fcbb1e00caedee29775578a5596f31ebe60`.
+
+All 40 registered faults produced the same classification in both captures:
+
+- `safely_resumable` (2): `before-reservation`, `after-reservation`;
+- `indeterminate_stopped` (2): `after-dispatch`, `after-simulated-request`;
+- `already_complete` (7): `after-seal`, `after-artifact`, `after-terminal`, `recovery-race`, `repeated-inspect-recover`, `second-dispatch`, `automatic-retry-attempt`; and
+- `fail_closed` (29): `malformed-state`, `truncated-state`, `unknown-field-state`, `duplicate-key-state`, `reordered-state`, `oversized-state`, `stale-plan`, `stale-request`, `stale-source`, `stale-route`, `stale-provider`, `stale-adapter`, `stale-image`, `stale-model`, `stale-permission`, `stale-authority`, `adapter-projection-drift`, `retained-request-drift`, `automatic-retry-state`, `artifact-omission`, `artifact-byte-drift`, `artifact-hash-mismatch`, `artifact-path-escape`, `artifact-media-type-drift`, `artifact-replacement-race`, `cleanup-failure`, `container-residue`, `network-residue`, `credential-lock-residue`.
+
+Each capture totals 38 dispatches, 37 simulated requests, zero provider calls, zero automatic retries, 7 artifacts, 9 terminal records, and 6 operator steps. Cleanup is `verified` for 32 cases, `failed` as injected for 4, and unverified by the interruption checkpoint for 4. The exact after-terminal smoke produced one dispatch, one simulated request, zero provider calls, zero retries, one artifact, one terminal record, verified cleanup, byte-identical repeated `inspect` and `recover` observations, and no residual resources.
+
+Measured total wall times for corrected capture C/D were: `after-terminal` 12,767/12,815 ms; `after-seal` 12,760/12,721 ms; `after-artifact` 12,921/12,904 ms; `after-dispatch` 1,542/1,535 ms; `after-simulated-request` 12,642/12,397 ms; `recovery-race` 13,144/13,208 ms; and `repeated-inspect-recover` 13,493/13,526 ms. Capture C executor median was 10,716 ms; total matrix wall times were 454,888/456,182 ms. These host timings are observational and excluded from the deterministic capture digest. Corrected `smoke-04` completed in 12,998 ms and retained byte-identical exercise plus two inspect and two recover observations.
+
+Local verification passed: the corrected focused retained RC-5 plus RC-6 tests passed 98/98 in 195.955 seconds; prompt-context validation passed; syntax validation passed 600 `.mjs` modules; and the Recursus-only runner passed 12 suites with zero failures and zero warnings after `test-all.mjs` raised only the RC-6 harness timeout from 120 to 300 seconds. The initial 120-second RC-6 harness timeout is not a product-test failure. The prohibited full local suite was intentionally skipped. These are local promotion gates only; the exact published head has not yet passed CI.
+
+The validation executor MUST wrap the kept RC-5 request semantics and the merged RC-6 production persistence and startup path. It MUST NOT change or relabel the RC-5 interface, wire or output contract, source projection, adapter revision, provider or model identity, one-shot transport meaning, result schema, artifact bounds, permission policy, authority checks, retry count, or cleanup rules. Its distinct executor, image, archive, and host identities MUST remain visible in every capture and summary.
+
 ## 4. Product-hardening question
 
 Can the retained RC-5 `oferta` route survive a bounded host interruption and resume to one attributable, artifact-verified terminal state without changing request identity, issuing an unregistered second provider request, weakening the zero-tool permission policy, or trusting stale or partial state?
@@ -63,7 +112,7 @@ RC-6 MUST NOT:
 - change the retained request projection, output semantics, provider identity, model identity, source bindings, or one-shot transport contract;
 - make a provider call or access a credential store;
 - add model-facing tools or any external mutation capability;
-- rebuild or repin the executor image without provider-free proof that a production-container change is required;
+- rebuild or repin the retained RC-5 executor image without provider-free proof that a production-container change is required; the separately identified validation-only image above is not such a rebuild or repin;
 - modify accepted RC-1 through RC-4 registrations, snapshots, fixtures, schemas, evidence, or implementation bytes;
 - mutate or copy historical RC-5 live evidence;
 - broaden into general workflow orchestration, deployment, release, or RC-7; or
@@ -123,21 +172,48 @@ The policy MUST be adapter-independent. The OpenAI Codex projection may record a
 
 ## 10. Fault-injection matrix
 
-Use the exact production startup and persistence path with the existing Docker-internal simulator and synthetic credentials only. Add deterministic fault hooks available only to tests or an explicitly provider-free diagnostic command. Cover at least:
+Use the exact merged RC-6 production startup and persistence path with the preregistered RC-6 validation executor, the existing Docker-internal simulator, and synthetic credentials only. The resulting evidence is exact only for that validation identity, not for the unavailable RC-5 image. Add deterministic fault hooks available only to tests or an explicitly provider-free diagnostic command. The closed public fault order is exactly:
 
-1. interruption before reservation;
-2. interruption after reservation and before dispatch;
-3. interruption after dispatch and before any sealed worker result;
-4. interruption after a trusted worker result is sealed and before artifact publication;
-5. interruption after artifact publication and before terminal completion;
-6. interruption after terminal completion;
-7. malformed, truncated, unknown-field, duplicated, reordered, or oversized state;
-8. stale plan, request, source, adapter, image, model, permission, or authority identity;
-9. artifact omission, byte change, hash mismatch, path escape, media-type drift, or replacement race;
-10. cleanup failure, unexpected container or network residue, and credential-lock residue;
-11. a second recovery process racing the first;
-12. repeated `inspect` and `recover` invocations; and
-13. any code path attempting a second dispatch or automatic retry.
+1. `before-reservation`;
+2. `after-reservation`;
+3. `after-dispatch`;
+4. `after-simulated-request`;
+5. `after-seal`;
+6. `after-artifact`;
+7. `after-terminal`;
+8. `malformed-state`;
+9. `truncated-state`;
+10. `unknown-field-state`;
+11. `duplicate-key-state`;
+12. `reordered-state`;
+13. `oversized-state`;
+14. `stale-plan`;
+15. `stale-request`;
+16. `stale-source`;
+17. `stale-route`;
+18. `stale-provider`;
+19. `stale-adapter`;
+20. `stale-image`;
+21. `stale-model`;
+22. `stale-permission`;
+23. `stale-authority`;
+24. `adapter-projection-drift`;
+25. `retained-request-drift`;
+26. `automatic-retry-state`;
+27. `artifact-omission`;
+28. `artifact-byte-drift`;
+29. `artifact-hash-mismatch`;
+30. `artifact-path-escape`;
+31. `artifact-media-type-drift`;
+32. `artifact-replacement-race`;
+33. `cleanup-failure`;
+34. `container-residue`;
+35. `network-residue`;
+36. `credential-lock-residue`;
+37. `recovery-race`;
+38. `repeated-inspect-recover`;
+39. `second-dispatch`; and
+40. `automatic-retry-attempt`.
 
 Each case MUST assert exact dispatch count, simulated HTTP request count, terminal state, artifact identity, cleanup state, and bounded diagnostic reason. Mutation coverage MUST demonstrate that weakening a required predicate fails a test.
 
@@ -219,6 +295,8 @@ Before publication, run only the allowed local gates:
 7. `git diff --check`; and
 8. a full status and diff review proving unrelated user work and accepted evidence are untouched.
 
+Injected captures MUST retain evidence mode `injected_test_only`. Promotion-review captures for this amended lane MUST retain `rc6_validation_executor_exact_provider_free`, executor `RC6-OFERTA-DOCKER-VALIDATION-EXECUTOR-V1`, and every registered image, archive, source, adapter, and host identity. They do not satisfy the blocked original fixed-image Docker-exact gate.
+
 Let GitHub CI run the full cross-platform suite. Local success is not acceptance. The exact reviewed PR head must pass Ubuntu, macOS, Windows, security, dependency, regression, visual, and guard checks before merge is eligible.
 
 ## 16. Exit decision
@@ -259,3 +337,5 @@ The handoff MUST report:
 ## 18. Non-claims
 
 RC-6 provider-free evidence does not establish live provider recovery, exactly-once behavior inside a provider, provider neutrality, production readiness, feature parity, deployment safety, improved hiring outcomes, or universal reliability. It can establish only the retained host route's deterministic classification, persistence, recovery, completion-verification, and no-replay behavior under the registered synthetic faults.
+
+Evidence under `RC6-DEV-VALIDATION-EXECUTOR-V1` additionally does not establish execution of the retained RC-5 image, equivalence to the original RC-5 host, or reproducible image construction. Its image and archive hashes establish byte identity only.

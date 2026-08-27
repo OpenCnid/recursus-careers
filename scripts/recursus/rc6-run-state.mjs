@@ -68,7 +68,7 @@ export async function runRC6RunStateCli(options = {}) {
       : parsed.command === 'recover'
         ? await recoverRunState(operationOptions)
         : await exerciseRunState(operationOptions);
-    stdout.write(`${canonicalJsonV1(result)}\n`);
+    stdout.write(canonicalJsonV1(result));
     return result.classification === 'fail_closed' ? 1 : 0;
   } catch (error) {
     stderr.write(`${formatRC6Error(error)}\n`);

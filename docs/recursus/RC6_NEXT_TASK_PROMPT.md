@@ -1,15 +1,36 @@
 # Codex kickoff prompt for RC-6 retained-surface promotion hardening
 
-Status: active handoff prompt
+Status: active corrected handoff prompt; local promotion gates passed, exact-head CI and publication pending
 
-Copy the complete prompt below into the next Codex session. It authorizes bounded provider-free implementation, local verification, a feature-branch commit, push, and a pull request. It does not authorize a provider call, credential-store access, pull-request merge, deployment, external Career Ops mutation, or work beyond RC-6.
+Copy the complete prompt below into the next Codex session. It authorizes the bounded provider-free RC-6 validation-executor rebuild, local verification, a feature-branch commit, push, and a pull request. It does not authorize a provider call, credential-store access, pull-request merge, deployment, external Career Ops mutation, or work beyond RC-6.
 
 ```text
 Work in this repository using Windows PowerShell only:
 
 F:\OpenCnid\recursus-careers
 
-Implement roadmap milestone RC-6 exactly as defined by the active normative `docs/recursus/SPEC.md`, using `docs/recursus/RC6_SLICE_CARD.md` as its operational scope, authority, budget, and exit summary. RC-5 is complete and the user adopted `KEEP`. RC-6 must harden only the retained `oferta` surface for bounded restart recovery, exactly-once attribution, artifact-verified completion, and a provider-neutral zero-tool permission policy. Do not redesign the RC-5 request, repeat its usefulness comparison, or expand into RC-7.
+Continue roadmap milestone RC-6 exactly as defined by the active normative `docs/recursus/SPEC.md`, using `docs/recursus/RC6_SLICE_CARD.md` as its operational scope, authority, budget, and exit summary. RC-5 is complete and the user adopted `KEEP`. RC-6 must harden only the retained `oferta` surface for bounded restart recovery, exactly-once attribution, artifact-verified completion, and a provider-neutral zero-tool permission policy. Do not redesign the RC-5 request, repeat its usefulness comparison, or expand into RC-7.
+
+Pre-execution validation decision:
+
+- `RC6-DEV-VALIDATION-EXECUTOR-V1` records the original fixed-image Docker-exact gate as `not_run / blocked`. Retained RC-5 image `sha256:8fd2be8c533c812abda166305d0399b72515258ec8f0039569ba2ff1d5176179` is unavailable on the replacement host and was not executed there.
+- RC-5 `KEEP`, code, request semantics, image identity, and historical evidence remain unchanged. RC-6 remains `in progress`; RC-7 has not started.
+- Base validation on merged RC-6 PR #19 implementation head `2f13cf4649324a95cadc445f7faf8cdee6714dd8`, merge `e9260576735bed0412fabb2a1dab41362e9ecab8`.
+- Apply corrective amendment `RC6-DEV-VALIDATION-EXECUTOR-V1-A1`. Pin `lib/recursus/rc6-run-state.mjs` at 82,514 bytes and SHA-256 `07cd41269c203a0a1b7162a3570c3a215dce8c0382eeb5bb7571f87bcafc6b1b`, `lib/recursus/rc6-validation-executor.mjs` at 116,709 bytes and SHA-256 `e7ff3ed131c1965ebd51005e7ea91b504c70ee25ae0683d73198706c88a051e3`, `scripts/recursus/Dockerfile.rc6-validation-executor` at 4,983 bytes and SHA-256 `20bbef26dc72c7dfa5ff820eb850501a087cdbc7481e2182d9b675c83feb589a`, and `lib/recursus/rc6-synthetic-credentials-local.mjs` at 2,569 bytes and SHA-256 `afbcaf09efdcdcb365c45db7e1da1e65bcb2b14c5acd28a262913eebe2cb3a2b`.
+- Use only distinct mode `rc6_validation_executor_exact_provider_free` and executor `RC6-OFERTA-DOCKER-VALIDATION-EXECUTOR-V1`.
+- Pin validation image `sha256:f65533481fe622cb80e47636e6da61691238f25bb420568e7c8828e2ae6b6ec1`, base `sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df`, adapter context `9222f8062771d7b4e7c17bf2e91869fe92207bc198736a08aa2ff52ee1a6cb92`, and selected external, uncommitted archive `F:\OpenCnid\rc6-docker-exact-rebuild-20260827\rc6-validation-executor-f6553348.tar` at 189,639,168 bytes and SHA-256 `6aadd5e980bb95b1da5125bb66dd862f653d21aa148f394b2a54b6e43fda23a7`.
+- The two exact no-cache builds differed: selected `sha256:f65533481fe622cb80e47636e6da61691238f25bb420568e7c8828e2ae6b6ec1` versus independent `sha256:7cd04373c7831ab42940884751b33235c31dc153e0dfa34943c54f0cc5ce1ba3`. The selected archive is recoverability and byte-identity evidence only, not reproducible-build proof or retained RC-5 image provenance.
+- The validation-only credential shim accepts only its exact synthetic credential document through its enforced canonical-file boundary. No dependency was downloaded or installed for this substitution. Do not treat it as validation of live credential-provider behavior or as equivalent to accepted `@deepseek-ai/dsh-credentials-local` or the original RC-5 image.
+- Use the exact retained worker, proxy, simulator, adapter, authority, Docker host, and closed 40-fault order registered in `SPEC.md`. Do not add, omit, rename, or reorder a public fault after results become visible.
+- Treat the earlier `matrix-a` and `matrix-b` captures as superseded diagnostics. Corrected captures use external `matrix-c` and `matrix-d`; fault 26 attests that all three recomputed-digest usage mutations fail through both inspect and recover, and the public wrapper root boundary is tested before Docker or generated writes.
+
+Local execution result:
+
+- The registered validation lane passed its local promotion gates. Exact-head CI and publication are still pending; do not state that CI passed or that RC-6 is accepted or `READY_FOR_PROMOTION_REVIEW`.
+- External, uncommitted corrected matrix C and D deterministic capture files are byte-identical at 23,477 bytes, SHA-256 `f0807d59b4771faa92ee26383058e3cae45429424270b67a38c3392b3da09921`, with embedded capture SHA-256 `40f56c958cff8413806779cd76a95fcbb1e00caedee29775578a5596f31ebe60`.
+- Each capture records 7 `already_complete`, 29 `fail_closed`, 2 `indeterminate_stopped`, and 2 `safely_resumable`; 38 dispatches, 37 simulated requests, zero provider calls, zero retries, 7 artifacts, 9 terminals, 6 operator steps, and cleanup 32 verified / 4 failed as injected / 4 unverified by checkpoint.
+- Corrected `smoke-04` records exactly one dispatch, one request, zero provider calls, zero retries, one artifact, one terminal record, verified cleanup, five identical exercise/inspect/recover observations, and no residual resources in 12,998 ms.
+- Local verification passed corrected focused RC-5 plus RC-6 tests 98/98 in 195.955 seconds, prompt-context validation, syntax for 600 `.mjs` modules, and 12 Recursus-only suites with zero failures or warnings. An initial 120-second RC-6 harness timeout led only that timeout to be raised to 300 seconds before the clean rerun. The full local suite was intentionally skipped.
 
 Authorization and limits:
 
@@ -38,7 +59,7 @@ Repository state and preservation:
 2. The previous session intentionally left the primary workspace detached at RC-5 head `287aeb08a83a132d20858bdd4dfd5e77f2ea2a9f` to preserve unrelated uncommitted web work and `docs/recursus/frontend-capability-map/`. PR #15 merged to `main` as `70e3058fee51e74a4cd6ee31a7869245d417cff5`. Discover the current state rather than assuming it is unchanged.
 3. Preserve every unrelated modification and untracked file. Do not stage, stash, clean, reset, rewrite, discard, or absorb the web or frontend-capability-map work into RC-6.
 4. Create or select an RC-6 branch only when doing so cannot overwrite those files. If safe branch setup is blocked, stop and report the exact conflict; do not force it.
-5. Confirm `origin/main` contains merge commit `70e3058fee51e74a4cd6ee31a7869245d417cff5` and that `docs/recursus/ROADMAP.md` marks RC-5 `kept` and RC-6 `next`.
+5. Confirm `origin/main` contains RC-5 merge `70e3058fee51e74a4cd6ee31a7869245d417cff5` and RC-6 merge `e9260576735bed0412fabb2a1dab41362e9ecab8`, and that `docs/recursus/ROADMAP.md` marks RC-5 `kept` and RC-6 `in progress`.
 6. Search for and follow the most specific `AGENTS.md` or equivalent instruction before touching each nested path.
 
 Study these files completely before implementation. The primary agent must personally study and interpret every binding instruction before delegating architectural judgment:
@@ -81,9 +102,9 @@ First produce a concise seam map before editing. Map the retained preparation, r
 Implementation boundary:
 
 - Prefer new files `lib/recursus/rc6-run-state.mjs`, `scripts/recursus/rc6-run-state.mjs`, and `tests/recursus/rc6-run-state.test.mjs`, plus the minimum existing updater, test registry, feature registry, or documentation changes required by repository checks.
-- Wrap the kept RC-5 route where possible. Modify RC-5 implementation only if a missing durable seam cannot be added safely outside it.
+- Wrap the kept RC-5 route. Do not modify RC-5 implementation merely because the retained image is unavailable on the replacement validation host.
 - Preserve the exact RC-5 interface, source projection, output policy, direct-adapter revision, provider and model identity, one-shot transport, no-tools policy, automatic-retry count, result schema, artifact bounds, authority checks, and cleanup rules.
-- Do not rebuild or repin the executor image unless the seam map and provider-free tests prove a production-container change is necessary.
+- Do not rebuild or repin the retained RC-5 executor image. Use only the separately identified RC-6 validation image registered above; never relabel it as the retained RC-5 image.
 - Do not modify accepted RC-1 through RC-4 registrations, snapshots, fixtures, schemas, evidence, or implementation bytes. Do not mutate or copy external RC-5 live evidence.
 - Keep all generated state below one explicit caller-owned empty disposable output root outside the repository. Fail closed on missing, non-empty, repository-contained, broad, aliased, overlapping, user-layer, or credential paths.
 
@@ -99,7 +120,7 @@ Build a closed provider-neutral permission policy for the retained zero-tool rou
 
 Provider-free fault matrix:
 
-- Exercise every checkpoint and mutation required by the RC-6 specification through the exact production persistence/startup path and Docker-internal simulator with synthetic credentials only.
+- Preserve the completed exact closed 40-fault result through publication. Do not regenerate it unless a registered implementation or identity byte changes; if one changes, invalidate the result and preregister a new bounded lane before execution.
 - Assert exact dispatch and simulated-request counts, recovery classification, artifact identity, terminal state, retry count, and cleanup state.
 - Prove repeated `inspect` and `recover` calls are idempotent.
 - Prove a second concurrent recovery cannot win or duplicate work.
@@ -134,6 +155,8 @@ Hand off with:
 - uninterrupted and recovery timing plus operator-step measurements;
 - all local and CI results and every skipped check;
 - confirmation of zero provider calls, zero credential access, zero external mutation, and zero WSL interaction;
+- confirmation that the retained RC-5 image was not executed, the original Docker-exact gate remained `not_run / blocked`, and all replacement evidence names the distinct RC-6 validation executor;
+- the image-build divergence and the limitation that the selected archive proves recoverability and byte identity, not reproducible construction;
 - confirmation that accepted RC-1 through RC-4, historical RC-5 evidence, and unrelated user work were unchanged; and
 - the recommendation and remaining non-claims.
 ```

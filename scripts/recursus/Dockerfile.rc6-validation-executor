@@ -1,0 +1,52 @@
+# syntax=docker/dockerfile:1.7
+ARG SOURCE_DATE_EPOCH=1787792392
+FROM node:24.19.0-bookworm-slim@sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df
+
+ARG ADAPTER_CONTEXT_SHA256
+ARG SOURCE_DATE_EPOCH
+
+USER root
+RUN mkdir -p /opt/rc3 /opt/rc5 /opt/recursus-profile/node_modules/deepseek-openai-codex \
+    /opt/recursus-profile/node_modules/@deepseek-ai/dsh-credentials-local/lib
+COPY --from=adapter-context node_modules/ /opt/recursus-profile/node_modules/
+COPY --from=adapter-context package.json README.md COMPATIBILITY.md THIRD_PARTY_NOTICES.md cordis.patch.yml /opt/recursus-profile/node_modules/deepseek-openai-codex/
+COPY --from=adapter-context lib/ /opt/recursus-profile/node_modules/deepseek-openai-codex/lib/
+COPY --chown=65532:65532 lib/recursus/recursus-route-content-gate-v17.mjs /opt/rc3/recursus-route-content-gate-v17.mjs
+COPY --chown=65532:65532 lib/recursus/recursus-route-html-entities-v17.mjs /opt/rc3/recursus-route-html-entities-v17.mjs
+COPY --chown=65532:65532 lib/recursus/recursus-route-credential-permission-v17.mjs /opt/rc3/recursus-route-credential-permission-v17.mjs
+COPY --chown=65532:65532 lib/recursus/recursus-route-proxy-v17.mjs /opt/rc3/recursus-route-proxy-v17.mjs
+COPY --chown=65532:65532 lib/recursus/recursus-route-relay-v17.mjs /opt/rc3/recursus-route-relay-v17.mjs
+COPY --chown=65532:65532 lib/recursus/recursus-route-socket-init-v17.mjs /opt/rc3/recursus-route-socket-init-v17.mjs
+COPY --chown=65532:65532 lib/recursus/rc5-provider-worker.mjs /opt/rc5/rc5-provider-worker.mjs
+COPY --chown=65532:65532 lib/recursus/rc6-synthetic-credentials-local.mjs /opt/recursus-profile/node_modules/@deepseek-ai/dsh-credentials-local/lib/index.js
+COPY --chown=65532:65532 scripts/recursus/rc5-provider-free-payload-probe.cjs /opt/rc5/rc5-provider-free-payload-probe.cjs
+RUN printf '{"type":"module"}\n' > /opt/recursus-profile/package.json \
+    && printf '{"name":"@deepseek-ai/dsh-credentials-local","version":"0.0.0-rc6-validation-only","type":"module","main":"./lib/index.js","exports":"./lib/index.js"}\n' > /opt/recursus-profile/node_modules/@deepseek-ai/dsh-credentials-local/package.json \
+    && node -e "const fs=require('node:fs');const source=fs.readFileSync('/opt/rc3/recursus-route-proxy-v17.mjs','utf8');const derived=source.replaceAll('maxTunnels: 2','maxTunnels: 1').replace('const TUNNEL_TIMEOUT_MS = 120_000;','const TUNNEL_TIMEOUT_MS = 470_000;').replace('rc3-proxy-v17','rc5-proxy-v2');if(derived===source||derived.includes('maxTunnels: 2')||derived.includes('TUNNEL_TIMEOUT_MS = 120_000')||!derived.includes('TUNNEL_TIMEOUT_MS = 470_000')||!derived.includes('rc5-proxy-v2'))process.exit(1);fs.writeFileSync('/opt/rc5/rc5-route-proxy.mjs',derived);" \
+    && chown -R 65532:65532 /opt/rc3 /opt/rc5 /opt/recursus-profile \
+    && chmod -R go-w /opt/rc3 /opt/rc5 /opt/recursus-profile \
+    && chmod 0555 /opt/rc3 /opt/rc5 /opt/recursus-profile \
+    && chmod 0444 /opt/rc5/rc5-provider-worker.mjs /opt/rc5/rc5-provider-free-payload-probe.cjs /opt/rc5/rc5-route-proxy.mjs
+USER 65532:65532
+WORKDIR /opt/rc3
+ENTRYPOINT ["/usr/local/bin/node"]
+
+LABEL org.opencontainers.image.revision="rc6-oferta-validation-executor-v1" \
+      org.opencontainers.image.base.name="node:24.19.0-bookworm-slim" \
+      org.opencontainers.image.base.digest="sha256:a9f5f7c91a432850b2a8a7797adf5eadb6c733ceed61167806cee7ea7fbc29df" \
+      io.opencnid.recursus.rc6-validation-executor="RC6-OFERTA-DOCKER-VALIDATION-EXECUTOR-V1" \
+      io.opencnid.recursus.rc6-adapter-revision="2fc02090af1632b86ee1175a6720904dfd71081c" \
+      io.opencnid.recursus.rc6-adapter-context.sha256="${ADAPTER_CONTEXT_SHA256}" \
+      io.opencnid.recursus.rc6-synthetic-credentials-local.path="/opt/recursus-profile/node_modules/@deepseek-ai/dsh-credentials-local/lib/index.js" \
+      io.opencnid.recursus.rc6-synthetic-credentials-local.byte-count="2569" \
+      io.opencnid.recursus.rc6-synthetic-credentials-local.sha256="afbcaf09efdcdcb365c45db7e1da1e65bcb2b14c5acd28a262913eebe2cb3a2b" \
+      io.opencnid.recursus.rc5-provider-worker.path="/opt/rc5/rc5-provider-worker.mjs" \
+      io.opencnid.recursus.rc5-provider-worker.byte-count="75569" \
+      io.opencnid.recursus.rc5-provider-worker.sha256="065fe2f438bbb9845a1cfec6060045b3d5e726a4a627470d198f22c9156d4296" \
+      io.opencnid.recursus.rc5-proxy.path="/opt/rc5/rc5-route-proxy.mjs" \
+      io.opencnid.recursus.rc5-proxy.byte-count="9399" \
+      io.opencnid.recursus.rc5-proxy.sha256="d954e9a2c4149dff01c5bb65b3bfece4bfbd3724db9b68ab21deb7f2da3d470d" \
+      io.opencnid.recursus.rc5-provider-free-simulator.path="/opt/rc5/rc5-provider-free-payload-probe.cjs" \
+      io.opencnid.recursus.rc5-provider-free-simulator.byte-count="28540" \
+      io.opencnid.recursus.rc5-provider-free-simulator.sha256="98337ae5d08ca2f68a4ac94e80a1492930e92c3a33b685b0c5d20d1eaccde6af" \
+      io.opencnid.recursus.rc5-container-run-authority.sha256="e284b3117d56e4961f16c58f218d5bc004563b963060070dbc3818df29eb0063"
