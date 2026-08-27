@@ -4,22 +4,22 @@ USER root
 RUN mkdir -p /opt/rc5
 COPY --chown=65532:65532 lib/recursus/rc5-provider-worker.mjs /opt/rc5/rc5-provider-worker.mjs
 COPY --chown=65532:65532 scripts/recursus/rc5-provider-free-payload-probe.cjs /opt/rc5/rc5-provider-free-payload-probe.cjs
-RUN node -e "const fs=require('node:fs');const source=fs.readFileSync('/opt/rc3/recursus-route-proxy-v17.mjs','utf8');const derived=source.replaceAll('maxTunnels: 2','maxTunnels: 1').replace('rc3-proxy-v17','rc5-proxy-v1');if(derived===source||derived.includes('maxTunnels: 2')||!derived.includes('rc5-proxy-v1'))process.exit(1);fs.writeFileSync('/opt/rc5/rc5-route-proxy.mjs',derived);" && chmod 0555 /opt/rc5 && chmod 0444 /opt/rc5/rc5-provider-worker.mjs /opt/rc5/rc5-provider-free-payload-probe.cjs /opt/rc5/rc5-route-proxy.mjs
+RUN node -e "const fs=require('node:fs');const source=fs.readFileSync('/opt/rc3/recursus-route-proxy-v17.mjs','utf8');const derived=source.replaceAll('maxTunnels: 2','maxTunnels: 1').replace('const TUNNEL_TIMEOUT_MS = 120_000;','const TUNNEL_TIMEOUT_MS = 470_000;').replace('rc3-proxy-v17','rc5-proxy-v2');if(derived===source||derived.includes('maxTunnels: 2')||derived.includes('TUNNEL_TIMEOUT_MS = 120_000')||!derived.includes('TUNNEL_TIMEOUT_MS = 470_000')||!derived.includes('rc5-proxy-v2'))process.exit(1);fs.writeFileSync('/opt/rc5/rc5-route-proxy.mjs',derived);" && chmod 0555 /opt/rc5 && chmod 0444 /opt/rc5/rc5-provider-worker.mjs /opt/rc5/rc5-provider-free-payload-probe.cjs /opt/rc5/rc5-route-proxy.mjs
 USER 65532:65532
 WORKDIR /opt/rc3
 ENTRYPOINT ["/usr/local/bin/node"]
 
-LABEL org.opencontainers.image.revision="rc5-bounded-provider-executor-v2" \
+LABEL org.opencontainers.image.revision="rc5-bounded-provider-executor-v7" \
       org.opencontainers.image.base.name="recursus-rc5-ordered-adapter:2fc0209" \
       org.opencontainers.image.base.digest="sha256:11f4d4b9777b13ec29430bd682e0cb6b46f715e3ead28736c87a94f89f89aa01" \
       io.opencnid.recursus.parent-image="sha256:11f4d4b9777b13ec29430bd682e0cb6b46f715e3ead28736c87a94f89f89aa01" \
       io.opencnid.recursus.rc5-provider-worker.path="/opt/rc5/rc5-provider-worker.mjs" \
-      io.opencnid.recursus.rc5-provider-worker.byte-count="51024" \
-      io.opencnid.recursus.rc5-provider-worker.sha256="9dfed83838f8069e5940b48af3a61c4404a0f649c2cdbcd147c74976e87f22bf" \
+      io.opencnid.recursus.rc5-provider-worker.byte-count="75569" \
+      io.opencnid.recursus.rc5-provider-worker.sha256="065fe2f438bbb9845a1cfec6060045b3d5e726a4a627470d198f22c9156d4296" \
       io.opencnid.recursus.rc5-proxy.path="/opt/rc5/rc5-route-proxy.mjs" \
       io.opencnid.recursus.rc5-proxy.byte-count="9399" \
-      io.opencnid.recursus.rc5-proxy.sha256="0f4348017e62663a69f388a6b3862e64ce3c9a8dc236f221a56684029f8be470" \
+      io.opencnid.recursus.rc5-proxy.sha256="d954e9a2c4149dff01c5bb65b3bfece4bfbd3724db9b68ab21deb7f2da3d470d" \
       io.opencnid.recursus.rc5-provider-free-simulator.path="/opt/rc5/rc5-provider-free-payload-probe.cjs" \
-      io.opencnid.recursus.rc5-provider-free-simulator.byte-count="18237" \
-      io.opencnid.recursus.rc5-provider-free-simulator.sha256="4157b37a8ec97c93250da2b060b7324233276bd39490eb9bff231cb95292332e" \
-      io.opencnid.recursus.rc5-container-run-authority.sha256="f8744737196faadb09582bf72ea3de2d43f494a73133d46239dfbe8d5e19f2b7"
+      io.opencnid.recursus.rc5-provider-free-simulator.byte-count="28540" \
+      io.opencnid.recursus.rc5-provider-free-simulator.sha256="98337ae5d08ca2f68a4ac94e80a1492930e92c3a33b685b0c5d20d1eaccde6af" \
+      io.opencnid.recursus.rc5-container-run-authority.sha256="e284b3117d56e4961f16c58f218d5bc004563b963060070dbc3818df29eb0063"
