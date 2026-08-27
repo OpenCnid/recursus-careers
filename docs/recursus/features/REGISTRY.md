@@ -26,8 +26,8 @@ This registry is the initial truth table for Recursus Careers. It should change 
 | Disposable end-to-end product slice | `recursus-careers` | implemented and kept | bounded RC-5 evaluation route only | No | bounded product value demonstrated | RC-6 retained-surface promotion hardening; no supported product path yet | PR #15 head `287aeb08a83a132d20858bdd4dfd5e77f2ea2a9f` merged as `70e3058fee51e74a4cd6ee31a7869245d417cff5`. Three authorized cases completed with trusted HTTP 200, one request each, zero retries, OAuth refreshes, or external mutations, and no factual or safety correction. FACT-01 tied; FACT-03 and SAFE-01 won. Summary SHA-256 `a69a18dcdc1e939577cee66f3de4ad2b3f6884be8efcababbf3bc24f0689a0f4` recommends `KEEP`, which the user adopted. This is not production readiness or feature availability. |
 | Durable project-scoped run graph | `recursus-runtime` | specified | not integrated | No | required | Recursus Milestone 2 | Restart, replay, concurrency, and recovery suite |
 | Process, child, timer, and provider supervision | `recursus-runtime` | specified | not integrated | No | required | Recursus Milestone 3 | Explicit reconnect, lost-state, cancellation, and orphan tests |
-| Evidence-gated completion | `recursus-runtime` and `recursus-careers` | specified | not integrated | No | required | RC-6 retained-surface artifact gate plus Recursus Milestone 4 | Mandatory gates block premature, partial, replaced, and stale completion without inferring provider state |
-| Provider-neutral capability policy | `recursus-careers` and `dsh` | specified | not started | No | required | RC-6 retained zero-tool policy plus later adapter conformance | PN1 contract proof plus every adapter limitation recorded; one adapter cannot establish behavioral neutrality |
+| Evidence-gated completion | `recursus-runtime` and `recursus-careers` | implemented for the retained RC-6 route | provider-free retained `oferta` hardening draft only | No | required | RC-6 promotion review plus Recursus Milestone 4 | The RC-6 draft gates completion on artifact, usage, provenance, permission, authority, and cleanup verification. It does not establish general runtime integration or live-provider recovery, and acceptance still requires the exact-head promotion gates. |
+| Provider-neutral capability policy | `recursus-careers` and `dsh` | implemented for the retained RC-6 route | provider-free retained `oferta` hardening draft only | No | required | RC-6 promotion review plus later adapter conformance | Closed policy `rc6-oferta-zero-tool-provider-neutral-v1` represents the retained zero-tool and no-external-mutation semantics independently of adapter syntax. The draft exercises only the pinned OpenAI Codex projection; one adapter cannot establish provider-neutral behavior. |
 | Exact run manifest and provenance | `recursus-careers` | implemented for RC-3 evaluation route | evaluation route only | No | required | Product run-state integration and broader route coverage | V17 schema-valid manifest for the one registered direct route; every later supported route still requires its own evidence |
 | Durable delegated work graph | `recursus-runtime` and `dsh` | specified; DSH child capability exists | not integrated | No | opt-in until accepted | Recursus Milestone 5 | Ownership, conflict, budget, cancellation, and integration tests |
 | Selective RLM research path | `rlm` and `recursus-careers` | implemented in external RLM component | not integrated | No | opt-in | Career-specific routing, containment, and artifact contract | Eligible-case ablation passes without safety or generic regression |
@@ -49,10 +49,10 @@ This registry is the initial truth table for Recursus Careers. It should change 
 
 ## Known absent evidence
 
-At the accepted RC-4 boundary there is:
+At the current RC-6 draft boundary there is:
 
 - no accepted product integration of the V17 evaluation bridge into Career Ops;
-- no Recursus Careers product integration or kept RC-5 learning result; the authorized RC-5 `FACT-01` treatment made one no-retry provider request, failed without an artifact, and stopped with `DELETE` recommended;
+- no supported Recursus Careers product integration; RC-5 produced one bounded learning result that the user kept, but its historical live evidence does not establish production readiness;
 - no Claude Code feature-parity result;
 - no Recursus Careers RLM, Honcho, or Dovetail ablation;
 - no same-model runtime comparison;

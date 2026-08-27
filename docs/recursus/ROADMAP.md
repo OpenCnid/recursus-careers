@@ -61,7 +61,7 @@ Acceptance history preserves the reviewed pre-acceptance state without overridin
 | RC-3 | Minimal Recursus execution bridge | `accepted` | The same cases can run through Recursus without claiming feature parity | RC-1, RC-2, and the required Recursus runner surface |
 | RC-4 | Compiled prompt and context parity | `accepted` | Four registered synthetic pilot mode contracts compile into two offline route-delivery bundles with matching decoded structural semantics under registered adapter rules | RC-2 and RC-3 |
 | RC-5 | Disposable end-to-end value slice | `kept` | The user adopted `KEEP` after the anomaly-disclosure comparison produced two wins and one tie | RC-4 |
-| RC-6 | Promotion hardening and durable completion | `next` | Harden only the retained RC-5 workflow surface for resume, retry, recovery, and evidence-backed completion | RC-5 `KEEP` and required Recursus supervision support |
+| RC-6 | Promotion hardening and durable completion | `in progress` | Provider-free hardening draft implemented for only the retained RC-5 workflow surface; promotion evidence remains incomplete | RC-5 `KEEP` and required Recursus supervision support |
 | RC-7 | Selective RLM research | `conditional` | RLM is tested only if RC-5 exposes a research bottleneck worth its added cost and authority | RC-5 `KEEP` and an integrated RLM route |
 | RC-8 | Honcho advisory memory | `conditional` | Reusable preferences and context are tested only if the kept workflow needs continuity | RC-5 `KEEP` and an integrated Honcho route |
 | RC-9 | Dovetail delegation and routing | `conditional` | Delegation is tested only if the kept workflow has parallel work whose coordination cost can be justified | RC-5 `KEEP` and integrated Dovetail support |
@@ -239,7 +239,7 @@ The newly authorized prepared A root then consumed all three slots sequentially.
 
 ### RC-6: Promotion hardening and durable completion
 
-The user adopted RC-5 `KEEP`, so RC-6 is now the next scoped follow-up. Harden only the retained workflow surface proposed for support. A disposable slice may use simpler bounded recovery if that is enough to answer the product question.
+The user adopted RC-5 `KEEP`, and the provider-free RC-6 hardening draft is implemented for only that retained workflow surface. RC-6 remains `in progress` pending promotion review and exact-head verification; it is not accepted, integrated, or production-ready. A disposable slice may use simpler bounded recovery if that is enough to answer the product question.
 
 Active normative contract: [RC-6 specification](SPEC.md). Operational summary: [RC-6 slice card](RC6_SLICE_CARD.md). Session handoff: [RC-6 Codex kickoff prompt](RC6_NEXT_TASK_PROMPT.md). The accepted [RC-4 specification](RC4_SPEC.md) remains historical and does not govern RC-6.
 

@@ -7,7 +7,7 @@ Copy the complete prompt below into the next Codex session. It authorizes bounde
 ```text
 Work in this repository using Windows PowerShell only:
 
-D:\OpenCnid\recursus-careers
+F:\OpenCnid\recursus-careers
 
 Implement roadmap milestone RC-6 exactly as defined by the active normative `docs/recursus/SPEC.md`, using `docs/recursus/RC6_SLICE_CARD.md` as its operational scope, authority, budget, and exit summary. RC-5 is complete and the user adopted `KEEP`. RC-6 must harden only the retained `oferta` surface for bounded restart recovery, exactly-once attribution, artifact-verified completion, and a provider-neutral zero-tool permission policy. Do not redesign the RC-5 request, repeat its usefulness comparison, or expand into RC-7.
 
@@ -24,7 +24,7 @@ Critical host isolation:
 
 The default WSL2 distribution named `hermes` hosts a live Codex gateway. Treat it as protected production infrastructure and completely outside this task.
 
-- Work only in Windows PowerShell under `D:\OpenCnid\recursus-careers`.
+- Work only in Windows PowerShell under `F:\OpenCnid\recursus-careers` or an isolated `F:\OpenCnid\recursus-careers-worktrees\` worktree.
 - Never run `wsl`, `wsl.exe`, bare `bash` or `bash.exe`, `wslpath`, `systemctl`, WSL shutdown commands, or distribution-management commands.
 - Do not enter, inspect, start, stop, restart, reconfigure, or select any WSL distribution.
 - Do not change the default WSL distribution or gateway state.

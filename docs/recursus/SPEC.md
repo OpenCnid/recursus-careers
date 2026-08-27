@@ -1,6 +1,6 @@
 # RC-6 retained-surface promotion hardening specification
 
-Status: active mutable implementation contract; implementation not started
+Status: active mutable implementation contract; provider-free draft implemented, promotion review pending
 
 Roadmap milestone: [RC-6](ROADMAP.md#rc-6-promotion-hardening-and-durable-completion)
 
@@ -8,7 +8,7 @@ Operational summary: [RC-6 slice card](RC6_SLICE_CARD.md)
 
 Session handoff: [RC-6 Codex kickoff prompt](RC6_NEXT_TASK_PROMPT.md)
 
-Last reviewed: 2026-08-26
+Last reviewed: 2026-08-27
 
 ## 1. Document role and history
 
@@ -198,7 +198,7 @@ Request explicit user approval before exceeding either implementation limit or e
 
 The default WSL2 distribution `hermes` hosts protected production infrastructure and remains completely outside RC-6.
 
-- Use Windows PowerShell only under `D:\OpenCnid\recursus-careers`.
+- Use Windows PowerShell only under `F:\OpenCnid\recursus-careers` or an isolated `F:\OpenCnid\recursus-careers-worktrees\` worktree.
 - Never run `wsl`, `wsl.exe`, bare `bash` or `bash.exe`, `wslpath`, `systemctl`, WSL shutdown, or distribution-management commands.
 - Do not inspect, enter, start, stop, restart, reconfigure, or select any WSL distribution.
 - Do not change the default WSL distribution or gateway state.

@@ -7,6 +7,7 @@ import test from 'node:test';
 import { zstdCompressSync } from 'node:zlib';
 
 import {
+  executeDockerProviderFreeCase,
   RC5_EXECUTOR_IMAGE_ID,
   RC5_PROVIDER_EXECUTOR_INTERNALS_FOR_TESTS,
 } from '../../lib/recursus/rc5-provider-executor.mjs';
@@ -1352,6 +1353,33 @@ test('production result evidence is collected before cleanup and reconciled only
   assert.ok(cleanupAuthority > collectEvidence);
   assert.ok(reconcileEvidence > cleanupAuthority);
   assert.equal(source.includes('function collectResult('), false);
+});
+
+test('single-run provider-free executor exposes no live authority or credential input', async () => {
+  const required = { dockerExecutable: 'C:\\missing\\docker.exe', probeRoot: 'C:\\missing\\probe', request: {} };
+  for (const forbidden of ['credentialHome', 'providerAuthority', 'provider', 'live']) {
+    await assert.rejects(
+      executeDockerProviderFreeCase({ ...required, [forbidden]: 'forbidden' }),
+      { code: 'RC5_EXECUTOR_PROBE_OPTIONS' },
+      forbidden,
+    );
+  }
+  for (const transportMode of ['live', 'provider_free_unknown', '', null]) {
+    await assert.rejects(
+      executeDockerProviderFreeCase({ ...required, transportMode }),
+      { code: 'RC5_EXECUTOR_MODE' },
+      String(transportMode),
+    );
+  }
+  await assert.rejects(executeDockerProviderFreeCase({}), { code: 'RC5_EXECUTOR_PROBE_OPTIONS' });
+
+  const source = executeDockerProviderFreeCase.toString();
+  assert.doesNotMatch(source, /options\.(?:credentialHome|providerAuthority|provider)/u);
+  assert.match(source, /authorityMode: 'provider_free'/u);
+  assert.match(source, /prepareDockerExecution/u);
+  assert.match(source, /validateExactProviderFreeResult/u);
+  assert.match(source, /removeProviderFreeState/u);
+  assert.match(source, /removeProviderFreeParents/u);
 });
 
 test('provider-free simulator authority requires an exact DNS alias', () => {
