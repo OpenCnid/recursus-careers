@@ -362,7 +362,7 @@ test('canonical state reader rejects structural and identity mutations before pu
       }],
       ['duplicate-key', 'sealed-results/FACT-01.json', (file) => {
         const text = readFileSync(file, 'utf8');
-        writeFileSync(file, text.replace('{', '{"schema_version":"1.0.0",'));
+        writeFileSync(file, `{"schema_version":"1.0.0",${text.slice(1)}`);
       }],
       ['oversized', 'sealed-results/FACT-01.json', (file) => writeFileSync(file, ' '.repeat(131_073))],
       ['plan', 'run-plan.json', (file) => canonicalMutation(file, (value) => { value.retained_plan_digest = 'b'.repeat(64); }, 'run_plan_sha256')],
