@@ -34,7 +34,7 @@ Read these files completely in this order:
 3. `docs/CODEX.md`
 4. `docs/recursus/README.md`
 5. `docs/recursus/ROADMAP.md`
-6. `docs/recursus/SPEC.md`
+6. `docs/recursus/RC4_SPEC.md`
 7. `docs/recursus/benchmarks/README.md`
 8. `docs/recursus/benchmarks/PROTOCOL.md`
 9. `docs/recursus/benchmarks/SCENARIO_CATALOG.md`

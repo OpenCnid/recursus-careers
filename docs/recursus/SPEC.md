@@ -1,474 +1,261 @@
-# RC-4 compiled prompt and context parity specification
+# RC-6 retained-surface promotion hardening specification
 
-Status: implementation in progress; acceptance requires the exact reviewed PR head to pass every required check
+Status: active mutable implementation contract; implementation not started
 
-Roadmap milestone: [RC-4](ROADMAP.md#rc-4-compiled-prompt-and-context-parity)
+Roadmap milestone: [RC-6](ROADMAP.md#rc-6-promotion-hardening-and-durable-completion)
 
-Last reviewed: 2026-08-25
+Operational summary: [RC-6 slice card](RC6_SLICE_CARD.md)
 
-## 1. Purpose
+Session handoff: [RC-6 Codex kickoff prompt](RC6_NEXT_TASK_PROMPT.md)
 
-Implement the smallest provider-free prompt and context compiler that can preserve the Career Ops workflow contract across the accepted Claude Code reference route and the accepted minimal Recursus direct route.
+Last reviewed: 2026-08-26
 
-RC-4 turns selected Career Ops instructions, trusted synthetic candidate sources, untrusted task data, invocation facts, tool policy, and output requirements into one versioned canonical intermediate representation. Route adapters then produce inspectable delivery bundles from that representation without invoking a runner, harness, provider, model, browser, plugin, or live service.
+## 1. Document role and history
 
-The milestone establishes structural parity at the compiler and route-delivery boundary. It does not establish model behavior, provider request parity inside a closed runner, prompt-injection resistance in execution, feature parity, factuality, safety, quality, or comparative performance.
+This file is the active normative specification for the next Recursus Careers milestone. The shorter slice card bounds execution, authority, budget, and the exit decision. The kickoff prompt transfers those constraints into a new Codex session.
+
+The accepted RC-4 compiler-boundary contract is preserved separately as [RC4_SPEC.md](RC4_SPEC.md). It remains evidence for what RC-4 implemented and accepted, but it is not an RC-6 worklist. Keeping that historical contract under an explicit milestone filename prevents later work from silently rewriting the basis of accepted RC-4 evidence while allowing the generic `SPEC.md` entrypoint to describe the active milestone.
+
+RC-6 does not reopen RC-4, rerun RC-5, or claim that the retained slice is already a supported product path.
 
 ## 2. Normative language
 
-`MUST`, `MUST NOT`, `SHOULD`, and `MAY` are normative requirements. A requirement can be relaxed only by changing this specification and recording the reason before implementation evidence is frozen.
+`MUST`, `MUST NOT`, `REQUIRED`, and `SHALL` are binding RC-6 requirements. `SHOULD` and `PREFER` describe the expected implementation unless repository evidence demonstrates a safer or smaller alternative. Any departure must be recorded in the handoff.
 
-## 3. Accepted foundation and preservation boundary
+## 3. Foundation and retained surface
 
-RC-4 begins from accepted RC-1, RC-2, and RC-3 evidence:
+The user adopted RC-5 `KEEP` after PR #15 merged exact implementation head `287aeb08a83a132d20858bdd4dfd5e77f2ea2a9f` as merge commit `70e3058fee51e74a4cd6ee31a7869245d417cff5`.
 
-- RC-1 Benchmark Foundation v1 is accepted through PR #1.
-- RC-2 Claude Code reference capture v4 is accepted through PR #2.
-- RC-3 minimal Recursus execution bridge V17 is accepted through PR #4.
-- Exact reviewed RC-3 implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed the required Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency checks.
-- PR #4 merged as `04f5f490f3c745e2ab335c91ca2eb3abf31c19c0`.
-- V17 pins Recursus `d6d25dda3951e46fe1b03ec3cecc3f348bfe2346`, DSH `e52c224fe00954fb7e8cda19eb2411dceef15989`, and direct adapter `5232102d0cc8bd55d5bf27b6eb203efbf6ada8a9`.
+RC-6 retains only this demonstrated `oferta` surface:
 
-These accepted artifacts are immutable prerequisites, not RC-4 input that may be rewritten:
+- interface `RC5-DSH-CODEX-ANOMALY-DISCLOSURE-V1@1.0.0`;
+- wire contract `recursus-dsh-codex-anomaly-disclosure-v1`;
+- output frame `rc5-independent-evidence-and-anomaly-disclosure-v1`;
+- direct-adapter revision `2fc02090af1632b86ee1175a6720904dfd71081c`;
+- bounded executor image `sha256:8fd2be8c533c812abda166305d0399b72515258ec8f0039569ba2ff1d5176179`;
+- model-facing tools `[]`, automatic retries `0`, and one provider request per authorized case;
+- exact accepted RC-4 source bindings and RC-2 baselines; and
+- the existing DSH OAuth boundary, explicit one-shot transport, safe diagnostic envelope, and verified cleanup behavior.
 
-1. RC-1 corpus, schemas, manifests, and oracle bytes MUST remain unchanged.
-2. RC-2 registrations, ledgers, captured evidence, and accepted interpretations MUST remain unchanged.
-3. RC-3 V1 through V17 contracts, evidence, ledgers, source snapshots, and accepted interpretations MUST remain unchanged.
-4. RC-3 V17 MUST NOT be rerun, promoted into product integration, or relabeled as prompt-parity evidence.
-5. The existing Career Ops product workflow MUST remain behaviorally unchanged by RC-4.
-6. Recursus Milestone 1 and current-pin Linux double-build, profile, smoke, and clean-machine acceptance evidence remain incomplete and MUST continue to be described that way.
+The RC-5 live summary has SHA-256 `a69a18dcdc1e939577cee66f3de4ad2b3f6884be8efcababbf3bc24f0689a0f4`. It records trusted HTTP `200` for FACT-01, FACT-03, and SAFE-01; exactly three provider requests; zero retries, OAuth refreshes, or external mutations; one tie; two wins; and no factual or safety correction.
 
-Any local upstream Recursus checkout at revision `4444405e8b34124b1518fa2a66d0223e202234e4` may contain user-owned generated evidence. RC-4 MUST NOT alter, stage, commit, discard, reinterpret, or depend on such a dirty checkout.
+Those external live bytes are immutable historical evidence. RC-6 MUST NOT copy them into the repository, mutate them, reuse their consumed call slots, or reinterpret `KEEP` as production readiness.
 
-## 4. Required outcome
+## 4. Product-hardening question
 
-At completion, a local reviewer can, without network access:
+Can the retained RC-5 `oferta` route survive a bounded host interruption and resume to one attributable, artifact-verified terminal state without changing request identity, issuing an unregistered second provider request, weakening the zero-tool permission policy, or trusting stale or partial state?
 
-1. compile each registered pilot mode and synthetic invocation into a deterministic canonical `CompiledPrompt` document;
-2. project the same canonical document into an inspectable Claude Code reference delivery bundle and Recursus direct delivery bundle;
-3. decode both bundles back to canonical block references and prove all semantic fields match;
-4. identify every permitted route-specific transformation and protocol deviation by a registered rule;
-5. prove that task data appears exactly once and only with untrusted data authority;
-6. prove that evaluator-only material, user-owned local profile data, credentials, and unrelated files never enter the source closure or compiled output;
-7. fail closed on mixed, stale, duplicated, truncated, relabeled, reordered, or unregistered input; and
-8. run focused positive and negative tests on Ubuntu, macOS, and Windows.
+RC-6 answers a recovery and completion-integrity question. It does not repeat the RC-5 usefulness comparison.
 
-The successful verifier output MUST include this exact sentence:
+## 5. Scope
 
-> Structural prompt and context parity validated. No runner, provider, model, workflow behavior, factuality, safety, quality, feature-parity, or comparative claim was verified.
+RC-6 is limited to:
 
-## 5. Bounded pilot
+1. mapping the retained route's durable preparation, reservation, dispatch, worker-result, artifact, attempt, lock, cleanup, operator-observation, and summary seams;
+2. deterministic provider-free interruption and recovery classification;
+3. exact attribution and artifact-verified completion;
+4. idempotent inspection and recovery without replay;
+5. a closed, provider-neutral permission policy for the retained zero-tool route; and
+6. the minimum documentation, registration, and test integration required by repository checks.
 
-### 5.1 Pilot modes
+RC-6 MUST NOT:
 
-RC-4 covers exactly these four Career Ops mode contracts:
+- change the retained request projection, output semantics, provider identity, model identity, source bindings, or one-shot transport contract;
+- make a provider call or access a credential store;
+- add model-facing tools or any external mutation capability;
+- rebuild or repin the executor image without provider-free proof that a production-container change is required;
+- modify accepted RC-1 through RC-4 registrations, snapshots, fixtures, schemas, evidence, or implementation bytes;
+- mutate or copy historical RC-5 live evidence;
+- broaden into general workflow orchestration, deployment, release, or RC-7; or
+- claim production readiness, provider neutrality, or provider-side exactly-once behavior.
 
-| Mode | Contract surface represented |
+## 6. Required outcome
+
+At completion, provider-free evidence MUST show all of the following:
+
+1. Every durable run has one exact plan, request, route, authority, permission, and source identity.
+2. Restart handling classifies each checkpoint as safely resumable, already complete, or indeterminate-and-stopped.
+3. Recovery never silently replays a dispatched provider request.
+4. A trusted sealed worker result may be promoted after restart only after artifact, usage, authority, and cleanup verification pass.
+5. A partial, missing, malformed, stale, mismatched, or externally replaced state document cannot be presented as completed.
+6. Repeating `inspect` or `recover` is idempotent and cannot create another dispatch, artifact, or terminal result.
+7. The retained no-tools/no-external-mutation policy is represented independently of the OpenAI Codex adapter and is checked at the final wire and terminal-result boundaries.
+8. Recovery behavior and cost are measured against the unchanged uninterrupted provider-free RC-5 path.
+
+## 7. Recovery state model
+
+RC-6 may refine names after inspecting the actual retained seams, but it MUST preserve these semantic checkpoints:
+
+| Checkpoint | Required restart behavior |
 | --- | --- |
-| `oferta` | A-G offer evaluation, source boundary, scoring instructions, research and output structure |
-| `pdf` | Candidate-source use, truthful tailoring rules, template selection, and document output contract |
-| `cover` | Candidate-facing writing, JD treatment, bounded research instructions, and human confirmation gates |
-| `email` | Candidate-facing writing, report or JD context, attachment guidance, and the draft-only no-send boundary |
+| Prepared, no reservation | Revalidate exact identities; recovery may not perform a provider action. |
+| Reservation durable, no dispatch | Resume only the same pre-dispatch operation when durable evidence proves no provider-reachable dispatch occurred and the original authority remains valid; otherwise stop. |
+| Dispatch durable, no trusted sealed result | Mark the run indeterminate and stop. Never replay or infer whether the provider completed. |
+| Trusted worker result sealed, publication incomplete | Revalidate the sealed result, artifact, authority trace, and cleanup; publish without another provider request only when every gate passes. |
+| Terminal result complete | Return the same terminal identity and artifact; perform no new write except an explicitly idempotent verification record. |
+| Any identity, policy, artifact, or state drift | Fail closed with a bounded content-safe reason and no provider action. |
 
-The shared router MAY register `auto-pipeline` as an invocation alias for `oferta`, but it MUST NOT pretend that downstream PDF, tracker, browser, or mutation behavior ran. An alias is metadata, not a fifth mode contract.
+The implementation MUST first map these checkpoints onto the existing RC-5 reservation, dispatch, worker-result, artifact, attempt, lock, and cleanup files. It MUST NOT invent a recovery guarantee for a checkpoint that the retained implementation does not durably expose.
 
-All other Career Ops modes remain unsupported by RC-4. They MUST NOT be inferred, simulated, or counted toward RC-4 parity.
+## 8. Provider and authority boundary
 
-### 5.2 Compilation targets
+RC-6 implementation and its fault-injection acceptance work are provider-free. This specification authorizes zero provider calls and zero credential-store access.
 
-RC-4 supports exactly two offline compilation targets:
+- Do not copy, inspect, search, hash, decode, mount, or validate the reusable DSH credential store.
+- Do not add a provider-call authorization sentence to the kickoff prompt.
+- A future live recovery conformance attempt, if justified after provider-free review, requires a specification amendment and fresh exact user authority.
+- A provider dispatch is never automatically retryable. A new user-authorized run is not a retry and must receive a new run identity and durable authority record.
 
-1. `co-claude-code-reference-v1`: the runner-facing semantic delivery bundle for the accepted Claude Code reference lane.
-2. `recursus-direct-v1`: the harness-facing semantic delivery bundle for the accepted Recursus direct lane before provider transport.
+## 9. Capability and permission policy
 
-These are compiler-boundary targets. RC-4 does not claim visibility into a closed runner's final provider request and does not contact a provider. Any field that cannot be observed at this boundary MUST be recorded as `unverified` or a named deviation, never inferred as `pass`.
+Introduce one closed provider-neutral policy document or in-memory contract for the retained surface. Its minimum semantics are:
 
-### 5.3 Synthetic invocation matrix
+- model-facing tools: none;
+- browser, plugin, shell, child-agent, submission, send, contact, tracker, and external-mutation capabilities: denied;
+- candidate and job sources: read-only registered synthetic inputs;
+- task text: untrusted data, never instruction authority;
+- generated artifact: Markdown only, bounded to the retained RC-5 limit;
+- provider requests: at most one per separately authorized run and zero during RC-6 acceptance;
+- automatic provider retries: zero; and
+- diagnostics: bounded allowlisted fields only.
 
-Every pilot mode MUST compile at least:
+The policy MUST be adapter-independent. The OpenAI Codex projection may record adapter-specific limitations, but it MUST NOT define the underlying permission meaning. Testing one adapter does not establish provider neutrality.
 
-- one ordinary synthetic invocation using only RC-1 agent-visible fixture bytes or new explicitly synthetic non-oracle metadata;
-- one untrusted-task variant containing instruction-shaped text;
-- one context or budget boundary variant; and
-- one missing-required-source or invalid-authority negative case.
+## 10. Fault-injection matrix
 
-`FACT-01`, `FACT-03`, `SAFE-01`, and `NOSUB-01` SHOULD be reused where their declared agent-visible sources fit the mode. Scenario manifests and oracle files are evaluator-only and MUST NOT become compiler inputs.
+Use the exact production startup and persistence path with the existing Docker-internal simulator and synthetic credentials only. Add deterministic fault hooks available only to tests or an explicitly provider-free diagnostic command. Cover at least:
 
-## 6. Scope
+1. interruption before reservation;
+2. interruption after reservation and before dispatch;
+3. interruption after dispatch and before any sealed worker result;
+4. interruption after a trusted worker result is sealed and before artifact publication;
+5. interruption after artifact publication and before terminal completion;
+6. interruption after terminal completion;
+7. malformed, truncated, unknown-field, duplicated, reordered, or oversized state;
+8. stale plan, request, source, adapter, image, model, permission, or authority identity;
+9. artifact omission, byte change, hash mismatch, path escape, media-type drift, or replacement race;
+10. cleanup failure, unexpected container or network residue, and credential-lock residue;
+11. a second recovery process racing the first;
+12. repeated `inspect` and `recover` invocations; and
+13. any code path attempting a second dispatch or automatic retry.
 
-### 6.1 In scope
+Each case MUST assert exact dispatch count, simulated HTTP request count, terminal state, artifact identity, cleanup state, and bounded diagnostic reason. Mutation coverage MUST demonstrate that weakening a required predicate fails a test.
 
-- A versioned, dependency-free prompt and context compiler.
-- Closed JSON Schema Draft 2020-12 contracts for registrations, mode manifests, adapter manifests, compiled prompts, route delivery bundles, and validation results.
-- Explicit source closure and exact SHA-256 byte identities.
-- Ordered canonical prompt blocks with layer, authority, trust, provenance, budget policy, and required status.
-- Deterministic normalization and canonical serialization.
-- Explicit tool-capability, language, output-contract, and context-budget metadata.
-- Two offline route adapters and their inverse structural decoders.
-- Registered adapter transformation and deviation rules.
-- Static source-boundary, task-occurrence, and evaluator-only exclusion checks.
-- Focused positive, negative, denial, determinism, and cross-platform tests.
-- Package, updater, ownership, documentation, and CI integration required by the new distributed files.
+## 11. Command surface
 
-### 6.2 Out of scope
-
-RC-4 MUST NOT:
-
-- invoke Claude Code, Codex CLI, Recursus, DSH, a provider adapter transport, a provider SDK, a model, a browser, a plugin, telemetry, OAuth, or any live service;
-- read, copy, hash, log, validate, or use credentials or provider environment variables;
-- access HTTP, DNS, sockets, or unrelated network services;
-- execute V17 or create another provider attempt;
-- read user-owned ignored profile files or use real candidate, job, report, tracker, email, or application data;
-- open evaluator-only oracle files as compilation sources;
-- score a generated result or calculate factuality, safety, quality, CAQ, feature parity, advancement, superiority, or hiring outcomes;
-- claim behavioral prompt-injection resistance from static classification and canary tests;
-- perform a tool call, external mutation, application, submission, send, contact, or click;
-- integrate Recursus into the user-facing Career Ops workflow;
-- implement durable state, evidence-gated completion, RLM, Honcho, Dovetail, or automatic routing;
-- silently compress, omit, reorder, duplicate, paraphrase, or promote semantic content; or
-- install a dependency solely to make verification pass.
-
-## 7. Required deliverables
-
-The implementation SHOULD use this layout. A naming change requires an explicit reason in the implementation handoff.
-
-The originally planned V1 package is preserved as a frozen rejected record after its freeze edit omitted the required provider-isolation field. The user explicitly authorized V2 on 2026-08-25. V2 is the active package below and MUST NOT rewrite any V1 byte.
+Prefer one small RC-6 command surface rather than changing the retained RC-5 user contract broadly:
 
 ```text
-lib/recursus/prompt-context-v1.mjs
-scripts/recursus/verify-prompt-context-v1.mjs
-tests/recursus/prompt-context-v1.test.mjs
-
-evals/recursus/rc4-prompt-context-v2/
-  README.md
-  registration.json
-  source-snapshot.json
-  schemas/
-    registration.schema.json
-    mode-manifest.schema.json
-    adapter-manifest.schema.json
-    compiled-prompt.schema.json
-    route-bundle.schema.json
-    validation-result.schema.json
-  modes/
-    oferta.json
-    pdf.json
-    cover.json
-    email.json
-  adapters/
-    co-claude-code-reference-v1.json
-    recursus-direct-v1.json
-  fixtures/
-    invocations.json
+node scripts/recursus/rc6-run-state.mjs inspect --output-root <existing-provider-free-root>
+node scripts/recursus/rc6-run-state.mjs recover --output-root <existing-provider-free-root>
+node scripts/recursus/rc6-run-state.mjs exercise --output-root <empty-provider-free-root> --fault <registered-fault>
 ```
 
-The implementation MUST also update:
-
-- `package.json` with one RC-4 verification command, unless an accepted evidence snapshot hash-binds the current `package.json` bytes. When that preservation exception applies, `package.json` MUST remain byte-identical, the direct verifier entrypoint in section 13 is the required command surface, the exception MUST be recorded in the RC-4 package README and handoff, and the bound evidence validator MUST continue to pass;
-- `update-system.mjs` so every new distributed root or library file is protected by updater drift checks;
-- `evals/recursus/README.md` with the exact RC-4 evidence and non-claim boundary;
-- `docs/recursus/ROADMAP.md` and `docs/recursus/features/REGISTRY.md` only when status and evidence genuinely change; and
-- applicable ownership files when new nested paths require them.
-
-Do not add a second verifier or schema copy when the registered module can safely serve both CLI and tests.
-
-## 8. Source closure and mode manifests
-
-Each mode manifest MUST declare:
-
-- stable mode ID and semantic version;
-- exact workflow and router versions;
-- ordered system-owned instruction sources;
-- conditional instruction sources and the condition that enables each one;
-- permitted synthetic profile and task sources;
-- tool capability profile;
-- language policy;
-- context-budget policy;
-- output contract ID, version, parser version, and validator version;
-- supported invocation shapes;
-- required and optional blocks; and
-- explicitly unsupported behavior.
-
-Compilation MUST start from a registered allowlist. Recursive repository discovery, parent-directory lookup, shell expansion, environment-variable path lookup, and implicit user-file discovery are forbidden.
-
-Every source entry MUST include:
-
-- normalized repository-relative POSIX path or registered synthetic mount identity;
-- expected byte count and SHA-256 digest;
-- source class;
-- authority and trust classification;
-- visibility classification;
-- normalization rule; and
-- the block or blocks it is allowed to populate.
-
-A source hash mismatch, undeclared source, missing required source, visibility mismatch, or classification mismatch MUST fail compilation before any route bundle is created.
-
-## 9. Canonical `CompiledPrompt` contract
-
-The canonical representation MUST contain:
-
-- schema, compiler, registration, and source-snapshot versions;
-- mode, workflow, router, and invocation IDs and versions;
-- fixture identity and synthetic status;
-- output contract and validator identities;
-- language policy;
-- tool capability profile;
-- context capacity and budget decisions;
-- ordered prompt blocks;
-- source-closure digest;
-- normalized invariant-system digest;
-- task-payload digest;
-- profile-context digest;
-- deterministic compilation digest; and
-- validation status and issues.
-
-Each prompt block MUST contain the fields defined by the architectural [Compiled prompt and context contract](architecture/PROMPT_CONTEXT_CONTRACT.md), including:
-
-- stable ID and version;
-- ordinal;
-- layer;
-- authority;
-- trust;
-- source identity and source hash;
-- normalized content hash;
-- required status;
-- budget policy and action;
-- content or an explicitly registered file-reference delivery record; and
-- exact content byte and character counts.
-
-The supported layers are:
+`inspect` and `recover` MUST be networkless and credential-free. `exercise` MUST accept only registered provider-free faults and synthetic credentials. If repository inspection shows that fewer commands are sufficient, reduce this surface and document why. Do not add a provider-execution command to RC-6.
 
-- `system.invariant`
-- `context.profile`
-- `context.memory`
-- `data.task`
-- `invocation`
-- `output.frame`
+## 12. Implementation boundary
 
-RC-4 MUST NOT populate `context.memory`. It MUST be absent or an explicitly empty registered block. No memory content may support a candidate fact.
+Prefer new RC-6 files:
 
-Task data MUST occur exactly once in `data.task`, with authority `data` and trust `external_untrusted`. Candidate profile content MUST remain distinguishable from policy and instructions. System invariant bytes MUST remain identical across profiles and task fixtures for the same mode and source snapshot.
+- `lib/recursus/rc6-run-state.mjs`;
+- `scripts/recursus/rc6-run-state.mjs`;
+- `tests/recursus/rc6-run-state.test.mjs`;
+- the RC-6 specification, slice card, and handoff prompt; and
+- only the minimum existing test, updater, registry, or documentation surfaces required by repository checks.
 
-## 10. Canonicalization and budgeting
+Modify retained RC-5 implementation files only when a missing durable seam cannot be supplied by a wrapper. Any such change MUST preserve the exact RC-5 request projection, provider authority, one-shot transport, result schema, artifact policy, and accepted source bindings.
 
-- Exact file integrity uses SHA-256 over original bytes.
-- Canonical JSON uses recursively sorted object keys, preserved array order, UTF-8, LF line endings, and one trailing newline.
-- Text normalization MUST be versioned and MUST NOT paraphrase content.
-- Unicode normalization, if used, MUST preserve the original source hash and record the normalization form.
-- Token estimates MUST name the estimator and version. Estimated counts MUST NOT be reported as provider-observed usage.
-- Every fixture MUST fit the smallest registered pilot capacity with all `must_keep` blocks present.
-- A route that cannot fit all `must_keep` blocks MUST fail compilation.
-- Deterministic compression MAY apply only to blocks registered for it and MUST record original and retained identities.
-- Silent truncation or omission is forbidden.
+Generated state belongs only below an explicit caller-owned empty disposable output root outside the repository. Reject repository-contained, missing, non-empty, user-layer, credential, broad, aliased, or overlapping roots.
 
-## 11. Route bundles, adapters, and parity
+### 12.1 Agent composition and parallelism
 
-Each adapter manifest MUST declare:
+The primary agent MUST study every binding instruction and required source completely before delegating architectural judgment. It MUST NOT outsource interpretation of `AGENTS.md`, this specification, the slice card, or the preservation and authority boundaries.
 
-- adapter and target route identity;
-- supported canonical contract version;
-- role and content-part mapping;
-- file-reference behavior;
-- tool-schema mapping;
-- capacity and parameter mapping;
-- inverse decoder version;
-- permitted transformation rule IDs; and
-- known limitations and protocol deviations.
+After that study, use composed multi-agent work for independent tasks:
 
-A route bundle MUST reference exactly one canonical compilation digest. It MUST record the ordered mapping from every canonical block to target fields or content parts.
+1. Study and apply the `subagent-composition` skill when the active Codex environment exposes it. If it is unavailable, report that fact and follow the equivalent rules in this section with the built-in multi-agent tools.
+2. Spawn bounded subagents in parallel for non-overlapping work such as the durable-seam audit, recovery threat model, permission-policy audit, fault-matrix and portability review, and final red-team review.
+3. Give each subagent an exact question, path scope, expected evidence, write authority, and prohibited actions.
+4. Prefer read-only audits first. Delegate implementation only across disjoint file ownership, and never assign overlapping writes.
+5. Subagents MUST NOT call providers, access credentials, interact with WSL, install dependencies, mutate accepted evidence, commit, push, merge, deploy, or perform external workflow actions unless the current user and active specification explicitly authorize that exact action.
+6. The primary agent owns shared-file integration, independently verifies every subagent conclusion, reconciles disagreements, reviews the complete diff, and records which model or inherited model setting each subagent used when that metadata is available.
 
-Allowed transformations are limited to:
+Parallelism is a means to improve independent coverage and latency. It does not relax the scope, budget, preservation, provider-free, or host-isolation boundaries.
 
-- mapping canonical roles to route-supported roles;
-- splitting a block into ordered content parts while preserving identity;
-- selecting registered inline or file-reference delivery;
-- encoding the same tool schemas in target syntax;
-- adding non-semantic cache metadata; and
-- adding registered model or capacity parameters that do not change Career Ops semantics.
+## 13. Budget
 
-An adapter MUST NOT add, remove, reorder, duplicate, paraphrase, or silently truncate semantic blocks. It MUST NOT promote profile, task, recall, or generated content to system authority. It MUST NOT change source authority, scoring, tool authority, side-effect policy, language policy, or output meaning.
+- Active implementation and local verification: at most 90 minutes or 45,000 model tokens when observable, whichever comes first.
+- Dependencies: none.
+- Provider calls: zero.
+- Credential-store access: zero.
+- External Career Ops mutations: zero.
+- Fault cases: one deterministic provider-free run per registered checkpoint plus focused mutation tests.
+- CI waiting after publication is outside the implementation-time cap.
 
-Structural parity passes only when both inverse decoders recover identical:
+Request explicit user approval before exceeding either implementation limit or expanding the retained surface.
 
-- ordered block IDs, versions, ordinals, layers, authority, and trust;
-- normalized content hashes;
-- required status and budget actions;
-- mode and workflow versions;
-- task occurrence count;
-- output contract and language policy;
-- tool capability profile; and
-- compilation digest.
+## 14. Host-isolation override
 
-Provider request bytes hidden inside the Claude Code runner remain unobserved. RC-4 MUST report that limit and MUST NOT elevate compiler-boundary parity into provider-observed parity.
+The default WSL2 distribution `hermes` hosts protected production infrastructure and remains completely outside RC-6.
 
-## 12. Isolation, privacy, and denial requirements
+- Use Windows PowerShell only under `D:\OpenCnid\recursus-careers`.
+- Never run `wsl`, `wsl.exe`, bare `bash` or `bash.exe`, `wslpath`, `systemctl`, WSL shutdown, or distribution-management commands.
+- Do not inspect, enter, start, stop, restart, reconfigure, or select any WSL distribution.
+- Do not change the default WSL distribution or gateway state.
+- Do not run the local full `node test-all.mjs` suite because its Windows helper may start the default WSL distribution.
+- Windows `docker.exe` may be used only through the already-running Docker Desktop `desktop-linux` context and only when it cannot start or integrate with `hermes`.
+- If a required step appears to need WSL or could affect the protected gateway, stop and report the exact command rather than executing it.
 
-RC-4 compilation and validation MUST be offline, child-process free, and mutation free except for an explicit caller-owned empty output directory used by a CLI fixture command.
+## 15. Verification gates
 
-The implementation MUST prove that compiled sources and outputs exclude:
+Before publication, run only the allowed local gates:
 
-- every RC-1 evaluator-only path, identifier, digest, and leak canary;
-- every RC-2 and RC-3 evidence root and raw artifact;
-- `modes/_profile.md`, `modes/_custom.md`, `modes/_brief.md`, `voice-dna.md`, `cv.md`, `config/profile.yml`, reports, trackers, and other user-layer files unless a future version explicitly registers synthetic replacements;
-- credentials, credential-shaped values, environment dumps, absolute private paths, and Git metadata; and
-- sibling or parent repository content.
+1. the focused RC-6 test directly;
+2. any focused retained RC-5 regression test affected by the change;
+3. two independent provider-free fault-matrix captures with byte-identical deterministic artifacts where time and nonce fields are intentionally excluded or normalized;
+4. `node scripts/recursus/verify-prompt-context-v1.mjs validate`;
+5. `node test-all.mjs --only recursus/`;
+6. `node scripts/check-syntax.mjs`;
+7. `git diff --check`; and
+8. a full status and diff review proving unrelated user work and accepted evidence are untouched.
 
-Negative tests MUST instrument and deny network, DNS, sockets, provider entrypoints, browsers, plugins, telemetry, child processes, environment-secret reads, and writes outside the explicit output root. A denial result is evidence that the forbidden call was attempted and blocked, not evidence of successful compilation.
+Let GitHub CI run the full cross-platform suite. Local success is not acceptance. The exact reviewed PR head must pass Ubuntu, macOS, Windows, security, dependency, regression, visual, and guard checks before merge is eligible.
 
-## 13. Verifier command contract
+## 16. Exit decision
 
-Add a command with these behaviors:
+Recommend `READY_FOR_PROMOTION_REVIEW` only when:
 
-```text
-node scripts/recursus/verify-prompt-context-v1.mjs validate
-node scripts/recursus/verify-prompt-context-v1.mjs compile --mode <mode> --fixture <fixture> --target <target> --output <empty-directory>
-node scripts/recursus/verify-prompt-context-v1.mjs compare --mode <mode> --fixture <fixture>
-node scripts/recursus/verify-prompt-context-v1.mjs --help
-```
+- every registered interruption reaches the correct resumable, complete, or stopped-indeterminate state;
+- no fault or race produces a duplicate dispatch, request, artifact, or terminal record;
+- every completed result passes artifact, usage, provenance, permission, authority, and cleanup verification;
+- stale and partial state always fails closed;
+- recovery is idempotent;
+- the unchanged uninterrupted provider-free path still passes; and
+- measured recovery overhead and operator steps are recorded.
 
-`validate` MUST validate the complete frozen registration, source snapshot, schemas, mode manifests, adapter manifests, fixture cross-references, hashes, visibility rules, and source closure.
+Recommend `REBUILD` if the retained persistence seams cannot distinguish safe resume from ambiguous replay, or if hardening requires changing the RC-5 request semantics.
 
-`compile` MUST resolve and validate the complete read and write plan before writing, refuse a non-empty output directory, write only deterministic synthetic compiler artifacts, and clean up a newly created output directory after a partial failure when safe.
+Recommend `DELETE_RC6_DRAFT` only for the new hardening draft, not the already adopted RC-5 surface, when it adds complexity without a credible recovery benefit.
 
-The writer MUST bind the planned physical output-root identity, revalidate that identity and resolved file containment around every create and write, reject deterministic root or ancestor replacement races, and clean up only a created file whose physical path and filesystem identity still match. Node.js provides no portable directory-handle-relative create primitive, so V1 does not claim atomic defense against a hostile external process mutating directory components in the interval between checks.
+The user owns the final RC-6 decision. `READY_FOR_PROMOTION_REVIEW` is not production acceptance and does not authorize release, deployment, external mutation, a provider call, or RC-7.
 
-`compare` MUST compile once, project to both targets, decode both bundles, compare all parity fields, and emit the exact non-claim sentence from section 4 on success.
+## 17. Publication and handoff
 
-Supported command failures MUST return nonzero exit codes with stable, content-safe diagnostics. Diagnostics MUST identify logical fields and digest prefixes without printing raw prompt, candidate, JD, or evidence content.
+The RC-6 session may create a feature branch, commit intended files, push, open one pull request against `main`, and wait for required checks on the exact head. It MUST NOT merge without separate user direction.
 
-## 14. Required tests
+The handoff MUST report:
 
-### 14.1 Positive tests
+- branch, commit, PR, and exact reviewed head when publication is authorized;
+- the mapped durable checkpoints and any retained seam that remained unobservable;
+- every fault case and its exact terminal classification;
+- dispatch, simulated-request, retry, artifact, and cleanup counts;
+- permission-policy identity and adapter projection limitations;
+- uninterrupted and recovery wall time plus operator-step measurements;
+- all local and CI results, skipped checks, and blockers;
+- confirmation that provider calls, credential access, external mutation, and WSL interaction were zero;
+- confirmation that accepted RC-1 through RC-4, historical RC-5 ledgers, and unrelated user work were unchanged; and
+- the recommendation and remaining non-claims.
 
-Tests MUST prove:
+## 18. Non-claims
 
-- all four registered modes compile deterministically;
-- both targets decode to the same canonical semantics;
-- two clean runs in separate temporary roots produce byte-identical artifacts;
-- invariant-system hashes remain stable across candidate and task fixtures;
-- task data occurs exactly once and only in `data.task`;
-- candidate context stays out of system invariant bytes;
-- every allowed transformation is named and reversible;
-- output contracts, language policy, tools, and budgets survive both projections; and
-- behavior and bytes are consistent on supported CI platforms.
-
-### 14.2 Negative tests
-
-Tests MUST reject at least:
-
-- stale or wrong source hashes;
-- a mixed source snapshot or registration version;
-- a falsely relabeled profile, task, memory, or oracle block;
-- evaluator-only paths, bytes, identifiers, digests, and canaries;
-- task duplication, omission, reordering, or promotion to system authority;
-- candidate profile content in invariant-system bytes;
-- unregistered adapter transformations or protocol deviations;
-- semantic paraphrase or changed output meaning;
-- hidden block omission or silent truncation;
-- a route bundle bound to the wrong compilation digest;
-- a decoder that drops or invents a block;
-- an unregistered mode, route, tool, output contract, or budget action;
-- absolute, traversal, case-colliding, Unicode-confusable, symbolic-link, directory-junction, or realpath-escaping source paths;
-- oversized strings, arrays, nesting, source files, or output bundles;
-- malformed UTF-8, JSON, schema versions, or unknown fields;
-- non-empty or overlapping output directories;
-- user-layer, credential-shaped, private-path, or evidence-root leakage;
-- network, provider, browser, telemetry, plugin, child-process, or unexpected mutation attempts; and
-- diagnostics that expose raw protected content.
-
-Tests MUST include focused regression cases proving mixed, stale, or falsely relabeled evidence fails. Validation MUST fail closed rather than downgrading these cases to warnings.
-
-The V1 child-process-free portability boundary covers symbolic links and directory junctions exposed by Node.js filesystem APIs, plus any resolved-path escape. Other Windows reparse subclasses that Node.js reports as ordinary files or directories are outside this V1 claim and remain unsupported and unverified.
-
-## 15. Freeze and review protocol
-
-RC-4 is provider-free. No provider capture is authorized or required for this milestone.
-
-The implementation package remains mutable until:
-
-1. all static, denial, negative, threat, and portability tests pass;
-2. two offline dry runs match exactly;
-3. an independent red-team review finds no unresolved acceptance defect; and
-4. the primary agent reconciles every valid review finding.
-
-Only then may the RC-4 registration, source snapshot, schemas, manifests, and fixture set be frozen once. A defect found after freezing MUST NOT be repaired by rewriting frozen bytes. It requires a new version and explicit approval before a second frozen RC-4 package is created.
-
-## 16. Verification requirements
-
-Before handoff, run at least:
-
-```text
-node verify-recursus-benchmark.mjs validate
-node verify-recursus-reference-v4.mjs validate --require-complete-set
-node scripts/recursus/verify-recursus-route-v17.mjs validate --evidence-dir <existing-approved-v17-evidence-root> --require-actual
-node scripts/recursus/verify-prompt-context-v1.mjs validate
-node scripts/recursus/verify-prompt-context-v1.mjs compare --mode oferta --fixture <registered-fixture>
-node test-all.mjs --only recursus/
-node scripts/check-syntax.mjs
-node test-all.mjs
-git diff --check
-```
-
-The V17 validation is read-only and uses the existing approved external evidence root. It MUST NOT invoke the V17 capture command or create new evidence. If that root is unavailable in CI, run the repository-contained structural V17 tests and report the external validation as an exact local-only prerequisite.
-
-Do not install missing packages solely to make a blocked check green. Report the exact missing prerequisite and run every unaffected check.
-
-## 17. Acceptance criteria
-
-RC-4 may move from `next` to `in progress` when implementation begins on an intentional branch.
-
-RC-4 may move to `accepted` only when all of the following are true:
-
-1. every required deliverable exists and validates;
-2. all four pilot modes compile through both offline targets;
-3. structural parity is 100 percent for every registered fixture;
-4. every permitted difference is explained by a named adapter rule;
-5. no hidden candidate fact, user-layer byte, credential material, or evaluator-only content enters a compilation or route bundle;
-6. every required positive, negative, denial, determinism, and portability test passes;
-7. two pre-freeze offline dry runs match exactly;
-8. one independent final red-team review has no unresolved acceptance finding;
-9. accepted RC-1, RC-2, and RC-3 bytes and interpretations remain unchanged;
-10. the exact reviewed RC-4 commit passes Ubuntu, macOS, Windows, and all repository-required checks; and
-11. the roadmap, overview, evaluation README, and feature registry state the exact evidence and limitations without claiming product integration or behavioral provider neutrality.
-
-Local success on an uncommitted tree is not acceptance. A pull request, partial matrix, cancelled platform, or different commit's CI does not satisfy exact-commit evidence.
-
-## 18. Required non-claims
-
-RC-4 evidence supports only this bounded statement:
-
-> For the registered synthetic fixtures, four pilot mode contracts compile into two offline route-delivery bundles whose decoded semantic block identities, authority, trust, order, source hashes, policies, and output contracts match under the registered adapter rules.
-
-It does not support claims of:
-
-- provider-observed prompt equality;
-- executed workflow or tool behavior;
-- prompt-injection resistance or action safety;
-- candidate-claim factuality;
-- application or artifact quality;
-- full Career Ops feature parity;
-- PN2 provider-pluggable or PN3 behaviorally provider-neutral maturity;
-- Recursus product integration;
-- improved reliability, speed, cost, or quality;
-- advancement to a comparative benchmark; or
-- callback, interview, offer, or hiring outcomes.
-
-Hashes prove byte identity only. Static authority labels and canary exclusion do not prove model obedience.
-
-## 19. Handoff
-
-The implementation handoff MUST include:
-
-- exact branch and commit;
-- pull request URL when publication was authorized;
-- frozen registration and source-snapshot identities;
-- pilot modes, fixtures, targets, and adapter-rule IDs;
-- exact verification commands and results;
-- exact CI result for each required platform and check;
-- independent review findings and resolutions;
-- preserved user-owned and historical evidence status;
-- every unrun check or blocker;
-- the non-claims in section 18; and
-- whether RC-4 remains `in progress` or is eligible for `accepted`.
-
-Do not begin RC-5, merge a pull request, invoke a provider, or mutate user-layer data without separate explicit authority.
+RC-6 provider-free evidence does not establish live provider recovery, exactly-once behavior inside a provider, provider neutrality, production readiness, feature parity, deployment safety, improved hiring outcomes, or universal reliability. It can establish only the retained host route's deterministic classification, persistence, recovery, completion-verification, and no-replay behavior under the registered synthetic faults.

@@ -2,7 +2,7 @@
 
 Status: working roadmap
 
-Last reviewed: 2026-08-25
+Last reviewed: 2026-08-26
 
 This roadmap turns the Recursus Careers design into small, testable repository changes. The current priority is fast product learning inside an explicit blast radius. Build the smallest useful path, test it immediately, and keep, rebuild, or delete it before investing in promotion-grade evidence.
 
@@ -38,9 +38,11 @@ Before implementation, record a lightweight slice card with:
 
 Build only enough of the real path to answer the product question. Test as soon as one end-to-end case works, not after every planned capability is complete. Record user-visible usefulness, completion or failure, latency, token or comparable cost when reported, human correction, and workflow friction. Stop when the decision is clear.
 
+For RC-6 and later slices, write handoffs using `study` rather than a shallow `read` instruction. The primary agent studies all binding instructions and required sources itself, then studies and applies the `subagent-composition` skill when available and spawns bounded multi-agents for parallel independent audits, disjoint implementation, and final red-team review. When that skill is unavailable, the session reports the limitation and uses equivalent built-in multi-agent composition. Every delegation has an exact scope, expected evidence, non-overlapping write boundary, and prohibited actions. The primary agent owns reconciliation and shared integration, and the final handoff records subagent tasks and model inheritance or overrides when observable.
+
 Full preregistration, frozen evidence packages, repeat matrices, cross-platform acceptance, and causal ablations are promotion work. They are required before a supported product path, release, public comparative claim, or sensitive data, action, or security expansion. They are not prerequisites for a disposable learning slice. Accepted evidence remains immutable when a slice is rebuilt or deleted.
 
-The active contract is the [RC-5 disposable `oferta` slice card](RC5_SLICE_CARD.md). The initial [RC-5 Codex kickoff prompt](RC5_NEXT_TASK_PROMPT.md) is historical and superseded by the bounded-executor continuation. The accepted [RC-4 specification](SPEC.md) remains historical and does not govern RC-5.
+The active normative contract is the [RC-6 specification](SPEC.md), with the [RC-6 slice card](RC6_SLICE_CARD.md) as its operational summary and the [RC-6 kickoff prompt](RC6_NEXT_TASK_PROMPT.md) as its session handoff. The kept [RC-5 slice card](RC5_SLICE_CARD.md) and initial [RC-5 kickoff prompt](RC5_NEXT_TASK_PROMPT.md) remain historical. The accepted [RC-4 specification](RC4_SPEC.md) remains historical and does not govern RC-6.
 
 Acceptance history preserves the reviewed pre-acceptance state without overriding the active milestone map:
 
@@ -95,7 +97,7 @@ Outcome:
 - A deterministic offline verifier detects structural drift, path escape, oracle leakage, and unsupported self-attestation.
 - A deterministic seeding command creates an agent-visible workspace that excludes evaluator-only material.
 
-The accepted executable contract is preserved in the [Benchmark Foundation v1 package](../../evals/recursus/README.md) and PR #1 history. The [RC-4 specification](SPEC.md) is now an accepted historical implementation boundary.
+The accepted executable contract is preserved in the [Benchmark Foundation v1 package](../../evals/recursus/README.md) and PR #1 history. The [RC-4 specification](RC4_SPEC.md) is now an accepted historical implementation boundary.
 
 Explicit boundary: this milestone does not run a model or harness, calculate application quality, evaluate factuality or safety, test recovery, or declare parity or superiority.
 
@@ -238,6 +240,8 @@ The newly authorized prepared A root then consumed all three slots sequentially.
 ### RC-6: Promotion hardening and durable completion
 
 The user adopted RC-5 `KEEP`, so RC-6 is now the next scoped follow-up. Harden only the retained workflow surface proposed for support. A disposable slice may use simpler bounded recovery if that is enough to answer the product question.
+
+Active normative contract: [RC-6 specification](SPEC.md). Operational summary: [RC-6 slice card](RC6_SLICE_CARD.md). Session handoff: [RC-6 Codex kickoff prompt](RC6_NEXT_TASK_PROMPT.md). The accepted [RC-4 specification](RC4_SPEC.md) remains historical and does not govern RC-6.
 
 Outcome:
 
