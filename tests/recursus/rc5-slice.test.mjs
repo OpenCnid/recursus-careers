@@ -13,7 +13,9 @@ import {
   runSliceCase,
   summarizeSlice,
 } from '../../lib/recursus/rc5-slice.mjs';
-import { canonicalJsonV1 } from '../../lib/recursus/prompt-context-v1.mjs';
+import { canonicalJsonV1, sha256V1 } from '../../lib/recursus/prompt-context-v1.mjs';
+import { RC5_PROVIDER_EXECUTOR_INTERNALS_FOR_TESTS } from '../../lib/recursus/rc5-provider-executor.mjs';
+import { validateOrderedWorkerRequest } from '../../lib/recursus/rc5-provider-worker.mjs';
 import { runRC5SliceCli } from '../../scripts/recursus/rc5-slice.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..', '..');
@@ -105,25 +107,25 @@ test('test-only prepare is explicitly ineligible for provider execution', async 
     assert.equal(plan.executor_probe.production_fetch_tls_leg_exercised, false);
     assert.deepEqual(plan.executor_probe.authority_manifest, {
       id: 'rc5-container-run-authority-v1',
-      sha256: 'f8744737196faadb09582bf72ea3de2d43f494a73133d46239dfbe8d5e19f2b7',
+      sha256: 'e284b3117d56e4961f16c58f218d5bc004563b963060070dbc3818df29eb0063',
     });
     assert.deepEqual(plan.executor_probe.worker_source, {
-      byte_count: 56_988,
+      byte_count: 75_569,
       path: '/opt/rc5/rc5-provider-worker.mjs',
-      sha256: 'df7aed70c3fa72de0ecd8c973c0dab24b7ca414053918c6a144462377a039c8a',
+      sha256: '065fe2f438bbb9845a1cfec6060045b3d5e726a4a627470d198f22c9156d4296',
     });
     assert.deepEqual(plan.executor_probe.proxy_source, {
       byte_count: 9_399,
       path: '/opt/rc5/rc5-route-proxy.mjs',
-      sha256: '0f4348017e62663a69f388a6b3862e64ce3c9a8dc236f221a56684029f8be470',
+      sha256: 'd954e9a2c4149dff01c5bb65b3bfece4bfbd3724db9b68ab21deb7f2da3d470d',
     });
     assert.deepEqual(plan.executor_probe.simulator_source, {
-      byte_count: 22_678,
+      byte_count: 28_540,
       path: '/opt/rc5/rc5-provider-free-payload-probe.cjs',
-      sha256: '933bf6767b5a44a97960d049ed9ba62361b2ef15442db6af5bbf61602e48f8db',
+      sha256: '98337ae5d08ca2f68a4ac94e80a1492930e92c3a33b685b0c5d20d1eaccde6af',
     });
     assert.deepEqual(plan.executor_probe.image, {
-      id: 'sha256:f6ebef6ba4017ed84bd24e869449563fc7d77e7969ad581efef2a068cdd3b527',
+      id: 'sha256:8fd2be8c533c812abda166305d0399b72515258ec8f0039569ba2ff1d5176179',
       reference: 'recursus-rc5-bounded-executor:2fc0209',
       worker_source: plan.executor_probe.worker_source,
     });
@@ -136,26 +138,67 @@ test('test-only prepare is explicitly ineligible for provider execution', async 
       assert.equal(capture.simulator_response_status, successful ? 200 : 503);
       assert.equal(capture.completion, successful ? 'completed' : 'failed');
       assert.equal(capture.error_category, successful ? null : 'UNAVAILABLE');
+      assert.equal(capture.delay_ms, 0);
       assert.equal(capture.failure_stage, successful ? null : 'adapter_terminal');
       assert.equal(capture.finish_reason, successful ? 'stop' : 'error');
+      assert.equal(capture.heartbeat_count, 0);
       assert.equal(capture.direct_adapter_invocations, 1);
       assert.equal(capture.provider_request_count, 1);
       assert.equal(capture.response_http_status, successful ? 200 : 503);
       assert.equal(capture.response_http_status, capture.simulator_response_status);
       assert.equal(capture.oauth_refresh_count, 0);
+      assert.equal(capture.output_token_target_exceeded, false);
+      assert.equal(capture.provider_error_code, successful ? null : 'service_unavailable');
+      assert.equal(capture.provider_error_detail_class, null);
+      assert.equal(capture.provider_error_param, successful ? null : 'input');
       assert.equal(capture.payload_sha256, plan.transport_probe.payload_captures[caseIndex].payload_sha256);
     }
+    assert.deepEqual(plan.executor_probe.delayed_capture, {
+      completion: 'completed',
+      delay_ms: 125_000,
+      direct_adapter_invocations: 1,
+      error_category: null,
+      failure_stage: null,
+      finish_reason: 'stop',
+      heartbeat_count: 12,
+      oauth_refresh_count: 0,
+      output_token_target_exceeded: false,
+      payload_sha256: plan.transport_probe.payload_captures[0].payload_sha256,
+      provider_error_code: null,
+      provider_error_detail_class: null,
+      provider_error_param: null,
+      provider_request_count: 1,
+      response_http_status: 200,
+      scenario_id: 'FACT-01',
+      simulator_response_status: 200,
+      transport_mode: 'provider_free_delayed_success',
+    });
     for (const item of plan.cases) {
       assert.equal(item.treatment.compile_count, 1);
       assert.equal(item.treatment.target_id, 'recursus-direct-v1');
       assert.equal(item.treatment.model_facing_tools.length, 0);
-      assert.equal(item.treatment.message_count, 9);
+      assert.equal(item.treatment.message_count, 5);
+      assert.equal(item.treatment.source_part_count, 9);
       assert.ok(readFileSync(path.join(root, ...item.treatment.bundle_path.split('/'))).length > 0);
       const request = JSON.parse(readFileSync(path.join(root, ...item.treatment.request_path.split('/')), 'utf8'));
-      assert.equal(request.dsh_generate_options.messages.length, 9);
+      assert.equal(request.dsh_generate_options.messages.length, 5);
+      assert.equal(request.source_parts.length, 9);
       assert.equal(request.dsh_generate_options.maxTokens, 4000);
-      assert.equal(Object.hasOwn(request.dsh_generate_options, 'system'), false);
+      assert.equal(typeof request.dsh_generate_options.system, 'string');
+      assert.ok(request.dsh_generate_options.system.length > 0);
+      assert.equal(request.execution.output_token_enforcement, 'best_effort_target_observed_v1');
       assert.deepEqual(request.dsh_generate_options.tools, []);
+      assert.equal(request.baseline_task.attempt_id, item.baseline.attempt_id);
+      assert.equal(request.baseline_task.prompt_sha256, item.baseline.task_contract.prompt_sha256);
+      assert.equal(request.baseline_task.output_contract.evidence_bullet_count, 3);
+      assert.equal(request.interface.id, 'RC5-DSH-CODEX-ANOMALY-DISCLOSURE-V1');
+      assert.equal(request.interface.wire_contract, 'recursus-dsh-codex-anomaly-disclosure-v1');
+      assert.match(request.dsh_generate_options.system, /distinct primary-source fact/u);
+      assert.match(request.dsh_generate_options.system, /explicitly disclose the evidence shortage/u);
+      assert.match(request.dsh_generate_options.system, /include exactly one concise anomaly notice/u);
+      assert.match(request.dsh_generate_options.system, /Do not invent an anomaly notice when none is detected/u);
+      assert.equal(request.dsh_generate_options.messages.at(-1).content[0].text, item.baseline.task_contract.prompt);
+      assert.match(item.baseline.task_contract.prompt, /short tailored professional summary and three grounded evidence bullets/u);
     }
   } finally {
     cleanup(root);
@@ -199,6 +242,12 @@ test('operator observations enforce strict stop and friction decisions without p
       provider_call_count: 3,
       recommendation: 'KEEP',
     });
+    const decision = readFileSync(path.join(root, 'decision.md'), 'utf8');
+    assert.match(decision, /keeps source part 8 audit-only/u);
+    assert.match(decision, /appends the exact accepted baseline invocation as a fifth user input/u);
+    assert.match(decision, /best-effort 4,000-token target/u);
+    assert.doesNotMatch(decision, /promotes the five system parts/u);
+    assert.doesNotMatch(decision, /accepts completion only with reported output usage at or below 4,000 tokens/u);
 
     const frictionRoot = tempRoot('rc5-friction-');
     roots.push(frictionRoot);
@@ -433,6 +482,12 @@ test('plan validation rejects case or baseline drift and hidden output escape', 
     wrongBaseline.cases[0].baseline.attempt_id = 'wrong';
     wrongBaseline.plan_digest.value = RC5_INTERNALS_FOR_TESTS.planDigest(wrongBaseline);
     assert.throws(() => RC5_INTERNALS_FOR_TESTS.validatePlanDocument(wrongBaseline), { code: 'RC5_CASE_IDENTITY' });
+    const wrongBaselineTask = structuredClone(plan);
+    wrongBaselineTask.cases[0].baseline.task_contract.prompt = wrongBaselineTask.cases[0].baseline.task_contract.prompt.replace('three grounded', 'two grounded');
+    wrongBaselineTask.cases[0].baseline.task_contract.prompt_sha256 = sha256V1(
+      wrongBaselineTask.cases[0].baseline.task_contract.prompt);
+    wrongBaselineTask.plan_digest.value = RC5_INTERNALS_FOR_TESTS.planDigest(wrongBaselineTask);
+    assert.throws(() => RC5_INTERNALS_FOR_TESTS.validatePlanDocument(wrongBaselineTask), { code: 'RC5_BASELINE_TASK_PARITY' });
     const escape = structuredClone(plan);
     escape.cases[0].treatment.request_path = '../hidden-prompt.json';
     escape.plan_digest.value = RC5_INTERNALS_FOR_TESTS.planDigest(escape);
@@ -442,7 +497,7 @@ test('plan validation rejects case or baseline drift and hidden output escape', 
   }
 });
 
-test('ordered-parts requests preserve all nine bundle parts and reject semantic or policy drift', async () => {
+test('Codex-native requests preserve all nine source parts and reject projection or policy drift', async () => {
   const root = tempRoot();
   try {
     await prepareProviderFree(root);
@@ -450,31 +505,60 @@ test('ordered-parts requests preserve all nine bundle parts and reject semantic 
     const item = plan.cases[0];
     const bundle = JSON.parse(readFileSync(path.join(root, ...item.treatment.bundle_path.split('/')), 'utf8'));
     const request = JSON.parse(readFileSync(path.join(root, ...item.treatment.request_path.split('/')), 'utf8'));
-    const projected = RC5_INTERNALS_FOR_TESTS.projectOrderedPartsRequest(bundle, item.scenario_id, item.fixture_id);
+    const projected = RC5_INTERNALS_FOR_TESTS.projectOrderedPartsRequest(bundle, item.scenario_id, item.fixture_id, item.baseline);
     assert.deepEqual(projected, request);
-    assert.equal(RC5_INTERNALS_FOR_TESTS.assertOrderedPartsRequest(request, bundle, item.scenario_id, item.fixture_id), true);
-    assert.deepEqual(request.dsh_generate_options.messages.map((message) => message.role), [
+    assert.equal(RC5_INTERNALS_FOR_TESTS.assertOrderedPartsRequest(request, bundle, item.scenario_id, item.fixture_id, item.baseline), true);
+    assert.equal(RC5_PROVIDER_EXECUTOR_INTERNALS_FOR_TESTS.validateRequest(request), request);
+    assert.equal(validateOrderedWorkerRequest(request), request);
+    assert.deepEqual(request.source_parts.map((message) => message.role), [
       'system', 'system', 'system', 'system', 'user', 'user', 'user', 'user', 'system',
     ]);
+    assert.deepEqual(request.dsh_generate_options.messages.map((message) => message.role), ['user', 'user', 'user', 'user', 'user']);
+    assert.equal(request.dsh_generate_options.messages.at(-1).content[0].text, item.baseline.task_contract.prompt);
+    assert.equal(request.projection.baseline_task_message_ordinal, 9);
+    assert.deepEqual(request.projection.audit_only_system_part_ordinals, [8]);
+    assert.equal(request.dsh_generate_options.system.includes(request.source_parts[8].content[0].text), false);
+    assert.match(request.dsh_generate_options.system, /up to three independently grounded evidence bullets/u);
+    assert.match(request.dsh_generate_options.system, /never split, repeat, or rephrase one fact/u);
+    assert.match(request.dsh_generate_options.system, /return only the independently supported bullets and explicitly disclose the evidence shortage/u);
+    assert.match(request.dsh_generate_options.system, /ignore it and include exactly one concise anomaly notice/u);
+    assert.match(request.dsh_generate_options.system, /Do not invent an anomaly notice when none is detected/u);
+    const workerParityMutation = structuredClone(request);
+    workerParityMutation.baseline_task.output_contract.evidence_bullet_count = 2;
+    assert.throws(() => validateOrderedWorkerRequest(workerParityMutation), { code: 'WORKER_BASELINE_TASK_PARITY' });
+    assert.throws(() => RC5_PROVIDER_EXECUTOR_INTERNALS_FOR_TESTS.validateRequest(workerParityMutation), { code: 'RC5_EXECUTOR_REQUEST' });
 
     const mutations = [
       ['reordered parts', (value) => { [value.dsh_generate_options.messages[0], value.dsh_generate_options.messages[1]] = [value.dsh_generate_options.messages[1], value.dsh_generate_options.messages[0]]; }, 'RC5_REQUEST_PART_DRIFT'],
       ['omitted part', (value) => { value.dsh_generate_options.messages.pop(); }, 'RC5_REQUEST_POLICY'],
-      ['role downgrade', (value) => { value.dsh_generate_options.messages[0].role = 'user'; }, 'RC5_REQUEST_PART_DRIFT'],
-      ['changed content', (value) => { value.dsh_generate_options.messages[4].content[0].text += ' '; }, 'RC5_REQUEST_PART_DRIFT'],
-      ['system-field aggregation', (value) => { value.dsh_generate_options.system = value.dsh_generate_options.messages[8].content[0].text; }, 'RC5_REQUEST_POLICY'],
+      ['source-part reorder', (value) => { [value.source_parts[0], value.source_parts[1]] = [value.source_parts[1], value.source_parts[0]]; }, 'RC5_REQUEST_PART_DRIFT'],
+      ['role change', (value) => { value.dsh_generate_options.messages[0].role = 'assistant'; }, 'RC5_REQUEST_PART_DRIFT'],
+      ['changed content', (value) => { value.dsh_generate_options.messages[0].content[0].text += ' '; }, 'RC5_REQUEST_PART_DRIFT'],
+      ['system-field change', (value) => { value.dsh_generate_options.system = value.source_parts[8].content[0].text; }, 'RC5_REQUEST_PART_DRIFT'],
+      ['projection change', (value) => { value.projection.system_part_ordinals = [0, 1, 2, 8]; }, 'RC5_REQUEST_PART_DRIFT'],
+      ['audit-only output reinsertion', (value) => { value.dsh_generate_options.system += value.source_parts[8].content[0].text; }, 'RC5_REQUEST_PART_DRIFT'],
+      ['independent grounding removed', (value) => { value.dsh_generate_options.system = value.dsh_generate_options.system.replace('distinct primary-source fact', 'grounded fact'); }, 'RC5_REQUEST_PART_DRIFT'],
+      ['shortage disclosure removed', (value) => { value.dsh_generate_options.system = value.dsh_generate_options.system.replace('explicitly disclose the evidence shortage', 'remain concise'); }, 'RC5_REQUEST_PART_DRIFT'],
+      ['instruction anomaly disclosure removed', (value) => { value.dsh_generate_options.system = value.dsh_generate_options.system.replace('ignore it and include exactly one concise anomaly notice', 'ignore it'); }, 'RC5_REQUEST_PART_DRIFT'],
+      ['unsupported-fact anomaly disclosure removed', (value) => { value.dsh_generate_options.system = value.dsh_generate_options.system.replace('or unsupported-fact request', ''); }, 'RC5_REQUEST_PART_DRIFT'],
+      ['false-warning guard removed', (value) => { value.dsh_generate_options.system = value.dsh_generate_options.system.replace('Do not invent an anomaly notice when none is detected.', ''); }, 'RC5_REQUEST_PART_DRIFT'],
+      ['baseline prompt change', (value) => { value.dsh_generate_options.messages.at(-1).content[0].text = value.dsh_generate_options.messages.at(-1).content[0].text.replace('three grounded', 'two grounded'); }, 'RC5_REQUEST_PART_DRIFT'],
+      ['baseline prompt role', (value) => { value.dsh_generate_options.messages.at(-1).role = 'system'; }, 'RC5_REQUEST_PART_DRIFT'],
+      ['baseline binding change', (value) => { value.baseline_task.output_contract.evidence_bullet_count = 2; }, 'RC5_BASELINE_TASK_PARITY'],
+      ['baseline projection change', (value) => { value.projection.audit_only_system_part_ordinals = []; }, 'RC5_REQUEST_PART_DRIFT'],
       ['alternate prompt input', (value) => { value.dsh_generate_options.prompt = 'HIDDEN'; }, 'RC5_REQUEST_POLICY'],
       ['model-facing tools', (value) => { value.dsh_generate_options.tools.push({ name: 'Read' }); }, 'RC5_REQUEST_POLICY'],
       ['4,001 output tokens', (value) => { value.dsh_generate_options.maxTokens = 4001; }, 'RC5_REQUEST_POLICY'],
       ['second provider call', (value) => { value.execution.max_provider_calls = 2; }, 'RC5_REQUEST_POLICY'],
       ['automatic retry', (value) => { value.execution.automatic_retries = 1; }, 'RC5_REQUEST_POLICY'],
+      ['output-token enforcement', (value) => { value.execution.output_token_enforcement = 'wire_field'; }, 'RC5_REQUEST_POLICY'],
     ];
     for (const [label, mutate, expectedCode] of mutations) {
       const changed = structuredClone(request);
       mutate(changed);
       changed.request_digest.value = RC5_INTERNALS_FOR_TESTS.requestDigest(changed);
       assert.throws(
-        () => RC5_INTERNALS_FOR_TESTS.assertOrderedPartsRequest(changed, bundle, item.scenario_id, item.fixture_id),
+        () => RC5_INTERNALS_FOR_TESTS.assertOrderedPartsRequest(changed, bundle, item.scenario_id, item.fixture_id, item.baseline),
         (error) => error?.code === expectedCode,
         label,
       );
@@ -495,7 +579,7 @@ test('provider-free final-wire validation rejects payload, fetch, identity, and 
     const makeObservation = () => {
       const payloads = requests.map((request) => RC5_INTERNALS_FOR_TESTS.expectedWirePayload(request));
       return {
-        capabilities: { ordered_system_user_messages_v1: true },
+        capabilities: { ordered_system_user_messages_v1: true, pi_native_openai_codex_payload_v1: true },
         diagnostic_probes: RC5_INTERNALS_FOR_TESTS.expectedAdapterDiagnosticProbes(),
         http_request_count: requests.length,
         payloads,
@@ -522,6 +606,9 @@ test('provider-free final-wire validation rejects payload, fetch, identity, and 
       ['diagnostic status', (value) => { value.captures[1].response_http_status = 500; }],
       ['diagnostic category', (value) => { value.captures[1].error_category = 'INTEGRATION'; }],
       ['diagnostic stage', (value) => { value.captures[1].failure_stage = 'adapter_throw'; }],
+      ['diagnostic code', (value) => { value.captures[1].provider_error_code = 'bad code'; }],
+      ['diagnostic detail', (value) => { value.captures[1].provider_error_detail_class = 'RAW_DETAIL'; }],
+      ['diagnostic param', (value) => { value.captures[1].provider_error_param = 'bad param'; }],
       ['diagnostic omission', (value) => { delete value.captures[1].response_http_status; }],
       ['diagnostic hidden body', (value) => { value.captures[1].response_body = 'RC5_PRIVATE_SENTINEL'; }],
     ]) {
@@ -537,13 +624,24 @@ test('provider-free final-wire validation rejects payload, fetch, identity, and 
     const wireMutations = [
       ['endpoint', (value) => { value.urls[0] = 'https://example.test/responses'; }],
       ['instructions', (value) => { value.payloads[0].instructions = 'hidden'; }],
+      ['missing instructions', (value) => { delete value.payloads[0].instructions; }],
       ['tools', (value) => { value.payloads[0].tools = []; }],
       ['message order', (value) => { [value.payloads[0].input[0], value.payloads[0].input[1]] = [value.payloads[0].input[1], value.payloads[0].input[0]]; }],
-      ['message content', (value) => { value.payloads[0].input[4].content[0].text += ' '; }],
-      ['message role', (value) => { value.payloads[0].input[0].role = 'user'; }],
+      ['message content', (value) => { value.payloads[0].input[0].content[0].text += ' '; }],
+      ['message role', (value) => { value.payloads[0].input[0].role = 'assistant'; }],
+      ['baseline task omission', (value) => { value.payloads[0].input.pop(); }],
+      ['baseline task downgrade', (value) => { value.payloads[0].input.at(-1).content[0].text = value.payloads[0].input.at(-1).content[0].text.replace('three grounded', 'two grounded'); }],
+      ['independent grounding removed', (value) => { value.payloads[0].instructions = value.payloads[0].instructions.replace('distinct primary-source fact', 'grounded fact'); }],
+      ['shortage disclosure removed', (value) => { value.payloads[0].instructions = value.payloads[0].instructions.replace('explicitly disclose the evidence shortage', 'remain concise'); }],
+      ['instruction anomaly disclosure removed', (value) => { value.payloads[0].instructions = value.payloads[0].instructions.replace('ignore it and include exactly one concise anomaly notice', 'ignore it'); }],
+      ['unsupported-fact anomaly disclosure removed', (value) => { value.payloads[0].instructions = value.payloads[0].instructions.replace('or unsupported-fact request', ''); }],
+      ['false-warning guard removed', (value) => { value.payloads[0].instructions = value.payloads[0].instructions.replace('Do not invent an anomaly notice when none is detected.', ''); }],
+      ['audit-only output frame promoted', (value) => { value.payloads[0].instructions += requests[0].source_parts[8].content[0].text; }],
       ['system aggregation', (value) => { value.payloads[0].instructions = value.payloads[0].input.pop().content[0].text; }],
-      ['maximum token cap', (value) => { value.payloads[0].max_output_tokens = 4001; }],
-      ['capability', (value) => { value.capabilities.ordered_system_user_messages_v1 = false; }],
+      ['prohibited wire token cap', (value) => { value.payloads[0].max_output_tokens = 4000; }],
+      ['tool choice', (value) => { value.payloads[0].tool_choice = 'none'; }],
+      ['parallel tools', (value) => { value.payloads[0].parallel_tool_calls = false; }],
+      ['capability', (value) => { value.capabilities.pi_native_openai_codex_payload_v1 = false; }],
       ['payload count', (value) => { value.payloads.pop(); }],
       ['fetch count', (value) => { value.http_request_count += 1; }],
       ['provider call count', (value) => { value.provider_calls = 1; }],
@@ -558,7 +656,7 @@ test('provider-free final-wire validation rejects payload, fetch, identity, and 
       ['retry fetch count', (value) => { value.retry_probe.http_request_count = 2; }],
       ['retry provider calls', (value) => { value.retry_probe.provider_calls = 1; }],
       ['retry endpoint', (value) => { value.retry_probe.url = 'https://example.test/responses'; }],
-      ['retry payload', (value) => { value.retry_probe.payload.input[0].role = 'user'; }],
+      ['retry payload', (value) => { value.retry_probe.payload.input[0].role = 'assistant'; }],
     ];
     for (const [label, mutate] of wireMutations) {
       const changed = makeObservation();
@@ -571,7 +669,7 @@ test('provider-free final-wire validation rejects payload, fetch, identity, and 
     }
 
     const probeMutations = [
-      ['capability drift', (value) => { value.capabilities.ordered_system_user_messages_v1 = false; }],
+      ['capability drift', (value) => { value.capabilities.pi_native_openai_codex_payload_v1 = false; }],
       ['adapter source drift', (value) => { value.adapter.source.sha256 = 'b'.repeat(64); }],
       ['image identity drift', (value) => { value.image.id = 'sha256:' + 'b'.repeat(64); }],
       ['payload capture count', (value) => { value.payload_captures.pop(); }],
@@ -637,16 +735,21 @@ function boundedExecutorResult(overrides = {}) {
     completion: 'completed',
     direct_adapter_invocations: 1,
     error_category: null,
+    executor_error_code: null,
     external_mutations: [],
     failure_stage: null,
     finish_reason: 'stop',
     input_tokens: 200,
     oauth_refresh_count: 0,
+    output_token_target_exceeded: false,
     output_tokens: 100,
+    provider_error_code: null,
+    provider_error_detail_class: null,
+    provider_error_param: null,
     provider_request_count: 1,
     response_http_status: 200,
     responses_endpoint: 'https://chatgpt.com/backend-api/codex/responses',
-    schema_version: '1.0.0',
+    schema_version: '1.3.0',
     trusted_completed: true,
     wall_ms: 100,
     ...overrides,
@@ -762,6 +865,7 @@ test('failed and timed-out terminal attempts permanently stop later calls', asyn
         artifact: null,
         completion,
         error_category: completion === 'timed_out' ? 'TIMEOUT' : 'UNAVAILABLE',
+        executor_error_code: completion === 'timed_out' ? 'RC5_WORKER_TIMEOUT' : null,
         failure_stage: completion === 'timed_out' ? 'worker_timeout' : 'adapter_terminal',
         finish_reason: finishReason,
         response_http_status: completion === 'timed_out' ? null : 503,
@@ -822,19 +926,24 @@ test('attempt schema rejects false completion, invalid identity, excessive resul
     direct_adapter_invocations: 1,
     dispatch_id: 'RC5-DISPATCH-FACT-01-R01',
     error_category: null,
+    executor_error_code: null,
     external_mutations: [],
     failure_stage: null,
     finish_reason: 'stop',
     input_tokens: 200,
     oauth_refresh_count: 0,
+    output_token_target_exceeded: false,
     output_tokens: 100,
+    provider_error_code: null,
+    provider_error_detail_class: null,
+    provider_error_param: null,
     provider_request_count: 1,
     request_digest: 'a'.repeat(64),
     reservation_id: 'RC5-RESERVATION-FACT-01-R01',
     response_http_status: 200,
     responses_endpoint: 'https://chatgpt.com/backend-api/codex/responses',
     scenario_id: 'FACT-01',
-    schema_version: '1.0.0',
+    schema_version: '1.3.0',
     trusted_completed: true,
     usefulness: 'not_evaluated',
     wall_ms: 100,
@@ -842,11 +951,13 @@ test('attempt schema rejects false completion, invalid identity, excessive resul
   RC5_INTERNALS_FOR_TESTS.validateAttemptResult(valid);
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, completion: 'timed_out' }), { code: 'RC5_FALSE_COMPLETION' });
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, trusted_completed: false }), { code: 'RC5_FALSE_COMPLETION' });
-  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, output_tokens: 4001 }), { code: 'RC5_RESULT_BUDGET' });
+  RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, output_token_target_exceeded: true, output_tokens: 4001 });
+  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, output_token_target_exceeded: true, output_tokens: 1_000_001 }), { code: 'RC5_RESULT_BUDGET' });
+  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, output_token_target_exceeded: 'not_reported', output_tokens: 'not_reported' }), { code: 'RC5_FALSE_COMPLETION' });
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, dispatch_id: 'wrong' }), { code: 'RC5_RESULT_INVALID' });
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, artifact: { ...valid.artifact, byte_count: 65_537 } }), { code: 'RC5_RESULT_BUDGET' });
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, external_mutations: ['tracker_write'] }), { code: 'RC5_EXTERNAL_MUTATION' });
-  for (const key of ['response_http_status', 'error_category', 'failure_stage']) {
+  for (const key of ['response_http_status', 'error_category', 'executor_error_code', 'failure_stage', 'output_token_target_exceeded', 'provider_error_code', 'provider_error_detail_class', 'provider_error_param']) {
     const omitted = { ...valid };
     delete omitted[key];
     assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult(omitted), { code: 'RC5_RESULT_INVALID' }, `omitted ${key}`);
@@ -856,16 +967,46 @@ test('attempt schema rejects false completion, invalid identity, excessive resul
   }
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, error_category: 'RAW_ERROR' }), { code: 'RC5_RESULT_INVALID' });
   assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, failure_stage: 'response_body' }), { code: 'RC5_RESULT_INVALID' });
+  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, provider_error_code: 'bad code' }), { code: 'RC5_RESULT_INVALID' });
+  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, provider_error_detail_class: 'RAW_DETAIL' }), { code: 'RC5_RESULT_INVALID' });
+  assert.throws(() => RC5_INTERNALS_FOR_TESTS.validateAttemptResult({ ...valid, provider_error_param: 'bad param' }), { code: 'RC5_RESULT_INVALID' });
   RC5_INTERNALS_FOR_TESTS.validateAttemptResult({
     ...valid,
     artifact: null,
     completion: 'timed_out',
     error_category: 'TIMEOUT',
+    executor_error_code: 'RC5_WORKER_TIMEOUT',
     failure_stage: 'worker_timeout',
     finish_reason: 'aborted',
     response_http_status: null,
     trusted_completed: false,
   });
+  RC5_INTERNALS_FOR_TESTS.validateAttemptResult({
+    ...valid,
+    artifact: null,
+    completion: 'failed',
+    error_category: 'BUDGET_EXCEEDED',
+    failure_stage: 'worker_validation',
+    finish_reason: 'error',
+    output_tokens: 4_001,
+    output_token_target_exceeded: true,
+    trusted_completed: false,
+  });
+});
+
+test('executor reconciliation fallback preserves only an allowlisted stage code', () => {
+  assert.equal(RC5_INTERNALS_FOR_TESTS.safeExecutorErrorCode({ code: 'RC5_AUTHORITY_TRACE' }), 'RC5_AUTHORITY_TRACE');
+  assert.equal(RC5_INTERNALS_FOR_TESTS.safeExecutorErrorCode({ code: 'RC5_AUTHORITY_TRACE_CLOSE_COUNT' }), 'RC5_AUTHORITY_TRACE_CLOSE_COUNT');
+  assert.equal(RC5_INTERNALS_FOR_TESTS.safeExecutorErrorCode({ code: 'RC5_AUTHORITY_TRACE_DENIED_CONCURRENCY' }), 'RC5_AUTHORITY_TRACE_DENIED_CONCURRENCY');
+  assert.equal(RC5_INTERNALS_FOR_TESTS.safeExecutorErrorCode({ code: 'RC5_PRIVATE_PATH_D:\\secret' }), 'RC5_EXECUTOR_UNCLASSIFIED');
+  const traced = RC5_INTERNALS_FOR_TESTS.failedExecutorResult(120_123, 'RC5_AUTHORITY_TRACE');
+  assert.equal(traced.completion, 'failed');
+  assert.equal(traced.error_category, 'INTEGRATION');
+  assert.equal(traced.executor_error_code, 'RC5_AUTHORITY_TRACE');
+  assert.equal(traced.failure_stage, 'executor_reconciliation');
+  assert.equal(traced.direct_adapter_invocations, 'not_reported');
+  assert.equal(traced.provider_request_count, 'not_reported');
+  assert.equal(canonicalJsonV1(traced).includes('D:\\secret'), false);
 });
 
 test('CLI run validates arguments and authority before reaching runtime', async () => {
