@@ -474,6 +474,14 @@ test('plan validation rejects case or baseline drift and hidden output escape', 
     await prepareProviderFree(root);
     const plan = JSON.parse(readFileSync(path.join(root, 'slice-plan.json'), 'utf8'));
     RC5_INTERNALS_FOR_TESTS.validatePlanDocument(plan);
+    const keptExecutorPlan = structuredClone(plan);
+    keptExecutorPlan.route.executor.host_source = RC5_INTERNALS_FOR_TESTS.KEPT_RC5_EXECUTOR_HOST_SOURCE;
+    keptExecutorPlan.plan_digest.value = RC5_INTERNALS_FOR_TESTS.planDigest(keptExecutorPlan);
+    RC5_INTERNALS_FOR_TESTS.validatePlanDocument(keptExecutorPlan);
+    const unknownExecutorPlan = structuredClone(keptExecutorPlan);
+    unknownExecutorPlan.route.executor.host_source.sha256 = 'b'.repeat(64);
+    unknownExecutorPlan.plan_digest.value = RC5_INTERNALS_FOR_TESTS.planDigest(unknownExecutorPlan);
+    assert.throws(() => RC5_INTERNALS_FOR_TESTS.validatePlanDocument(unknownExecutorPlan), { code: 'RC5_ROUTE_IDENTITY' });
     const wrongCase = structuredClone(plan);
     wrongCase.cases[0].scenario_id = 'FACT-03';
     wrongCase.plan_digest.value = RC5_INTERNALS_FOR_TESTS.planDigest(wrongCase);

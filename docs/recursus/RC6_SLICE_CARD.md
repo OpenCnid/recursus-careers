@@ -1,6 +1,6 @@
 # RC-6 retained-surface promotion hardening slice card
 
-Status: mutable operational summary; implementation not started
+Status: mutable operational summary; provider-free draft implemented, promotion review pending
 
 Normative contract: [RC-6 specification](SPEC.md)
 
@@ -53,7 +53,7 @@ Ask before expanding the time, token, dependency, authority, or retained-surface
 
 ## Host isolation
 
-Use Windows PowerShell only under `D:\OpenCnid\recursus-careers`. The default WSL2 distribution `hermes` is protected production infrastructure and completely outside the task.
+Use Windows PowerShell only under `F:\OpenCnid\recursus-careers` or an isolated `F:\OpenCnid\recursus-careers-worktrees\` worktree. The default WSL2 distribution `hermes` is protected production infrastructure and completely outside the task.
 
 Never run WSL, bare Bash, `wslpath`, `systemctl`, WSL shutdown, or distribution-management commands. Do not run the local full `node test-all.mjs` suite. Use `docker.exe` only through the already-running Docker Desktop `desktop-linux` context when it cannot start or integrate with `hermes`. Stop and report any required command that could cross this boundary.
 
@@ -70,6 +70,8 @@ Before publication:
 7. review status and the exact diff for preservation violations.
 
 Let GitHub CI run the full cross-platform suite.
+
+Injected fault-matrix captures MUST identify themselves as `injected_test_only`; they verify classification and persistence logic but do not satisfy the Docker-exact conformance gate. The Docker-exact path may seal only the closed result envelope returned by the fixed provider-free RC-5 executor. Retained RC-5 preparation metadata remains test-only projection metadata and is not a claim of live-provider eligibility.
 
 ## Exit decision
 
