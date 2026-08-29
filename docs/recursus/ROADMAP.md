@@ -2,7 +2,7 @@
 
 Status: working roadmap
 
-Last reviewed: 2026-08-26
+Last reviewed: 2026-08-27
 
 This roadmap turns the Recursus Careers design into small, testable repository changes. The current priority is fast product learning inside an explicit blast radius. Build the smallest useful path, test it immediately, and keep, rebuild, or delete it before investing in promotion-grade evidence.
 
@@ -25,7 +25,7 @@ No milestone becomes `accepted` because its documentation was written. Acceptanc
 
 ## Operating model
 
-RC-4 is the last infrastructure-heavy gate before testing product value. RC-5 replaces the former mandatory RC-5 through RC-7 sequence with one disposable end-to-end slice. RC-6 and RC-7 retain their IDs for traceability, but they are conditional follow-ups rather than prerequisites to learning.
+RC-4 is the last infrastructure-heavy gate before testing product value. RC-5 replaced the former mandatory RC-5 through RC-7 sequence with one disposable end-to-end slice. RC-6 was subsequently scheduled and accepted for the retained surface. RC-7 Gate A qualified a falsifiable research question, and Gate B established containment conformance for one exact provider-free synthetic Docker boundary after independent red-team review. Gate C retains eight immutable indeterminate no-replay `SAFE-01` direct attempts across three superseded matrix activations and five separately bounded smokes. A separately authorized direct diagnostic has now proven the real logged-in `recursus` profile, `OPENAI_CODEX_OAUTH` credential-reference seam, `openai-codex` registration, `gpt-5.6-sol` catalog entry, HTTPS generation route, and normal terminal stream with exactly one generation POST and zero refreshes. It retained no provider prose, request ID, reasoning, replay state, or credential value. A provider-free revision audit bounds that proof to the credential/transport seam shared by the installed Recursus adapter and Gate C's descendant adapter; it is not a matrix score. The host now fails closed before reservation unless `DSH_HOME` is one physical external directory whose exact Recursus profile marker binds the required reference. The unused sixth-smoke freeze is superseded and no sixth smoke will run. No RLM, Python, Docker, WSL, recursive child, matrix score, purchase, publication, or deployment authority was exercised by the diagnostic. The 36-attempt matrix remains prohibited until one fresh final activation freeze reflects this repair and receives exact numeric approval.
 
 Before implementation, record a lightweight slice card with:
 
@@ -42,7 +42,7 @@ For RC-6 and later slices, write handoffs using `study` rather than a shallow `r
 
 Full preregistration, frozen evidence packages, repeat matrices, cross-platform acceptance, and causal ablations are promotion work. They are required before a supported product path, release, public comparative claim, or sensitive data, action, or security expansion. They are not prerequisites for a disposable learning slice. Accepted evidence remains immutable when a slice is rebuilt or deleted.
 
-The active normative contract is the [RC-6 specification](SPEC.md), with the [RC-6 slice card](RC6_SLICE_CARD.md) as its operational summary and the [RC-6 kickoff prompt](RC6_NEXT_TASK_PROMPT.md) as its session handoff. The kept [RC-5 slice card](RC5_SLICE_CARD.md) and initial [RC-5 kickoff prompt](RC5_NEXT_TASK_PROMPT.md) remain historical. The accepted [RC-4 specification](RC4_SPEC.md) remains historical and does not govern RC-6.
+The active normative contract is the [RC-7 specification](RC7_SPEC.md), with the [RC-7 slice card](RC7_SLICE_CARD.md) as its operational summary and the [RC-7 kickoff prompt](RC7_NEXT_TASK_PROMPT.md) as its session handoff. The closed [RC-6 specification](SPEC.md), [RC-6 slice card](RC6_SLICE_CARD.md), and [RC-6 prompt](RC6_NEXT_TASK_PROMPT.md) remain historical, as do the kept RC-5 and accepted RC-4 records.
 
 Acceptance history preserves the reviewed pre-acceptance state without overriding the active milestone map:
 
@@ -61,8 +61,8 @@ Acceptance history preserves the reviewed pre-acceptance state without overridin
 | RC-3 | Minimal Recursus execution bridge | `accepted` | The same cases can run through Recursus without claiming feature parity | RC-1, RC-2, and the required Recursus runner surface |
 | RC-4 | Compiled prompt and context parity | `accepted` | Four registered synthetic pilot mode contracts compile into two offline route-delivery bundles with matching decoded structural semantics under registered adapter rules | RC-2 and RC-3 |
 | RC-5 | Disposable end-to-end value slice | `kept` | The user adopted `KEEP` after the anomaly-disclosure comparison produced two wins and one tie | RC-4 |
-| RC-6 | Promotion hardening and durable completion | `in progress` | Validation-executor local promotion gates passed; original-image gate remains blocked and exact-head CI/publication are pending | RC-5 `KEEP` and required Recursus supervision support |
-| RC-7 | Selective RLM research | `conditional` | RLM is tested only if RC-5 exposes a research bottleneck worth its added cost and authority | RC-5 `KEEP` and an integrated RLM route |
+| RC-6 | Promotion hardening and durable completion | `accepted` | The registered provider-free validation executor passed its corrected fault matrix and exact-head CI; the original retained-image gate remains explicitly blocked | RC-5 `KEEP` and required Recursus supervision support |
+| RC-7 | Selective RLM research | `in progress` | Gate A returned `QUALIFIED_FOR_ABLATION`; Gate B is `CONTAINMENT_CONFORMANT`; eight direct `SAFE-01` attempts remain immutable indeterminate no-replay evidence; one separately authorized direct diagnostic proves the real logged-in credential/transport path and the host rejects the wrong DSH home before reservation; no RLM ablation or score exists | RC-5 `KEEP`, RC-6 closure, qualified hypotheses, conformant Gate B evidence, one fresh final Gate C matrix freeze, and exact numeric approval |
 | RC-8 | Honcho advisory memory | `conditional` | Reusable preferences and context are tested only if the kept workflow needs continuity | RC-5 `KEEP` and an integrated Honcho route |
 | RC-9 | Dovetail delegation and routing | `conditional` | Delegation is tested only if the kept workflow has parallel work whose coordination cost can be justified | RC-5 `KEEP` and integrated Dovetail support |
 | RC-10 | Company, lab, and relationship intelligence | `conditional` | Reusable intelligence is built only after the slice demonstrates repeat-use value without mixing facts, inferences, and memory | RC-5 `KEEP` and the specific justified components |
@@ -239,9 +239,9 @@ The newly authorized prepared A root then consumed all three slots sequentially.
 
 ### RC-6: Promotion hardening and durable completion
 
-The user adopted RC-5 `KEEP`, and the provider-free RC-6 hardening draft is implemented for only that retained workflow surface. RC-6 remains `in progress` under validation-executor `REBUILD` corrective amendment `RC6-DEV-VALIDATION-EXECUTOR-V1-A1`; its local promotion gates passed, but exact-head CI and publication are pending, and it is not accepted, integrated, or production-ready. RC-7 has not started. A disposable slice may use simpler bounded recovery if that is enough to answer the product question.
+The user adopted RC-5 `KEEP`, and RC-6 hardened only that retained workflow surface. The user later adopted `READY_FOR_PROMOTION_REVIEW`, directed publication and merge, and formally closed RC-6. PR #20 reviewed head `49224f231e3cdf5cedb526af00eab4feddd618b9` and merged it as `7db74cfc59537c8a9b08d3ea7e0dd38079b15cb5` after all 12 exact-head checks passed. RC-6 is `accepted` only within its registered provider-free validation-executor boundary; it is not integrated or production-ready.
 
-Active normative contract: [RC-6 specification](SPEC.md). Operational summary: [RC-6 slice card](RC6_SLICE_CARD.md). Session handoff: [RC-6 Codex kickoff prompt](RC6_NEXT_TASK_PROMPT.md). The accepted [RC-4 specification](RC4_SPEC.md) remains historical and does not govern RC-6.
+Historical normative contract: [RC-6 specification](SPEC.md). Closure summary: [RC-6 slice card](RC6_SLICE_CARD.md). Historical handoff: [RC-6 Codex kickoff prompt](RC6_NEXT_TASK_PROMPT.md). The active successor is [RC-7](RC7_SPEC.md).
 
 Outcome:
 
@@ -256,27 +256,31 @@ Exit evidence:
 - A resumed run cannot silently change route identity, corpus version, or permissions.
 - Recovery cost and success rate are measured against the unchanged baseline.
 
-Validation change record, 2026-08-27: merged RC-6 PR #19 implementation head `2f13cf4649324a95cadc445f7faf8cdee6714dd8` (`e9260576735bed0412fabb2a1dab41362e9ecab8`) remains the persistence and startup base. The retained RC-5 executor image `sha256:8fd2be8c533c812abda166305d0399b72515258ec8f0039569ba2ff1d5176179` is unavailable on the replacement validation host. The original fixed-image Docker-exact gate remains `not_run / blocked`; the image was not executed and is not rebuilt or repinned. Corrective amendment `RC6-DEV-VALIDATION-EXECUTOR-V1-A1`, mode `rc6_validation_executor_exact_provider_free`, executor `RC6-OFERTA-DOCKER-VALIDATION-EXECUTOR-V1`, and validation image `sha256:f65533481fe622cb80e47636e6da61691238f25bb420568e7c8828e2ae6b6ec1` passed their local matrix. External corrected matrix C/D deterministic captures are byte-identical at 23,477 bytes, file SHA-256 `f0807d59b4771faa92ee26383058e3cae45429424270b67a38c3392b3da09921`, embedded SHA-256 `40f56c958cff8413806779cd76a95fcbb1e00caedee29775578a5596f31ebe60`; pre-amendment A/B remain superseded diagnostics. Each corrected capture records 7 already complete, 29 fail closed, 2 indeterminate stopped, and 2 safely resumable; 38 dispatches, 37 simulated requests, zero provider calls or retries, 7 artifacts, 9 terminals, 6 operator steps, and cleanup 32 verified / 4 failed as injected / 4 unverified by checkpoint. Fault 26 proves three recomputed-digest usage mutations fail through both inspect and recover. Corrected `smoke-04` had exact counts 1/1/0/0/1/1 for dispatch/request/provider/retry/artifact/terminal, verified cleanup, five identical observations, and no residue in 12,998 ms. Corrected focused RC-5 plus RC-6 tests passed 98/98 in 195.955 seconds, prompt validation passed, syntax passed 600 modules, and the Recursus-only runner passed 12 suites with zero failures or warnings after only its RC-6 timeout increased from 120 to 300 seconds. Full local suite was intentionally skipped; exact-head CI and publication remain pending.
+Validation and closure record, 2026-08-27: merged RC-6 PR #19 implementation head `2f13cf4649324a95cadc445f7faf8cdee6714dd8` (`e9260576735bed0412fabb2a1dab41362e9ecab8`) remains the persistence and startup base. The retained RC-5 executor image `sha256:8fd2be8c533c812abda166305d0399b72515258ec8f0039569ba2ff1d5176179` was unavailable on the replacement validation host. The original fixed-image Docker-exact gate remains `not_run / blocked`; the image was not executed, rebuilt, or repinned. Corrective amendment `RC6-DEV-VALIDATION-EXECUTOR-V1-A1`, mode `rc6_validation_executor_exact_provider_free`, executor `RC6-OFERTA-DOCKER-VALIDATION-EXECUTOR-V1`, and validation image `sha256:f65533481fe622cb80e47636e6da61691238f25bb420568e7c8828e2ae6b6ec1` passed their local matrix. External corrected matrix C/D captures are byte-identical at 23,477 bytes, file SHA-256 `f0807d59b4771faa92ee26383058e3cae45429424270b67a38c3392b3da09921`, embedded SHA-256 `40f56c958cff8413806779cd76a95fcbb1e00caedee29775578a5596f31ebe60`; pre-amendment A/B remain superseded diagnostics. Each corrected capture records 7 already complete, 29 fail closed, 2 indeterminate stopped, and 2 safely resumable; 38 dispatches, 37 simulated requests, zero provider calls or retries, 7 artifacts, 9 terminals, 6 operator steps, and cleanup 32 verified / 4 failed as injected / 4 unverified by checkpoint. Fault 26 proves three recomputed-digest usage mutations fail through both inspect and recover. Corrected `smoke-04` had exact counts 1/1/0/0/1/1 for dispatch/request/provider/retry/artifact/terminal, verified cleanup, five identical observations, and no residue in 12,998 ms. Corrected focused RC-5 plus RC-6 tests passed 98/98 in 195.955 seconds; validation-executor tests passed 6/6; prompt validation passed; syntax passed 600 modules; and the Recursus-only runner passed 12 suites with zero failures or warnings. The unfiltered local suite was intentionally skipped. PR #20 exact reviewed head then passed all required CI and merged.
 
 The selected recovery archive remains external and uncommitted at `F:\OpenCnid\rc6-docker-exact-rebuild-20260827\rc6-validation-executor-f6553348.tar`, 189,639,168 bytes with SHA-256 `6aadd5e980bb95b1da5125bb66dd862f653d21aa148f394b2a54b6e43fda23a7`. Two exact no-cache builds differed (`sha256:f65533481fe622cb80e47636e6da61691238f25bb420568e7c8828e2ae6b6ec1` selected versus `sha256:7cd04373c7831ab42940884751b33235c31dc153e0dfa34943c54f0cc5ce1ba3` independent), so the archive is recoverability evidence rather than reproducible-build proof. The validation-only synthetic credential shim accepts only its exact synthetic document; no dependency was downloaded or installed for it, and it cannot establish live credential-provider behavior or equivalence to accepted `@deepseek-ai/dsh-credentials-local` or the original RC-5 image.
 
-This change affects RC-6 validation identity and its active specification, card, handoff, and feature-registration notes only. Dependency order is unchanged, RC-7 remains conditional, and no accepted claim is withdrawn. Accepted RC-1 through RC-4 evidence and the RC-5 `KEEP` decision, code identity, request semantics, image pin, and external evidence remain comparable and immutable. The draft-only expectation of exact execution against the original RC-5 image is narrowed to exact execution of the separately identified RC-6 validation executor; that result cannot establish accepted-image or original-host equivalence.
+RC-6 closure changes roadmap status and historical documentation only. No accepted claim is widened or withdrawn. Accepted RC-1 through RC-4 evidence and the RC-5 `KEEP` decision, code identity, request semantics, image pin, and external evidence remain comparable and immutable. The separately identified RC-6 validation executor cannot establish retained-image or original-host equivalence.
 
 ### RC-7: Selective RLM research
 
-Conditional follow-up: schedule RC-7 only after RC-5 returns `KEEP` and identifies a research bottleneck. RLM is not required merely because the component exists.
+RC-7 is scheduled by explicit user direction after RC-5 `KEEP` and RC-6 closure. Gate A returned `QUALIFIED_FOR_ABLATION` for three eligible hypotheses and three generic controls. Gate B returned `CONTAINMENT_CONFORMANT` for one exact provider-free synthetic Docker/WSL2 boundary after deterministic live preparations, injected fault coverage, and final independent red-team review. No result demonstrates a measured recursive-research gain; RLM remains optional and off by default.
+
+Active normative contract: [RC-7 specification](RC7_SPEC.md). Operational summary: [RC-7 slice card](RC7_SLICE_CARD.md). Session handoff: [RC-7 Codex kickoff prompt](RC7_NEXT_TASK_PROMPT.md).
 
 Outcome:
 
-- RLM is available for deep company, repository, paper, and research-lab investigations.
-- A router decides when recursive research is justified by uncertainty and task value.
-- Direct-model controls distinguish RLM gains from model gains.
+- A provider-free qualification package identifies or rejects a concrete, falsifiable RLM-shaped bottleneck.
+- If qualified and separately authorized, an opt-in RLM route is contained and tested for deep lab, paper, and repository investigations.
+- Registered direct-model controls distinguish RLM gains from model, prompt, source, evaluator, and automatic-routing changes.
+- Gates A and B are complete locally. Gate C provider-free preparation is complete locally and awaits exact digest-bound numeric approval; no Gate C benchmark attempt has started, and RC-7 is not closed.
 
 Exit evidence:
 
-- RLM is enabled one variable at a time in paired runs.
-- Research depth, evidence coverage, latency, token use, and cost are recorded.
-- The route falls back safely when RLM is unavailable or over budget.
+- Gate A freezes at least three eligible hypotheses and three generic controls from synthetic source packs, proves evaluator isolation, and produces byte-identical preparations from fresh roots.
+- Provider-free containment and recovery tests pass before any provider request or credential use is considered.
+- A separately authorized ablation enables RLM one variable at a time and records research depth, evidence coverage, exact computation, completion, latency, requests, tokens, cost, OS authority, failures, and cleanup.
+- Generic controls do not regress, critical safety gates remain clean, and the route falls back safely when RLM is disabled, unavailable, interrupted, malformed, or over budget.
 
 ### RC-8: Honcho advisory memory
 

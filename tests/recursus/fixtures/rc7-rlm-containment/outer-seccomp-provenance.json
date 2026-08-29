@@ -1,0 +1,10 @@
+{
+  "schema_version": "rc7-gate-b-seccomp-provenance-v1",
+  "source_repository": "https://github.com/moby/profiles.git",
+  "source_commit": "de2c5158b0d0203e9a29f2117f62e97b38813ecd",
+  "source_path": "seccomp/default.json",
+  "source_sha256": "87a3f83e2af130d26224f43b4b37f7e91e81ed355b8f12e3568baffe2dd50ce6",
+  "normalization": "crlf-to-lf",
+  "retained_path": "tests/recursus/fixtures/rc7-rlm-containment/outer-seccomp-default-errno.json",
+  "retained_sha256": "de1f5327ca42b80be02daba8d39c0d087a530dc3c16f7028170fe068c9d66e61"
+}

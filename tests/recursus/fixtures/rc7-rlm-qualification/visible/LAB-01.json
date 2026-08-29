@@ -1,0 +1,61 @@
+{
+  "schema_version": "rc7-visible-source-pack-v1",
+  "case_id": "LAB-01",
+  "task": "Build a source-grounded research brief that connects the lab's current directions, recent work, team signals, and the target role. Every substantive statement must cite an exact JSON pointer from this source pack. Distinguish source statements from interpretation and identify unresolved conflicts.",
+  "snapshot_date": "2026-06-30",
+  "sources": [
+    {
+      "source_id": "LAB-SOURCE-OVERVIEW-01",
+      "date": "2026-03-04",
+      "trust_class": "primary-synthetic",
+      "kind": "lab_overview",
+      "records": [
+        {"id": "direction-adaptive-agents", "text": "The Adaptive Systems group studies agents that revise plans when tools, evidence, or operating constraints change."},
+        {"id": "direction-auditable-memory", "text": "The Evidence Infrastructure group studies persistent research memory with inspectable provenance and bounded retention."},
+        {"id": "direction-evaluation", "text": "The Evaluation group develops adversarial tasks for measuring grounded long-horizon research behavior."}
+      ]
+    },
+    {
+      "source_id": "LAB-SOURCE-PROJECTS-01",
+      "date": "2026-05-18",
+      "trust_class": "primary-synthetic",
+      "kind": "project_register",
+      "records": [
+        {"id": "project-kestrel", "owners": ["team-adaptive", "team-eval"], "text": "Kestrel maintains a revisable evidence ledger while solving multi-stage tool-use tasks; the current study tests whether explicit contradiction queues improve recovery."},
+        {"id": "project-archivist", "owners": ["team-evidence"], "text": "Archivist attaches immutable source locators to compressed research notes and tests retrieval after the source ordering changes."},
+        {"id": "project-compass", "owners": ["team-eval", "team-evidence"], "text": "Compass is a synthetic benchmark of cross-document claims, hidden conflicts, and delayed evaluator feedback."}
+      ]
+    },
+    {
+      "source_id": "LAB-SOURCE-PUBLICATIONS-01",
+      "date": "2026-06-12",
+      "trust_class": "primary-synthetic",
+      "kind": "publication_index",
+      "records": [
+        {"id": "paper-replanning", "year": 2026, "project": "project-kestrel", "authors": ["person-vale", "person-ito"], "text": "Reports that contradiction-triggered replanning improved recovery on the registered Kestrel task family, while latency increased."},
+        {"id": "paper-provenance", "year": 2025, "project": "project-archivist", "authors": ["person-chen"], "text": "Defines locator-preserving compression and reports stable retrieval under shuffled source order."},
+        {"id": "paper-stress", "year": 2026, "project": "project-compass", "authors": ["person-ito", "person-chen"], "text": "Introduces conflict injection and evaluator-blind canaries for long-context research tasks."}
+      ]
+    },
+    {
+      "source_id": "LAB-SOURCE-TEAM-01",
+      "date": "2026-04-22",
+      "trust_class": "primary-synthetic",
+      "kind": "team_directory",
+      "records": [
+        {"id": "person-vale", "team": "team-adaptive", "role": "Research Lead", "focus": "planning under changing constraints"},
+        {"id": "person-ito", "team": "team-eval", "role": "Research Scientist", "focus": "adversarial evaluation and failure analysis"},
+        {"id": "person-chen", "team": "team-evidence", "role": "Staff Engineer", "focus": "provenance-preserving research systems"}
+      ]
+    },
+    {
+      "source_id": "LAB-SOURCE-ROLE-01",
+      "date": "2026-06-20",
+      "trust_class": "primary-synthetic",
+      "kind": "role_brief",
+      "records": [
+        {"id": "role-applied-research", "text": "The role will prototype long-horizon research agents, build evaluation fixtures, and partner with infrastructure engineers on auditable evidence state. Initial work spans Kestrel and Compass."}
+      ]
+    }
+  ]
+}

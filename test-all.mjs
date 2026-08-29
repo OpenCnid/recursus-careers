@@ -107,7 +107,7 @@ const readTextLF = (path) => normalizeEol(readFile(path));
 const TESTS_DIR = join(ROOT, 'tests');
 
 // Most discovered suites fit the shared 30-second child budget. The Recursus
-// benchmark, RC-2 reference, RC-3 execution-bridge, and RC-5/RC-6 suites perform repeated
+// benchmark, RC-2 reference, RC-3 execution-bridge, and RC-5/RC-6/RC-7 suites perform repeated
 // byte-level reconciliation and need a larger bounded allowance on Windows CI. RC-6 runs
 // two complete 40-case persistence captures and therefore has its own five-minute bound.
 const DISCOVERED_TEST_TIMEOUTS_MS = new Map([
@@ -117,6 +117,17 @@ const DISCOVERED_TEST_TIMEOUTS_MS = new Map([
   ['recursus/prompt-context-v1.test.mjs', 120_000],
   ['recursus/rc5-slice.test.mjs', 120_000],
   ['recursus/rc6-run-state.test.mjs', 300_000],
+  ['recursus/rc7-rlm-containment.test.mjs', 120_000],
+  ['recursus/rc7-rlm-gate-c-broker.test.mjs', 120_000],
+  ['recursus/rc7-rlm-gate-c-executor.test.mjs', 120_000],
+  ['recursus/rc7-rlm-gate-c-host-launcher.test.mjs', 120_000],
+  ['recursus/rc7-rlm-gate-c-preregistration.test.mjs', 120_000],
+  ['recursus/rc7-rlm-gate-c-results.test.mjs', 120_000],
+  ['recursus/rc7-rlm-gate-c-rlm-launcher.test.mjs', 120_000],
+  ['recursus/rc7-rlm-gate-c-scorer.test.mjs', 120_000],
+  ['recursus/rc7-rlm-gate-c-smoke.test.mjs', 120_000],
+  ['recursus/rc7-rlm-gate-c-worker.test.mjs', 120_000],
+  ['recursus/rc7-rlm-qualification.test.mjs', 120_000],
   ['recursus/reference-capture.test.mjs', 120_000],
 ]);
 

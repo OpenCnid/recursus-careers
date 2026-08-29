@@ -1,8 +1,8 @@
 # Codex kickoff prompt for RC-6 retained-surface promotion hardening
 
-Status: active corrected handoff prompt; local promotion gates passed, exact-head CI and publication pending
+Status: historical closed handoff; do not replay as current authority
 
-Copy the complete prompt below into the next Codex session. It authorizes the bounded provider-free RC-6 validation-executor rebuild, local verification, a feature-branch commit, push, and a pull request. It does not authorize a provider call, credential-store access, pull-request merge, deployment, external Career Ops mutation, or work beyond RC-6.
+This prompt preserves the instructions used to complete RC-6. RC-6 is closed through PR #20 and merge `7db74cfc59537c8a9b08d3ea7e0dd38079b15cb5`; this text no longer grants current authority. Use [RC7_NEXT_TASK_PROMPT.md](RC7_NEXT_TASK_PROMPT.md) for the next bounded task.
 
 ```text
 Work in this repository using Windows PowerShell only:

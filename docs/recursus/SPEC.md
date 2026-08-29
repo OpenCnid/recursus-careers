@@ -1,20 +1,22 @@
 # RC-6 retained-surface promotion hardening specification
 
-Status: active mutable implementation contract; validation-executor local promotion gates passed, exact-head CI and publication pending
+Status: historical closed RC-6 contract; accepted within the registered provider-free retained-surface boundary
 
 Roadmap milestone: [RC-6](ROADMAP.md#rc-6-promotion-hardening-and-durable-completion)
 
 Operational summary: [RC-6 slice card](RC6_SLICE_CARD.md)
 
-Session handoff: [RC-6 Codex kickoff prompt](RC6_NEXT_TASK_PROMPT.md)
+Historical session handoff: [RC-6 Codex kickoff prompt](RC6_NEXT_TASK_PROMPT.md)
+
+Active successor: [RC-7 selective RLM research specification](RC7_SPEC.md)
 
 Last reviewed: 2026-08-27
 
 ## 1. Document role and history
 
-This file is the active normative specification for the next Recursus Careers milestone. The shorter slice card bounds execution, authority, budget, and the exit decision. The kickoff prompt transfers those constraints into a new Codex session.
+This file preserves the normative contract under which RC-6 was implemented, validated, reviewed, and closed. It is no longer the active worklist. The active milestone contract is [RC7_SPEC.md](RC7_SPEC.md).
 
-The accepted RC-4 compiler-boundary contract is preserved separately as [RC4_SPEC.md](RC4_SPEC.md). It remains evidence for what RC-4 implemented and accepted, but it is not an RC-6 worklist. Keeping that historical contract under an explicit milestone filename prevents later work from silently rewriting the basis of accepted RC-4 evidence while allowing the generic `SPEC.md` entrypoint to describe the active milestone.
+The accepted RC-4 compiler-boundary contract is preserved separately as [RC4_SPEC.md](RC4_SPEC.md). It remains evidence for what RC-4 implemented and accepted, but it is not an RC-6 or RC-7 worklist. `SPEC.md` retains its historical name so links and the reviewed RC-6 contract remain stable.
 
 RC-6 does not reopen RC-4, rerun RC-5, or claim that the retained slice is already a supported product path.
 
@@ -45,7 +47,7 @@ Those external live bytes are immutable historical evidence. RC-6 MUST NOT copy 
 
 The original fixed-image Docker-exact gate is `not_run / blocked`: executor image `sha256:8fd2be8c533c812abda166305d0399b72515258ec8f0039569ba2ff1d5176179` is not available on the replacement validation host, and it was not executed there. Image availability is not provider-free proof that the retained production container needs to change. RC-5 `KEEP`, its code and request semantics, the image identity above, and all historical evidence remain unchanged.
 
-RC-6 remains `in progress` and records a validation-only `REBUILD` under this distinct registration. The validation-executor fault matrix passed locally; exact-head CI and publication remain pending:
+RC-6 recorded a validation-only `REBUILD` under this distinct registration. The corrected validation-executor fault matrix passed locally, and the exact reviewed RC-6 head later passed the required CI and merged through PR #20:
 
 - decision ID: `RC6-DEV-VALIDATION-EXECUTOR-V1`;
 - evidence mode: `rc6_validation_executor_exact_provider_free`;
@@ -334,7 +336,17 @@ The handoff MUST report:
 - confirmation that accepted RC-1 through RC-4, historical RC-5 ledgers, and unrelated user work were unchanged; and
 - the recommendation and remaining non-claims.
 
-## 18. Non-claims
+## 18. Closure record
+
+The user adopted `READY_FOR_PROMOTION_REVIEW` and later explicitly directed RC-6 closure. PR #20 reviewed exact head `49224f231e3cdf5cedb526af00eab4feddd618b9` and merged it into `main` as `7db74cfc59537c8a9b08d3ea7e0dd38079b15cb5`.
+
+All 12 exact-head checks passed: Ubuntu, macOS, Windows, CodeQL for Go, CodeQL for JavaScript/TypeScript, aggregate CodeQL, dependency review, guard, label, welcome, CV visual, and upgrade regression. Local evidence remained the registered corrected provider-free matrix C/D, focused RC-5 plus RC-6 tests 98/98, validation-executor tests 6/6, prompt-context validation, syntax validation for 600 modules, and 12 Recursus-only suites with zero failures or warnings. The unfiltered local suite remained intentionally skipped.
+
+The original retained RC-5 image `sha256:8fd2be8c533c812abda166305d0399b72515258ec8f0039569ba2ff1d5176179` was not recovered or executed on the replacement host, so that Docker-exact gate remains `not_run / blocked`. Closure accepts the separately identified RC-6 provider-free validation executor result and its explicit non-claims; it does not convert the blocked gate into a pass.
+
+RC-6 is therefore `accepted` only for the registered provider-free retained-surface hardening result. It is not production acceptance, deployment authority, live-provider recovery proof, provider-side exactly-once proof, provider-neutral behavior proof, original RC-5 image execution, or reproducible-build proof. RC-7 proceeds under [RC7_SPEC.md](RC7_SPEC.md) and does not reopen these bytes.
+
+## 19. Non-claims
 
 RC-6 provider-free evidence does not establish live provider recovery, exactly-once behavior inside a provider, provider neutrality, production readiness, feature parity, deployment safety, improved hiring outcomes, or universal reliability. It can establish only the retained host route's deterministic classification, persistence, recovery, completion-verification, and no-replay behavior under the registered synthetic faults.
 

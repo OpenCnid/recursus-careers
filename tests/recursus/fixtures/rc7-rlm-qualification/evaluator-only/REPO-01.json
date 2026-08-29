@@ -1,0 +1,21 @@
+{
+  "schema_version": "rc7-evaluator-oracle-v1",
+  "case_id": "REPO-01",
+  "eligibility": "rlm-shaped",
+  "leak_canary": "RC7-EVALUATOR-REPO-CANARY-9T2V",
+  "metric": {"id": "architecture-activity-locator-coverage-v1", "denominator": 12, "item_credit": "entailed architecture or activity relationship with all registered file or commit locators"},
+  "expected_relationships": [
+    {"id": "REPO-R01", "proposition": "The entry point validates input and delegates bounded plan construction to the planner.", "locators": ["/sources/1/records/0", "/sources/1/records/1"]},
+    {"id": "REPO-R02", "proposition": "The entry point sends the frozen plan through the broker rather than dispatching directly.", "locators": ["/sources/1/records/0", "/sources/1/records/2"]},
+    {"id": "REPO-R03", "proposition": "The broker records durable intent before dispatch and seals a result digest after dispatch.", "locators": ["/sources/1/records/2", "/sources/1/records/3"]},
+    {"id": "REPO-R04", "proposition": "Recovery distinguishes pending intent from a sealed terminal result and prohibits automatic replay of indeterminate dispatch.", "locators": ["/sources/1/records/3", "/sources/1/records/4"]},
+    {"id": "REPO-R05", "proposition": "The planner propagates the registered maximum-child limit of four into each frozen plan.", "locators": ["/sources/1/records/1", "/sources/1/records/5"]},
+    {"id": "REPO-R06", "proposition": "The recovery test exercises the no-replay behavior described by the recovery implementation.", "locators": ["/sources/1/records/4", "/sources/2/records/0"]},
+    {"id": "REPO-R07", "proposition": "The network-denial test supports the broker-only request boundary in the broker implementation.", "locators": ["/sources/1/records/2", "/sources/2/records/1"]},
+    {"id": "REPO-R08", "proposition": "Commit a91 introduced intent-before-dispatch behavior and corresponding recovery coverage.", "locators": ["/sources/3/records/0", "/sources/1/records/3"]},
+    {"id": "REPO-R09", "proposition": "Commit b07 introduced indeterminate classification and no automatic replay in recovery.", "locators": ["/sources/3/records/1", "/sources/1/records/4"]},
+    {"id": "REPO-R10", "proposition": "Commit c42 hardened broker-only child requests and direct-network denial.", "locators": ["/sources/3/records/2", "/sources/1/records/2"]},
+    {"id": "REPO-R11", "proposition": "The release groups three chronological hardening changes covering intent, recovery, and brokered networking.", "locators": ["/sources/3/records/0", "/sources/3/records/1", "/sources/3/records/2"]},
+    {"id": "REPO-R12", "proposition": "The frozen tree contains every code, configuration, test, and history surface referenced by the 0.4 hardening release analysis.", "locators": ["/sources/0/records/0", "/sources/3/records/3"]}
+  ]
+}
