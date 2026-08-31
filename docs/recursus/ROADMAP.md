@@ -15,9 +15,10 @@ RC-0 through RC-4 are accepted, RC-5 was kept, and RC-6 is accepted within its r
 - Latest closed contract: [RC7_SPEC.md](RC7_SPEC.md)
 - RC-7 learning review: [RC7_POSTMORTEM.md](RC7_POSTMORTEM.md)
 - Non-normative future proposal: [ORCHESTRATED_RLM_PROPOSAL.md](ORCHESTRATED_RLM_PROPOSAL.md)
+- Inactive successor contract: [ORCHESTRATED_RLM_SPEC.md](ORCHESTRATED_RLM_SPEC.md)
 - Current capability truth table: [features/REGISTRY.md](features/REGISTRY.md)
 
-The proposal does not reopen RC-7 or authorize implementation. Any future work requires a new bounded milestone and authority.
+The proposal and inactive successor contract do not reopen RC-7, schedule a milestone, or authorize implementation. Any future work requires a new bounded milestone and authority.
 
 ## Status vocabulary
 
@@ -73,7 +74,7 @@ RC-6 is accepted only for the registered provider-free validation-executor resul
 
 RC-7 completed its registered comparison and stopped. The [specification](RC7_SPEC.md), [slice record](RC7_SLICE_CARD.md), and [postmortem](RC7_POSTMORTEM.md) preserve the exact boundary and result. The terminal `STOP` is neither `KEEP_RLM_CANDIDATE`, `REBUILD_RLM_CANDIDATE`, nor `NO_RLM`; it grants no repair, rerun, integration, publication, or deployment authority.
 
-The [orchestrator-guided RLM proposal](ORCHESTRATED_RLM_PROPOSAL.md) is non-normative. It may inform a separately authorized future milestone but cannot change or continue RC-7.
+The [orchestrator-guided RLM proposal](ORCHESTRATED_RLM_PROPOSAL.md) remains the non-normative design rationale. The [inactive successor specification](ORCHESTRATED_RLM_SPEC.md) defines requirements for a separately authorized future slice; neither document changes or continues RC-7.
 
 ## Conditional work
 
