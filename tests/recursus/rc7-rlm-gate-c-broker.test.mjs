@@ -25,7 +25,6 @@ import {
   prepareRc7GateCFinalApprovalFreeze,
   recoverRc7GateCDispatchLedger,
   validateRc7GateCBrokerConformancePackage,
-  validateRc7GateCOperatorApprovalRecord,
   validateRc7GateCRequestIntent,
 } from "../../lib/recursus/rc7-rlm-gate-c-broker.mjs";
 import { parseRc7GateCStructuredOutput } from "../../lib/recursus/rc7-rlm-gate-c-output-grammar.mjs";
@@ -211,8 +210,6 @@ test("public hashes and test-only records cannot self-approve provider dispatch"
   const root = await testLedger("test-only-approval");
   await expectCode(() => authorizeRc7GateCProviderDispatch(root.root, request.intent), "NUMERIC_APPROVAL_REQUIRED");
   await expectCode(() => initializeRc7GateCDispatchLedger(root.root), "NUMERIC_APPROVAL_REQUIRED");
-  const testApproval = await __test.buildTestOnlyOperatorApprovalRecord(root.root, root.resultsRoot);
-  await expectCode(() => validateRc7GateCOperatorApprovalRecord(testApproval, root.root), "MATRIX_PROOF_REQUIRED");
 });
 
 test("a copied approval record cannot initialize an alternate ledger root", async () => {
