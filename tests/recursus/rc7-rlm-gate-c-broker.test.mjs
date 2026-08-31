@@ -23,7 +23,6 @@ import {
   preflightRc7GateCLiveDispatch,
   prepareRc7GateCBrokerConformance,
   prepareRc7GateCFinalApprovalFreeze,
-  recordRc7GateCOperatorApproval,
   recoverRc7GateCDispatchLedger,
   validateRc7GateCBrokerConformancePackage,
   validateRc7GateCOperatorApprovalRecord,
@@ -231,15 +230,6 @@ test("alternate and same-path-recreated results roots invalidate the exact appro
   const freeze = await __test.buildTestOnlyFinalApprovalFreeze(ledger.root, results.root);
   const alternateFreeze = await __test.buildTestOnlyFinalApprovalFreeze(ledger.root, alternate.root);
   assert.notEqual(freeze.final_freeze_sha256, alternateFreeze.final_freeze_sha256);
-  await expectCode(() => recordRc7GateCOperatorApproval(ledger.root, {
-    exact_approval_text: freeze.exact_approval_text,
-    final_freeze_sha256: freeze.final_freeze_sha256,
-    future_activation_sha256: freeze.future_activation_sha256,
-    results_root: alternate.root,
-    proof_ledger_root: ledger.root,
-    proof_results_root: results.root,
-    proof_rlm_root: alternate.root,
-  }), "MATRIX_PROOF_REQUIRED");
   assert.deepEqual(await readdir(ledger.root), []);
 
   const approval = await __test.buildTestOnlyOperatorApprovalRecord(ledger.root, results.root);
@@ -392,22 +382,16 @@ test("historical physical-tree evidence fails closed on tamper, recreation, miss
   ), (error) => error instanceof Rc7GateCBrokerError && error.code === "SUPERSEDED_ROOT_REUSE");
 });
 
-test("operator approval recording requires the exact successful proof and leaves no authority on mismatch", async () => {
+test("operator approval prerequisite requires the exact successful proof and leaves no authority on mismatch", async () => {
   const target = await freshRoot("operator-approval-mismatch");
   const results = await freshRoot("operator-approval-results");
   const freeze = await __test.buildTestOnlyFinalApprovalFreeze(target.root, results.root);
-  const proofLedger = await freshRoot("operator-proof-ledger");
-  const proofResults = await freshRoot("operator-proof-results");
-  const proofRlm = await freshRoot("operator-proof-rlm");
-  await expectCode(() => recordRc7GateCOperatorApproval(target.root, {
-    exact_approval_text: `${freeze.exact_approval_text} changed`,
-    final_freeze_sha256: freeze.final_freeze_sha256,
-    future_activation_sha256: freeze.future_activation_sha256,
-    results_root: results.root,
-    proof_ledger_root: proofLedger.root,
-    proof_results_root: proofResults.root,
-    proof_rlm_root: proofRlm.root,
-  }), "MATRIX_PROOF_REQUIRED");
+  const mismatchedPrerequisite = structuredClone(freeze.closure.successful_treatment_proof);
+  mismatchedPrerequisite.prerequisite_sha256 = "0".repeat(64);
+  assert.throws(
+    () => __test.validateSuccessfulTreatmentProofPrerequisite(mismatchedPrerequisite, true),
+    (error) => error instanceof Rc7GateCBrokerError && error.code === "MATRIX_PROOF_REQUIRED",
+  );
   assert.deepEqual(await readdir(target.root), []);
 });
 
