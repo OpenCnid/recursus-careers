@@ -1,0 +1,53 @@
+{
+  "schema_version": "rc7-visible-source-pack-v1",
+  "case_id": "REPO-01",
+  "task": "Explain the repository's request lifecycle, safety boundaries, recovery behavior, and recent development activity. Support every architecture or activity claim with exact JSON pointers and separate observed facts from interpretation.",
+  "snapshot_date": "2026-06-30",
+  "sources": [
+    {
+      "source_id": "REPO-SOURCE-TREE-01",
+      "date": "2026-06-30",
+      "trust_class": "primary-synthetic",
+      "kind": "repository_tree",
+      "records": [
+        {"id": "tree", "paths": ["src/entry.mjs", "src/planner.mjs", "src/broker.mjs", "src/journal.mjs", "src/recover.mjs", "config/limits.json", "tests/recovery.test.mjs", "tests/network-denial.test.mjs"]}
+      ]
+    },
+    {
+      "source_id": "REPO-SOURCE-CODE-01",
+      "date": "2026-06-30",
+      "trust_class": "primary-synthetic",
+      "kind": "selected_files",
+      "records": [
+        {"id": "src-entry", "path": "src/entry.mjs", "text": "validateRequest(input); const plan = planRequest(input); return broker.run(plan);"},
+        {"id": "src-planner", "path": "src/planner.mjs", "text": "export function planRequest(input) { return Object.freeze({requestId: input.id, steps: input.steps, maxChildren: limits.maxChildren}); }"},
+        {"id": "src-broker", "path": "src/broker.mjs", "text": "journal.recordIntent(plan); const result = await dispatch(plan); journal.sealResult(plan.requestId, result.digest); return result;"},
+        {"id": "src-journal", "path": "src/journal.mjs", "text": "recordIntent writes an exclusive pending record before dispatch; sealResult atomically replaces pending with a digest-bearing terminal record."},
+        {"id": "src-recover", "path": "src/recover.mjs", "text": "Pending records without a sealed result are reported indeterminate and are never replayed automatically. Terminal records are returned without redispatch."},
+        {"id": "config-limits", "path": "config/limits.json", "text": "{\"maxChildren\":4,\"maxDepth\":2,\"directNetwork\":false}"}
+      ]
+    },
+    {
+      "source_id": "REPO-SOURCE-TESTS-01",
+      "date": "2026-06-29",
+      "trust_class": "primary-synthetic",
+      "kind": "test_index",
+      "records": [
+        {"id": "test-recovery", "path": "tests/recovery.test.mjs", "text": "Covers interruption before intent, after intent, during dispatch, and after result seal; asserts no automatic replay after an indeterminate dispatch."},
+        {"id": "test-network", "path": "tests/network-denial.test.mjs", "text": "Asserts direct socket creation is denied and only the broker adapter may receive an already-authorized request envelope."}
+      ]
+    },
+    {
+      "source_id": "REPO-SOURCE-HISTORY-01",
+      "date": "2026-06-30",
+      "trust_class": "primary-synthetic",
+      "kind": "commit_and_release_index",
+      "records": [
+        {"id": "commit-a91", "date": "2026-06-03", "paths": ["src/journal.mjs", "tests/recovery.test.mjs"], "text": "Persist intent before dispatch and add interruption coverage."},
+        {"id": "commit-b07", "date": "2026-06-18", "paths": ["src/recover.mjs", "tests/recovery.test.mjs"], "text": "Classify unsealed dispatch as indeterminate and prohibit replay."},
+        {"id": "commit-c42", "date": "2026-06-27", "paths": ["src/broker.mjs", "tests/network-denial.test.mjs"], "text": "Route authorized child requests through the broker and deny direct networking."},
+        {"id": "release-0.4", "date": "2026-06-30", "commits": ["commit-a91", "commit-b07", "commit-c42"], "text": "Recovery and broker-boundary hardening release."}
+      ]
+    }
+  ]
+}

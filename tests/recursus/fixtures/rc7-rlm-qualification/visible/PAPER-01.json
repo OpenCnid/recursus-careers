@@ -1,0 +1,53 @@
+{
+  "schema_version": "rc7-visible-source-pack-v1",
+  "case_id": "PAPER-01",
+  "task": "Produce an evidence map of the paper's method, registered results, caveats, and derived comparisons. Cite exact JSON pointers, label each conclusion as paper-stated or analyst-derived, and show the inputs for every calculation.",
+  "snapshot_date": "2026-06-30",
+  "sources": [
+    {
+      "source_id": "PAPER-SOURCE-BODY-01",
+      "date": "2026-05-02",
+      "trust_class": "primary-synthetic",
+      "kind": "paper_sections",
+      "records": [
+        {"id": "abstract", "text": "We evaluate persistent evidence ledgers on multi-document synthesis and report improved supported-claim recall with additional compute."},
+        {"id": "method-ledger", "text": "The treatment stores candidate claims with source locators, contradiction status, and an unresolved-question queue. The control receives the same documents and task but has no persistent ledger."},
+        {"id": "method-sampling", "text": "We registered 48 synthetic source packs across four domains, three seeds per pack, and a maximum of four recursive evidence passes for the treatment."},
+        {"id": "result-primary", "text": "The preregistered primary endpoint is supported-claim recall. The treatment mean was 0.84 and the control mean was 0.73."},
+        {"id": "result-precision", "text": "Supported-claim precision was 0.96 for treatment and 0.97 for control."},
+        {"id": "result-latency", "text": "Median end-to-end latency was 128 seconds for treatment and 82 seconds for control."},
+        {"id": "discussion", "text": "The results support further evaluation of persistent evidence state; they do not establish general superiority outside the registered synthetic tasks."}
+      ]
+    },
+    {
+      "source_id": "PAPER-SOURCE-TABLES-01",
+      "date": "2026-05-02",
+      "trust_class": "primary-synthetic",
+      "kind": "tables",
+      "records": [
+        {"id": "table-domain", "columns": ["domain", "control_recall", "treatment_recall"], "rows": [["laboratory", 0.70, 0.83], ["papers", 0.75, 0.86], ["repositories", 0.72, 0.85], ["policy", 0.75, 0.82]]},
+        {"id": "table-failures", "columns": ["failure", "control_count", "treatment_count"], "rows": [["missed_cross_source_link", 31, 14], ["unsupported_claim", 7, 9], ["wrong_locator", 11, 6]]}
+      ]
+    },
+    {
+      "source_id": "PAPER-SOURCE-APPENDIX-01",
+      "date": "2026-05-02",
+      "trust_class": "primary-synthetic",
+      "kind": "appendix",
+      "records": [
+        {"id": "exclusions", "text": "Two attempts were excluded before scoring because the fixture archive was truncated. Both exclusions affected the control arm and were replaced under the registered policy."},
+        {"id": "variance", "text": "Across pack-level means, the treatment standard deviation was 0.041 and the control standard deviation was 0.038."},
+        {"id": "limitation", "text": "The evaluator used synthetic, fully enumerated facts. Performance on open-world research and private corpora was not measured."}
+      ]
+    },
+    {
+      "source_id": "PAPER-SOURCE-ROLE-01",
+      "date": "2026-06-10",
+      "trust_class": "primary-synthetic",
+      "kind": "role_context",
+      "records": [
+        {"id": "role-evaluation", "text": "The target role requires designing grounded-agent evaluations, explaining cost-quality tradeoffs, and identifying claims that exceed experimental evidence."}
+      ]
+    }
+  ]
+}

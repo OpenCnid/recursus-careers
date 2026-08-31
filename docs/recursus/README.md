@@ -12,13 +12,13 @@ RC-3 is `accepted` through PR #4. Exact implementation commit `7fe377863dc8b6b5c
 
 The actual route ran only through the explicit V17 capture command. It used a content-addressed read-only container, a fresh read-only seed, a dedicated writable credential mount managed by the configured runtime, a networkless worker namespace, and a host-owned CONNECT allowlist for `auth.openai.com:443` and `chatgpt.com:443`. The validated manifest records one DSH request, one direct-adapter invocation, one registered application fetch, one trusted terminal event, one 390-byte text artifact, strict successful cleanup checks, no denied or unregistered access, and no unexpected mutation. The configured runtime read and used the OAuth grant; host and runner code did not inspect credential values, and no credential value entered evidence. V1 through V16 remain preserved historical contract records. V1 had no materialized executable source closure to archive. The existing V2 through V15 executable sources and V4 through V15 focused tests were placed in an operator-verified local archive and pruned from the current checkout, so their recorded commands are not runnable here. The [archive record](RC3_ARCHIVE_RECORD.md) qualifies exactly what was verified. V10 and V12 through V15 were rejected after review; V11 stopped before runtime or provider invocation. V16 remains an independently valid historical execution record pinned to the superseded Recursus revision. The selected V17 Recursus revision passed exact post-merge Ubuntu and Windows CI. Separately, Recursus Milestone 1 and current-pin Linux double-build, profile, smoke, and clean-machine acceptance evidence remain incomplete. Exact Careers implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed the required Windows and supported CI in PR #4, so RC-3 is `accepted`. RC-4 is `accepted` through PR #6. Exact implementation head `f086626ef344b59fa466e13eeeb3eccc1acd97fd` passed the required Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency checks. RC-4 remains a provider-free compiler-boundary result, not product integration or comparative evidence.
 
-RC-5 is `kept` through PR #15. Exact implementation head `287aeb08a83a132d20858bdd4dfd5e77f2ea2a9f` merged as `70e3058fee51e74a4cd6ee31a7869245d417cff5` after the required Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency checks passed. Its bounded anomaly-disclosure comparison completed three trusted one-request cases with zero retries or external mutations, two wins, one tie, and no factual or safety correction. This is a product-learning result, not a supported-path or production-readiness claim. RC-6 is the active next milestone and is limited to provider-free recovery, attribution, completion verification, and permission-policy hardening for that retained surface.
+RC-5 is `kept` through PR #15. Exact implementation head `287aeb08a83a132d20858bdd4dfd5e77f2ea2a9f` merged as `70e3058fee51e74a4cd6ee31a7869245d417cff5` after the required Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency checks passed. Its bounded anomaly-disclosure comparison completed three trusted one-request cases with zero retries or external mutations, two wins, one tie, and no factual or safety correction. This is a product-learning result, not a supported-path or production-readiness claim. RC-6 is `accepted` within its registered provider-free retained-surface boundary: PR #20 reviewed head `49224f231e3cdf5cedb526af00eab4feddd618b9` passed all 12 required checks and merged as `7db74cfc59537c8a9b08d3ea7e0dd38079b15cb5`. The original RC-5 image was not recovered or executed on the replacement host, so that exact-image gate remains blocked and RC-6 does not establish production or live-provider recovery. RC-7 is closed with terminal `STOP`: Gate A returned `QUALIFIED_FOR_ABLATION`, Gate B returned `CONTAINMENT_CONFORMANT`, and v25 sealed the complete 36-attempt Gate C comparison. The comparison retained 29 verified completions, seven zero-score RLM-treatment failures, and one direct-route `fabricated-candidate-fact` critical failure. The current RLM route is off and unintegrated; `STOP` is neither `KEEP_RLM_CANDIDATE` nor `NO_RLM`.
 
 ## Documentation map
 
 | Area | Purpose | Start here |
 | --- | --- | --- |
-| Delivery | Defines the retained slice and its next scoped hardening step | [Active RC-6 specification](SPEC.md), [operational slice card](RC6_SLICE_CARD.md), and [session kickoff prompt](RC6_NEXT_TASK_PROMPT.md); the [RC-5 slice card](RC5_SLICE_CARD.md) is the kept predecessor record |
+| Delivery | Records the stopped RC-7 investigation and preserves predecessor decisions | [Closed RC-7 specification](RC7_SPEC.md), [operational slice card](RC7_SLICE_CARD.md), and [postmortem](RC7_POSTMORTEM.md); the [RC-6 specification](SPEC.md) and [closure card](RC6_SLICE_CARD.md) are historical |
 | Benchmarks | Defines the comparison routes, scenarios, metrics, controls, and advancement rules | [Benchmark overview](benchmarks/README.md) |
 | Architecture | Defines ownership, runtime boundaries, intended differences, and prompt compilation | [Architecture overview](architecture/README.md) |
 | Features | Records feature ownership, maturity, evidence, limitations, and advancement criteria | [Feature documentation](features/README.md) |
@@ -34,9 +34,14 @@ RC-5 is `kept` through PR #15. Exact implementation head `287aeb08a83a132d20858b
 Supporting documents:
 
 - [Recursus Careers roadmap](ROADMAP.md)
-- [Active RC-6 retained-surface promotion hardening specification](SPEC.md)
-- [RC-6 retained-surface promotion hardening slice card](RC6_SLICE_CARD.md)
-- [Active Codex kickoff prompt for RC-6](RC6_NEXT_TASK_PROMPT.md)
+- [Closed RC-7 selective RLM research specification](RC7_SPEC.md)
+- [RC-7 selective RLM research slice card](RC7_SLICE_CARD.md)
+- [RC-7 selective RLM research postmortem](RC7_POSTMORTEM.md)
+- [Proposed orchestrator-guided RLM follow-up](ORCHESTRATED_RLM_PROPOSAL.md)
+- [Historical Codex kickoff prompt for RC-7 Gate A](RC7_NEXT_TASK_PROMPT.md)
+- [Closed RC-6 retained-surface promotion hardening specification](SPEC.md)
+- [RC-6 closure slice card](RC6_SLICE_CARD.md)
+- [Historical Codex kickoff prompt for RC-6](RC6_NEXT_TASK_PROMPT.md)
 - [RC-5 disposable `oferta` slice card](RC5_SLICE_CARD.md)
 - [Historical initial Codex kickoff prompt for RC-5](RC5_NEXT_TASK_PROMPT.md)
 - [Accepted historical RC-4 compiled prompt and context parity specification](RC4_SPEC.md)
@@ -54,7 +59,7 @@ Supporting documents:
 
 Starting with RC-5, delivery uses bounded vertical slices. Define the smallest useful user path and its blast radius, build it, test it immediately on the three registered representative jobs against ordinary Career Ops, and then choose `KEEP`, `REBUILD`, or `DELETE`. A disposable learning slice needs only enough specification to bound authority, cost, writes, and the decision signal. It does not need release-grade preregistration or a full evidence matrix.
 
-The active normative contract is [SPEC.md](SPEC.md). The [RC-6 slice card](RC6_SLICE_CARD.md) is its compact execution boundary, and the [copy-ready kickoff prompt](RC6_NEXT_TASK_PROMPT.md) transfers both into a new session. The accepted RC-4 contract is preserved separately in [RC4_SPEC.md](RC4_SPEC.md), and the kept [RC-5 slice card](RC5_SLICE_CARD.md) remains the predecessor decision record.
+The closed normative record is [RC7_SPEC.md](RC7_SPEC.md), the [RC-7 slice card](RC7_SLICE_CARD.md) is its compact execution summary, and the [postmortem](RC7_POSTMORTEM.md) records the resulting architectural and process lessons. The [orchestrator-guided RLM proposal](ORCHESTRATED_RLM_PROPOSAL.md) records a non-normative candidate for a separately bounded future slice; it does not reopen RC-7 or grant execution authority. The [Gate A kickoff prompt](RC7_NEXT_TASK_PROMPT.md) is retained as historical session authority. Gate C completed with `STOP`; its RLM route remains off and its evidence grants no repair, rerun, integration, publication, or deployment authority. The closed RC-6 contract remains at [SPEC.md](SPEC.md), while the accepted RC-4 contract and kept RC-5 decision remain preserved historical records.
 
 For RC-6 and future slices, the primary agent must study every binding instruction and required source completely before delegating architectural judgment. Each active specification, slice card, and kickoff prompt should direct the session to study and apply the `subagent-composition` skill when available, then spawn bounded multi-agents in parallel for independent audits, disjoint implementation work, and final red-team review. If the skill is unavailable, the agent should report that fact and use equivalent built-in multi-agent composition. Subagents need exact scopes and non-overlapping ownership; the primary agent remains responsible for reconciliation, shared-file integration, preservation, and the final diff. Handoffs should record each subagent's task and model or inherited model setting when that metadata is available.
 
@@ -79,12 +84,12 @@ An implementation label never substitutes for evidence. A component capability i
 
 ## Claim boundary
 
-Until the comparative benchmark protocol is executed, use language such as:
+After the stopped RC-7 comparison, use language such as:
 
-- "designed to improve"
-- "intended difference"
-- "specified, not integrated"
-- "unmeasured against Career Ops on Claude Code"
+- "the current RLM implementation is shelved and not integrated"
+- "RC-7 ended at a critical safety stop"
+- "the comparison did not establish a promotable RLM benefit"
+- "the result does not prove that all recursive research is ineffective"
 
 Do not describe Recursus Careers as better, safer, provider-neutral in behavior, or more efficient without the named evidence required by [Metrics and advancement](benchmarks/METRICS_AND_PROMOTION.md).
 

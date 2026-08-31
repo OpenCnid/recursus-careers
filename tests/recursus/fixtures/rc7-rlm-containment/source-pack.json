@@ -1,0 +1,7 @@
+{
+  "schema_version": "rc7-gate-b-visible-source-pack-v1",
+  "probe_id": "RLM-PERSISTENCE-38-TO-42",
+  "visible_task": "Retain one integer in a persistent IPython namespace and compute a fixed offset in the same kernel generation.",
+  "first_value": 38,
+  "offset": 4
+}

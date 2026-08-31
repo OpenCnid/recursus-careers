@@ -1,0 +1,21 @@
+{
+  "schema_version": "rc7-evaluator-oracle-v1",
+  "case_id": "PAPER-01",
+  "eligibility": "rlm-shaped",
+  "leak_canary": "RC7-EVALUATOR-PAPER-CANARY-4M8Q",
+  "metric": {"id": "evidence-map-correctness-v1", "denominator": 12, "item_credit": "correct proposition, exact locator, statement-versus-interpretation label, and calculation when required"},
+  "expected_relationships": [
+    {"id": "PAPER-R01", "kind": "paper-stated", "proposition": "Treatment stores locator-bearing candidate claims, contradiction status, and an unresolved-question queue while control has no persistent ledger.", "locators": ["/sources/0/records/1"]},
+    {"id": "PAPER-R02", "kind": "paper-stated", "proposition": "The registered design uses 48 packs, three seeds per pack, and at most four treatment evidence passes.", "locators": ["/sources/0/records/2"]},
+    {"id": "PAPER-R03", "kind": "paper-stated", "proposition": "The preregistered primary endpoint is supported-claim recall with treatment 0.84 and control 0.73.", "locators": ["/sources/0/records/3"]},
+    {"id": "PAPER-R04", "kind": "analyst-derived", "proposition": "The absolute primary-endpoint difference is 0.11 in favor of treatment.", "calculation": "0.84-0.73=0.11", "locators": ["/sources/0/records/3"]},
+    {"id": "PAPER-R05", "kind": "analyst-derived", "proposition": "Treatment precision is 0.01 lower than control precision.", "calculation": "0.96-0.97=-0.01", "locators": ["/sources/0/records/4"]},
+    {"id": "PAPER-R06", "kind": "analyst-derived", "proposition": "Treatment median latency is approximately 1.561 times control latency.", "calculation": "128/82=1.5609756098", "locators": ["/sources/0/records/5"]},
+    {"id": "PAPER-R07", "kind": "paper-stated", "proposition": "The authors support further evaluation but do not claim general superiority outside registered synthetic tasks.", "locators": ["/sources/0/records/6"]},
+    {"id": "PAPER-R08", "kind": "analyst-derived", "proposition": "The unweighted mean domain-level recall difference is 0.11.", "calculation": "mean([0.83-0.70,0.86-0.75,0.85-0.72,0.82-0.75])=0.11", "locators": ["/sources/1/records/0"]},
+    {"id": "PAPER-R09", "kind": "analyst-derived", "proposition": "The table reports 17 fewer missed cross-source links for treatment.", "calculation": "31-14=17", "locators": ["/sources/1/records/1"]},
+    {"id": "PAPER-R10", "kind": "paper-stated", "proposition": "Two truncated-fixture control attempts were excluded before scoring and replaced under the registered policy.", "locators": ["/sources/2/records/0"]},
+    {"id": "PAPER-R11", "kind": "analyst-derived", "proposition": "Treatment pack-level standard deviation is approximately 1.079 times control.", "calculation": "0.041/0.038=1.0789473684", "locators": ["/sources/2/records/1"]},
+    {"id": "PAPER-R12", "kind": "paper-stated", "proposition": "Open-world performance was not measured, so the role-relevant conclusion is an evaluation-design signal rather than proof of live-research superiority.", "locators": ["/sources/2/records/2", "/sources/3/records/0"]}
+  ]
+}

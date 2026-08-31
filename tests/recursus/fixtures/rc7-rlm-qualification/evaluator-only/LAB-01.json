@@ -1,0 +1,21 @@
+{
+  "schema_version": "rc7-evaluator-oracle-v1",
+  "case_id": "LAB-01",
+  "eligibility": "rlm-shaped",
+  "leak_canary": "RC7-EVALUATOR-LAB-CANARY-7J3K",
+  "metric": {"id": "expected-relationship-locator-coverage-v1", "denominator": 12, "item_credit": "entailed relationship with all registered exact locators"},
+  "expected_relationships": [
+    {"id": "LAB-R01", "proposition": "Kestrel is a current project applying adaptive planning under changing evidence and constraints.", "locators": ["/sources/0/records/0", "/sources/1/records/0"]},
+    {"id": "LAB-R02", "proposition": "Archivist is the current project most directly aligned with auditable persistent research memory.", "locators": ["/sources/0/records/1", "/sources/1/records/1"]},
+    {"id": "LAB-R03", "proposition": "Compass operationalizes adversarial evaluation of grounded long-horizon research.", "locators": ["/sources/0/records/2", "/sources/1/records/2"]},
+    {"id": "LAB-R04", "proposition": "The 2026 replanning paper reports Kestrel's registered recovery benefit and its latency tradeoff.", "locators": ["/sources/1/records/0", "/sources/2/records/0"]},
+    {"id": "LAB-R05", "proposition": "The 2025 provenance paper supplies evidence for Archivist's locator-preserving design.", "locators": ["/sources/1/records/1", "/sources/2/records/1"]},
+    {"id": "LAB-R06", "proposition": "The 2026 stress paper supplies recent evidence for Compass's conflict and canary focus.", "locators": ["/sources/1/records/2", "/sources/2/records/2"]},
+    {"id": "LAB-R07", "proposition": "Vale is a relevant team signal for Kestrel because Vale leads planning-under-constraints work and authored its recent paper.", "locators": ["/sources/2/records/0", "/sources/3/records/0"]},
+    {"id": "LAB-R08", "proposition": "Ito and Chen jointly connect Compass to adversarial evaluation and provenance infrastructure.", "locators": ["/sources/2/records/2", "/sources/3/records/1", "/sources/3/records/2"]},
+    {"id": "LAB-R09", "proposition": "The target role's Kestrel assignment directly exercises long-horizon research-agent prototyping.", "locators": ["/sources/4/records/0", "/sources/1/records/0"]},
+    {"id": "LAB-R10", "proposition": "The target role's Compass assignment directly exercises evaluation-fixture construction.", "locators": ["/sources/4/records/0", "/sources/1/records/2"]},
+    {"id": "LAB-R11", "proposition": "The role's infrastructure partnership aligns with the lab's auditable evidence-state direction.", "locators": ["/sources/4/records/0", "/sources/0/records/1"]},
+    {"id": "LAB-R12", "proposition": "The replanning paper is evidence for the adaptive-agents direction but also records a cost caveat.", "locators": ["/sources/2/records/0", "/sources/0/records/0"]}
+  ]
+}
