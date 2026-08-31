@@ -18,6 +18,7 @@ const HASHES = Object.freeze({
   intent: "6".repeat(64), permit: "7".repeat(64), semantic: "8".repeat(64), stage: "9".repeat(64), capsule: "a".repeat(64), container: "b".repeat(64),
 });
 const REPOSITORY_ROOT = path.resolve(import.meta.dirname, "..", "..");
+const TEST_DISPOSABLE_ROOT = path.join(path.parse(REPOSITORY_ROOT).root, "rc7-disposable");
 
 function withDigest(value, field) {
   return { ...value, [field]: sha256V1(canonicalJsonV1(value)) };
@@ -117,9 +118,9 @@ function transport() {
 function fixtureInput() {
   return {
     abort_signal: new AbortController().signal,
-    ledger_root: "F:\\rc7-disposable\\ledger",
-    runtime_root: "F:\\rc7-disposable\\runtime",
-    stage_root: "F:\\rc7-disposable\\runtime\\stage",
+    ledger_root: path.join(TEST_DISPOSABLE_ROOT, "ledger"),
+    runtime_root: path.join(TEST_DISPOSABLE_ROOT, "runtime"),
+    stage_root: path.join(TEST_DISPOSABLE_ROOT, "runtime", "stage"),
     dispatch_sha256: brokerResult().dispatch.dispatch_sha256,
     sealed_request: { caller_bytes: "ignored-by-fake-preflight", intent: { request_kind: "top-level" } },
     gate_b_attestation: { caller_reference: "ignored-by-fake-preflight" },
@@ -171,7 +172,7 @@ test("one-use host orchestration validates broker bytes, capsule acknowledgment,
   assert.equal(result.state, "one-shot-child-complete");
   assert.equal(result.result.state, "fake-provider-unreachable-result");
   assert.deepEqual(fake.events, [
-    "freeze:F:\\rc7-disposable\\ledger", "inspect-stage", "verify-capsule", "broker-preflight", "inspect-stage", "verify-capsule",
+    `freeze:${path.join(TEST_DISPOSABLE_ROOT, "ledger")}`, "inspect-stage", "verify-capsule", "broker-preflight", "inspect-stage", "verify-capsule",
     "lock-acquired", "handoff-written-and-closed", "ack-validated-before-commit", "lock-released",
   ]);
   assert.equal(fake.consumed.size, 1);
