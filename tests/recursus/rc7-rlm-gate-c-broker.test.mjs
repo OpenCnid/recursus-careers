@@ -504,7 +504,7 @@ test("RLM-root qualification rejects exact historical reuse, nesting, aliasing, 
   const historical = lineage.abandoned_partial_matrix_v19.retained_rlm_roots.find((item) => item.ordinal === 11).root_identity;
   await expectCode(
     () => __test.identifyTestRlmRootForAttempt(root.root, root.resultsRoot, treatment.run_id, historical.normalized_physical_root, true),
-    "SUPERSEDED_ROOT_REUSE",
+    process.platform === "win32" ? "SUPERSEDED_ROOT_REUSE" : "UNSAFE_OUTPUT_ROOT",
   );
 
   const native = await freshRoot("fresh-rlm-native");

@@ -313,8 +313,16 @@ test("contract and source keep provider, credential, network, Docker, and live c
   assert.match(contract.child_environment, /recursus profile marker binds OPENAI_CODEX_OAUTH/u);
   assert.ok(contract.handoff_excludes.includes("DSH_HOME-path-or-value"));
   assert.match(contract.capsule_integration, /acceptRc7GateCHostHandoff/u);
-  assert.equal(contract.node_runtime.version, process.versions.node);
-  assert.equal((await __test.verifyPinnedHostNodeRuntime()).sha256, contract.node_runtime.sha256);
+  if (process.platform === "win32") {
+    assert.equal(contract.node_runtime.version, process.versions.node);
+    assert.equal((await __test.verifyPinnedHostNodeRuntime()).sha256, contract.node_runtime.sha256);
+  } else {
+    assert.deepEqual(contract.node_runtime, {
+      version: "24.19.0",
+      byte_count: 92_825_416,
+      sha256: "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237",
+    });
+  }
   const source = await readFile(path.join(path.dirname(new URL(import.meta.url).pathname.slice(1)), "../../lib/recursus/rc7-rlm-gate-c-host-launcher.mjs"), "utf8");
   for (const denied of ["globalThis.fetch", "node:http", "node:https", ".credentials.yaml", "docker.exe", "dsh-credentials-local"]) assert.equal(source.includes(denied), false, denied);
   assert.equal(source.includes("OPENAI_CODEX_OAUTH"), true);

@@ -80,7 +80,7 @@ function withDigest(value, field) {
 function syntheticRlmRootIdentity(root, ordinal) {
   return withDigest({
     schema_version: "rc7-gate-c-rlm-root-identity-v1",
-    normalized_physical_root: path.resolve(root).replaceAll("/", "\\").replace(/\\+$/u, "").toLowerCase(),
+    normalized_physical_root: process.platform === "win32" ? path.resolve(root).toLowerCase() : path.resolve(root),
     device_id: "1",
     file_id: String(10_000 + ordinal),
     birthtime_ns: String(20_000 + ordinal),
