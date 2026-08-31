@@ -1,8 +1,8 @@
-# Initial feature registry
+# Feature registry
 
 [Feature documentation](README.md) | [Intended differences](../architecture/INTENDED_DIFFERENCES.md) | [Benchmarks](../benchmarks/README.md)
 
-This registry is the initial truth table for Recursus Careers. It should change with implementation and evidence, not with aspiration alone.
+This registry is the current truth table for Recursus Careers. It changes with implementation and evidence, not with aspiration alone.
 
 ## Inherited Career Ops capabilities
 
