@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, readdir, realpath, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { after, test } from "node:test";
 
@@ -17,17 +17,20 @@ import {
 import { canonicalJsonV1 } from "../../lib/recursus/prompt-context-v1.mjs";
 
 const CREATED = [];
+const EXTERNAL_TEST_PARENT = process.platform === "win32"
+  ? path.dirname(brokerTest.REPOSITORY_ROOT)
+  : await realpath(path.join(path.parse(brokerTest.REPOSITORY_ROOT).root, "tmp"));
 
 after(async () => {
   for (const target of CREATED.reverse()) {
-    assert.equal(path.dirname(target), path.dirname(brokerTest.REPOSITORY_ROOT));
+    assert.equal(path.dirname(target), EXTERNAL_TEST_PARENT);
     assert.match(path.basename(target), /^rc7-gate-c-matrix-diagnostic-test-/u);
     await rm(target, { recursive: true, force: true });
   }
 });
 
 async function roots() {
-  const parent = await mkdtemp(path.join(path.dirname(brokerTest.REPOSITORY_ROOT), "rc7-gate-c-matrix-diagnostic-test-"));
+  const parent = await mkdtemp(path.join(EXTERNAL_TEST_PARENT, "rc7-gate-c-matrix-diagnostic-test-"));
   CREATED.push(parent);
   const freeze = path.join(parent, "freeze");
   const diagnostic = path.join(parent, "diagnostic");

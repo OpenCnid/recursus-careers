@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { link, lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { link, lstat, mkdir, mkdtemp, readFile, readdir, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { after, test } from "node:test";
 
@@ -42,17 +42,20 @@ import {
 import { canonicalJsonV1, sha256V1 } from "../../lib/recursus/prompt-context-v1.mjs";
 
 const CREATED = [];
+const EXTERNAL_TEST_PARENT = process.platform === "win32"
+  ? path.dirname(__test.REPOSITORY_ROOT)
+  : await realpath(path.join(path.parse(__test.REPOSITORY_ROOT).root, "tmp"));
 
 after(async () => {
   for (const target of CREATED.reverse()) {
-    assert.equal(path.dirname(target), path.dirname(__test.REPOSITORY_ROOT));
+    assert.equal(path.dirname(target), EXTERNAL_TEST_PARENT);
     assert.match(path.basename(target), /^rc7-gate-c-broker-test-/u);
     await rm(target, { recursive: true, force: true });
   }
 });
 
 async function freshRoot(name = "root") {
-  const parent = await mkdtemp(path.join(path.dirname(__test.REPOSITORY_ROOT), "rc7-gate-c-broker-test-"));
+  const parent = await mkdtemp(path.join(EXTERNAL_TEST_PARENT, "rc7-gate-c-broker-test-"));
   CREATED.push(parent);
   const root = path.join(parent, name);
   await mkdir(root);

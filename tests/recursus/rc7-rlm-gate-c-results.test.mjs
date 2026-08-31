@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { link, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { link, mkdir, mkdtemp, readFile, readdir, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { after, test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -26,17 +26,20 @@ import { buildRc7GateCSealedResult } from "../../lib/recursus/rc7-rlm-gate-c-wor
 import { canonicalJsonV1, sha256V1 } from "../../lib/recursus/prompt-context-v1.mjs";
 
 const CREATED = [];
+const EXTERNAL_TEST_PARENT = process.platform === "win32"
+  ? path.dirname(brokerTest.REPOSITORY_ROOT)
+  : await realpath(path.join(path.parse(brokerTest.REPOSITORY_ROOT).root, "tmp"));
 
 after(async () => {
   for (const target of CREATED.reverse()) {
-    assert.equal(path.dirname(target), path.dirname(brokerTest.REPOSITORY_ROOT));
+    assert.equal(path.dirname(target), EXTERNAL_TEST_PARENT);
     assert.match(path.basename(target), /^rc7-gate-c-results-test-/u);
     await rm(target, { recursive: true, force: true });
   }
 });
 
 async function freshRoot(name = "results") {
-  const parent = await mkdtemp(path.join(path.dirname(brokerTest.REPOSITORY_ROOT), "rc7-gate-c-results-test-"));
+  const parent = await mkdtemp(path.join(EXTERNAL_TEST_PARENT, "rc7-gate-c-results-test-"));
   CREATED.push(parent);
   const root = path.join(parent, name);
   await mkdir(root);

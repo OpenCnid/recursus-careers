@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, link, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdtemp, link, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import path from "node:path";
 import { after, test } from "node:test";
@@ -18,6 +18,9 @@ import { canonicalJsonV1, sha256V1 } from "../../lib/recursus/prompt-context-v1.
 import { validateRc7GateBRouteArtifactSetIndependent, validateRc7RecoveryArtifactIndependent } from "../../lib/recursus/rc7-rlm-containment-validator.mjs";
 
 const CREATED = [];
+const EXTERNAL_TEST_PARENT = process.platform === "win32"
+  ? path.dirname(__test.REPOSITORY_ROOT)
+  : await realpath(path.join(path.parse(__test.REPOSITORY_ROOT).root, "tmp"));
 const EXECUTED_FAULTS = new Set();
 const IMAGE_ID = `sha256:${"a".repeat(64)}`;
 const LEASE_ID = sha256V1(canonicalJsonV1({ policy: RC7_CONTAINMENT_POLICY_ID, image_id: IMAGE_ID }));
@@ -34,14 +37,14 @@ const OBSERVED_LEASE_ID = LEASE_ID;
 
 after(async () => {
   for (const target of CREATED.reverse()) {
-    assert.equal(path.dirname(target), path.dirname(__test.REPOSITORY_ROOT));
+    assert.equal(path.dirname(target), EXTERNAL_TEST_PARENT);
     assert.match(path.basename(target), /^rc7-containment-test-/u);
     await rm(target, { recursive: true, force: true });
   }
 });
 
 async function newRoot(name = "root") {
-  const parent = await mkdtemp(path.join(path.dirname(__test.REPOSITORY_ROOT), "rc7-containment-test-"));
+  const parent = await mkdtemp(path.join(EXTERNAL_TEST_PARENT, "rc7-containment-test-"));
   CREATED.push(parent);
   const root = path.join(parent, name);
   await mkdir(root);
