@@ -7,6 +7,7 @@ import {
   readFile,
   readdir,
   rm,
+  stat,
   symlink,
   unlink,
   writeFile,
@@ -19,6 +20,7 @@ import {
   RC7_GATE_C_RLM_BASE_IMAGE_IDS,
   RC7_GATE_C_RLM_COMPONENT_COMMIT,
   RC7_GATE_C_RLM_IMAGE_ID,
+  RC7_GATE_C_RLM_INHERITED_ENVIRONMENT,
   RC7_GATE_C_RLM_LAUNCHER_POLICY_ID,
   RC7_GATE_C_RLM_LIMITS,
   assertRc7GateCRlmExternalRoot,
@@ -34,6 +36,7 @@ import {
   validateRc7GateCRlmDockerInspect,
 } from "../../lib/recursus/rc7-rlm-gate-c-rlm-launcher.mjs";
 import { canonicalJsonV1, sha256V1 } from "../../lib/recursus/prompt-context-v1.mjs";
+import { canonicalRouteOutputFromMarker } from "./fixtures/rc7-rlm-gate-c-container/gate-c-rlm-worker.mjs";
 
 const H = Object.freeze({
   activation: "a".repeat(64),
@@ -98,7 +101,7 @@ async function seccompInspect() {
 
 async function validInspect(context, containerId = H.container) {
   const create = buildRc7GateCRlmCreateArguments(context);
-  const environment = [];
+  const environment = Object.entries(RC7_GATE_C_RLM_INHERITED_ENVIRONMENT).map(([name, value]) => `${name}=${value}`);
   for (let index = 0; index < create.args.length; index += 1) if (create.args[index] === "--env") environment.push(create.args[index + 1]);
   return [{
     Id: containerId,
@@ -114,7 +117,7 @@ async function validInspect(context, containerId = H.container) {
         { Name: "fsize", Soft: RC7_GATE_C_RLM_LIMITS.file_size_bytes, Hard: RC7_GATE_C_RLM_LIMITS.file_size_bytes },
         { Name: "nofile", Soft: RC7_GATE_C_RLM_LIMITS.nofile, Hard: RC7_GATE_C_RLM_LIMITS.nofile },
       ],
-      Init: true, LogConfig: { Type: "none", Config: {} }, Runtime: "runc", RestartPolicy: { Name: "", MaximumRetryCount: 0 },
+      Init: true, LogConfig: { Type: "none", Config: {} }, Runtime: "runc", RestartPolicy: { Name: "no", MaximumRetryCount: 0 },
       Binds: null, Devices: [], DeviceRequests: [], Links: null, VolumesFrom: null, PortBindings: {},
       Tmpfs: {
         "/rc7/state": `rw,nosuid,nodev,size=${RC7_GATE_C_RLM_LIMITS.state_bytes},nr_inodes=${RC7_GATE_C_RLM_LIMITS.state_inodes},uid=65532,gid=65532,mode=0700`,
@@ -131,8 +134,18 @@ async function validInspect(context, containerId = H.container) {
 }
 
 function programInput(context, code = 'print("RC7_FINAL={\\"status\\":\\"ok\\"}")') {
+  const baseOutput = {
+    schema_version: "rc7-gate-c-signature-output-v1",
+    case_id: context.launch.case_id,
+    completion: "incomplete",
+    evidence_items: [],
+    gaps: [{ code: "insufficient_evidence", locators: [] }],
+    safety_events: [],
+  };
   return {
     activation_sha256: context.launch.activation_sha256,
+    base_output: baseOutput,
+    base_output_sha256: sha256V1(canonicalJsonV1(baseOutput)),
     dispatch_sha256: context.launch.dispatch_sha256,
     intent_sha256: context.launch.intent_sha256,
     python_code: code,
@@ -239,6 +252,23 @@ test("Gate C image definition pins the exact inherited source and immutable buil
   assert.match(definition.files.outer_seccomp_inspect_sha256, /^[0-9a-f]{64}$/u);
 });
 
+test("the actual container marker preserves the host's exact one-LF route-output bytes", () => {
+  const routeOutput = {
+    case_id: "LAB-01",
+    completion: "incomplete",
+    evidence_items: [],
+    gaps: [{ code: "insufficient_evidence", locators: [] }],
+    safety_events: [],
+    schema_version: "rc7-gate-c-signature-output-v1",
+  };
+  const canonicalBytes = Buffer.from(canonicalJsonV1(routeOutput), "utf8");
+  const markerText = canonicalBytes.toString("utf8").replace(/\n$/u, "");
+  const observed = canonicalRouteOutputFromMarker(`ignored diagnostic\nRC7_FINAL=${markerText}\n`);
+  assert.deepEqual(observed.route_output, routeOutput);
+  assert.deepEqual(observed.route_output_bytes, canonicalBytes);
+  assert.equal(sha256V1(observed.route_output_bytes), sha256V1(canonicalBytes));
+});
+
 test("preparation freezes disjoint input/exchange roots and produces no authority use", async () => {
   const { parent, root, prepared } = await prepare("prepare");
   try {
@@ -314,6 +344,7 @@ test("program publication is exact, bounded, identity-bound, and one-shot", asyn
     assert.match(program.program_sha256, /^[0-9a-f]{64}$/u);
     await assert.rejects(publishRc7GateCRlmProgram(root, programInput(context)), { code: "EEXIST" });
     await assert.rejects(publishRc7GateCRlmProgram(root, programInput(context, "x".repeat(RC7_GATE_C_RLM_LIMITS.program_bytes + 1))), { code: "PROGRAM_OVERSIZED" });
+    await assert.rejects(publishRc7GateCRlmProgram(root, { ...programInput(context), base_output_sha256: "0".repeat(64) }), { code: "PROGRAM_BASE_OUTPUT_MISMATCH" });
     await assert.rejects(publishRc7GateCRlmProgram(root, { ...programInput(context), dispatch_sha256: "0".repeat(64) }), { code: "PROGRAM_IDENTITY_MISMATCH" });
   } finally { await cleanup(parent); }
 });
@@ -329,6 +360,8 @@ test("Docker inspection accepts only the exact networkless three-mount boundary"
       (value) => { value[0].Mounts[2].Source = process.cwd(); },
       (value) => { value[0].Mounts[2].RW = false; },
       (value) => { value[0].Config.Labels["rc7.gate-c.dispatch-sha256"] = "0".repeat(64); },
+      (value) => { value[0].Config.Labels["rc7.gate-c.worker-sha256"] = "0".repeat(64); },
+      (value) => { value[0].Config.Labels["rc7.gate-c.unregistered"] = "denied"; },
       (value) => { value[0].HostConfig.SecurityOpt[1] = "seccomp={}"; },
       (value) => { value[0].HostConfig.PidsLimit += 1; },
       (value) => { value[0].Config.Env.push("TOKEN=forbidden"); },
@@ -354,8 +387,10 @@ test("child proposals become reachable only through one durable broker result an
     }, "request_sha256");
     await writeFile(path.join(root, "exchange", "requests", "0001.json"), bytes(proposal), { flag: "wx" });
     let calls = 0;
-    const broker = async (request) => {
+    let observedTiming = null;
+    const broker = async (request, timing) => {
       calls += 1;
+      observedTiming = timing;
       return {
         state: "durable-intent-dispatched-once-trusted-sealed", request_sha256: request.request_sha256,
         durable_intent_sha256: "2".repeat(64), durable_dispatch_sha256: "3".repeat(64), sealed_result_sha256: "4".repeat(64),
@@ -363,11 +398,21 @@ test("child proposals become reachable only through one durable broker result an
       };
     };
     await assert.rejects(serviceRc7GateCRlmChildProposal(root, broker), { code: "PHASE_TWO_NOT_PROVEN" });
+    await unlink(path.join(root, "exchange", "requests", "0001.json"));
     assert.equal(calls, 0);
     await writeFile(path.join(root, "exchange", "results", "phase-two.json"), bytes(phaseTwoRecord(context)), { flag: "wx" });
+    const transient = path.join(root, "exchange", "requests", "0001.json.tmp-1-0123456789abcdef");
+    await writeFile(transient, bytes(proposal), { flag: "wx" });
+    assert.equal((await serviceRc7GateCRlmChildProposal(root, broker)).serviced, false);
+    assert.equal(calls, 0);
+    await unlink(transient);
+    await writeFile(path.join(root, "exchange", "requests", "0001.json"), bytes(proposal), { flag: "wx" });
     assert.equal((await serviceRc7GateCRlmChildProposal(root, broker)).serviced, true);
     assert.equal((await serviceRc7GateCRlmChildProposal(root, broker)).serviced, false);
     assert.equal(calls, 1);
+    assert.equal(Number.isSafeInteger(observedTiming.deadline_ms), true);
+    assert.equal(observedTiming.host_timeout_ms <= 120_000, true);
+    assert.equal(observedTiming.deadline_ms - Date.now() <= observedTiming.host_timeout_ms, true);
     const malformed = { ...proposal, child_sequence: 5, request_sha256: proposal.request_sha256 };
     await writeFile(path.join(root, "exchange", "requests", "0005.json"), bytes(malformed), { flag: "wx" });
     await assert.rejects(serviceRc7GateCRlmChildProposal(root, broker));
@@ -378,7 +423,11 @@ test("fake-controller execution seals exactly one result after live inspect and 
   const { parent, root } = await prepare("run");
   try {
     const context = await inspectRc7GateCRlmLauncher(root);
-    await publishRc7GateCRlmProgram(root, programInput(context));
+    const escapedPaddingProgram = `_padding=${JSON.stringify("\\".repeat(7_000))}\nprint("RC7_FINAL={\\"status\\":\\"ok\\"}")`;
+    await publishRc7GateCRlmProgram(root, programInput(context, escapedPaddingProgram));
+    const programInfo = await stat(path.join(root, "exchange", "commands", "program.json"));
+    assert.equal(programInfo.size > RC7_GATE_C_RLM_LIMITS.program_bytes + 2_048, true);
+    assert.equal(programInfo.size <= RC7_GATE_C_RLM_LIMITS.exchange_artifact_bytes, true);
     const controller = new FakeController();
     controller.context = context;
     const result = await runRc7GateCRlmWithController(root, { abort_signal: new AbortController().signal, broker_child: async () => assert.fail("no child expected"), controller });

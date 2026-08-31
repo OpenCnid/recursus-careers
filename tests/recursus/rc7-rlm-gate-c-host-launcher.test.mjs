@@ -70,7 +70,7 @@ function brokerResult(selectedRoute = "rc-direct") {
       configured_snapshot: "gpt-5.6-sol",
       reasoning: "xhigh",
       max_output_plus_reasoning_tokens: 8192,
-      provider_active_timeout_seconds: 120,
+      provider_active_timeout_seconds: 300,
       automatic_retries: 0,
       generation_https_posts: 1,
       oauth_refresh_https_posts: 1,
@@ -123,7 +123,7 @@ function fixtureInput() {
     dispatch_sha256: brokerResult().dispatch.dispatch_sha256,
     sealed_request: { caller_bytes: "ignored-by-fake-preflight", intent: { request_kind: "top-level" } },
     gate_b_attestation: { caller_reference: "ignored-by-fake-preflight" },
-    process_timeout_ms: 165_000,
+    process_timeout_ms: 345_000,
   };
 }
 
@@ -261,6 +261,28 @@ test("wrong runtime, stage manifest, or capsule identity fails before broker pre
   assert.equal(wrongCapsule.events.includes("broker-preflight"), false);
 });
 
+test("treatment-proof stage identities resolve from the nested execution closure", () => {
+  const input = fixtureInput();
+  const stage = { runtime_root: input.runtime_root, stage_root: input.stage_root, stage_manifest_sha256: HASHES.stage };
+  const capsule = {
+    path: path.join(input.stage_root, "lib", "recursus", "rc7-rlm-gate-c-live-capsule.mjs"),
+    sha256: HASHES.capsule,
+  };
+  const freeze = {
+    schema_version: "rc7-gate-c-treatment-proof-freeze-v1",
+    closure: { execution_closure: { worker_stage_manifest_sha256: HASHES.stage, live_capsule_sha256: HASHES.capsule } },
+  };
+  assert.deepEqual(__test.validateStageIdentity(stage, freeze, input, capsule), {
+    stage_manifest_sha256: HASHES.stage,
+    capsule_sha256: HASHES.capsule,
+    capsule_path: capsule.path,
+  });
+  assert.throws(
+    () => __test.validateStageIdentity(stage, { ...freeze, closure: { execution_closure: {} } }, input, capsule),
+    (error) => error.code === "HOST_STAGE_IDENTITY_MISMATCH",
+  );
+});
+
 test("timeout and interruption release the exact host lock and retain no replay authority", async () => {
   for (const code of ["HOST_ACK_TIMEOUT", "HOST_CHILD_TIMEOUT", "HOST_CHILD_INTERRUPTED"]) {
     const fake = fakeDependencies({ controller: { exchange: async () => { throw new Rc7GateCHostLauncherError(code, "injected provider-free fault"); } } });
@@ -346,4 +368,102 @@ test("production bootstrap emits the host parser's exact canonical result framin
   } finally {
     await rm(root, { recursive: true, force: true });
   }
+});
+
+test("a pre-ack child rejection is closed, sanitized, and does not leave launcher timers alive", async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), "rc7-gate-c-pre-ack-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const capsulePath = path.join(root, "rejecting-capsule.mjs");
+  await writeFile(capsulePath, [
+    'export async function acceptRc7GateCHostHandoff() { throw Object.assign(new Error("local detail must not escape"), { code: "HOST_DISPATCH_MISMATCH" }); }',
+    "export async function executeRc7GateCLiveCapsuleFromHostHandoff() { throw new Error(\"unreachable\"); }",
+    "",
+  ].join("\n"), { encoding: "utf8", flag: "wx" });
+  const profile = path.join(root, "dsh", "profiles", "recursus");
+  await mkdir(profile, { recursive: true });
+  await writeFile(path.join(profile, ".recursus-profile.json"), JSON.stringify({
+    assemblyId: "provider-free-test",
+    credentialReferences: ["OPENAI_CODEX_OAUTH"],
+    distributionSha256: "1".repeat(64),
+    lockfileSha256: "2".repeat(64),
+    packageCount: 1,
+    profileName: "recursus",
+    schemaVersion: 1,
+  }), { encoding: "utf8", flag: "wx" });
+  const previousDshHome = process.env.DSH_HOME;
+  process.env.DSH_HOME = path.join(root, "dsh");
+  try {
+    const controller = new AbortController();
+    const startedAt = Date.now();
+    await assert.rejects(
+      __test.productionController.exchange({
+        abortSignal: controller.signal,
+        handoffBytes: Buffer.from("{}\n", "utf8"),
+        capsulePath,
+        capsuleSha256: sha256V1(await readFile(capsulePath)),
+        stageManifestSha256: HASHES.stage,
+        processTimeoutMs: 30_000,
+        onAck: (bytes) => __test.parseCanonical(bytes, 32_768, "capsule acknowledgment"),
+        onLifecycle: async () => {},
+      }),
+      (error) => error.code === "HOST_CHILD_PRE_ACK_FAILED"
+        && error.details?.child_failure_code === "HOST_DISPATCH_MISMATCH"
+        && !JSON.stringify(error).includes("local detail must not escape"),
+    );
+    assert.ok(Date.now() - startedAt < 25_000);
+  } finally {
+    if (previousDshHome === undefined) delete process.env.DSH_HOME;
+    else process.env.DSH_HOME = previousDshHome;
+  }
+});
+
+test("strict unhandled-rejection mode survives a blocked handoff until the observed ACK timeout", async (t) => {
+  const root = await mkdtemp(path.join(tmpdir(), "rc7-gate-c-blocked-ack-"));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const capsulePath = path.join(root, "blocked-capsule.mjs");
+  await writeFile(capsulePath, [
+    "export async function acceptRc7GateCHostHandoff() { throw new Error('unreachable'); }",
+    "export async function executeRc7GateCLiveCapsuleFromHostHandoff() { throw new Error('unreachable'); }",
+    "setInterval(() => {}, 1000);",
+    "await new Promise(() => {});",
+    "",
+  ].join("\n"), { encoding: "utf8", flag: "wx" });
+  const dshHome = path.join(root, "dsh");
+  const profile = path.join(dshHome, "profiles", "recursus");
+  await mkdir(profile, { recursive: true });
+  await writeFile(path.join(profile, ".recursus-profile.json"), JSON.stringify({
+    assemblyId: "provider-free-test",
+    credentialReferences: ["OPENAI_CODEX_OAUTH"],
+    distributionSha256: "1".repeat(64),
+    lockfileSha256: "2".repeat(64),
+    packageCount: 1,
+    profileName: "recursus",
+    schemaVersion: 1,
+  }), { encoding: "utf8", flag: "wx" });
+  const moduleUrl = new URL("../../lib/recursus/rc7-rlm-gate-c-host-launcher.mjs", import.meta.url).href;
+  const runner = [
+    `import { __test } from ${JSON.stringify(moduleUrl)};`,
+    `const capsulePath = ${JSON.stringify(capsulePath)};`,
+    `const capsuleSha256 = ${JSON.stringify(sha256V1(await readFile(capsulePath)))};`,
+    "const controller = new AbortController();",
+    "try {",
+    "  await __test.productionController.exchange({ abortSignal: controller.signal, handoffBytes: Buffer.alloc(2 * 1024 * 1024), capsulePath, capsuleSha256, stageManifestSha256: '7'.repeat(64), processTimeoutMs: 345000, onAck: () => Buffer.from('{}\\n'), onLifecycle: async () => {} });",
+    "  process.exitCode = 91;",
+    "} catch (error) {",
+    "  if (error?.code !== 'HOST_ACK_TIMEOUT') { process.stderr.write(String(error?.code ?? 'missing')); process.exitCode = 92; }",
+    "}",
+  ].join("\n");
+  const child = spawn(process.execPath, ["--unhandled-rejections=strict", "--input-type=module", "--eval", runner], {
+    cwd: __test.REPOSITORY_ROOT,
+    env: { ...process.env, DSH_HOME: dshHome },
+    stdio: ["ignore", "pipe", "pipe"],
+    windowsHide: true,
+  });
+  const stderr = [];
+  child.stderr.on("data", (chunk) => stderr.push(chunk));
+  const exit = await new Promise((resolve, reject) => {
+    child.once("error", reject);
+    child.once("close", (code, signal) => resolve({ code, signal }));
+  });
+  assert.deepEqual(exit, { code: 0, signal: null }, Buffer.concat(stderr).toString("utf8"));
 });

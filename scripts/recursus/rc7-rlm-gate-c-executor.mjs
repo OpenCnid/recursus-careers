@@ -3,15 +3,17 @@
 import {
   formatRc7GateCBrokerError,
   recoverRc7GateCDispatchLedger,
+  recoverRc7GateCHostLaunchLock,
 } from "../../lib/recursus/rc7-rlm-gate-c-broker.mjs";
 import {
   RC7_GATE_C_RETAINED_FAILURE_WALL_CEILING_MS,
   executeRc7GateCAttempt,
+  rc7GateCClosedFailureCode,
   recoverRc7GateCRlmAttempt,
 } from "../../lib/recursus/rc7-rlm-gate-c-executor.mjs";
 import {
-  beginRc7GateCAttempt,
-  publishRc7GateCAttempt,
+  beginRc7GateCAttemptWithExecutionLock,
+  publishRc7GateCAttemptWithExecutionLock,
   recoverRc7GateCAttemptTerminal,
   recoverRc7GateCResults,
 } from "../../lib/recursus/rc7-rlm-gate-c-results.mjs";
@@ -46,10 +48,6 @@ function parseArgs(argv) {
   return parsed;
 }
 
-function failureCode(error) {
-  return typeof error?.code === "string" && /^[A-Z][A-Z0-9_-]{0,95}$/u.test(error.code) ? error.code : "UNEXPECTED_EXECUTION_FAILURE";
-}
-
 async function main() {
   const parsed = parseArgs(process.argv.slice(2));
   const started = Date.now();
@@ -57,6 +55,7 @@ async function main() {
     process.stderr.write(`${JSON.stringify({ ok: false, code: "ATTEMPT_RETAINED_FAILURE_WALL_EXPIRED", run_id: parsed.run_id, replay_permitted: false, recovery_required: true })}\n`);
     process.exit(124);
   }, RC7_GATE_C_RETAINED_FAILURE_WALL_CEILING_MS);
+  let executionLock = null;
   try {
     if (parsed.command === "recover") {
       const preregistration = await buildRc7GateCPreregistrationPackage();
@@ -66,7 +65,12 @@ async function main() {
       let code = "INTERRUPTED_EXECUTION_RECOVERED_NO_REPLAY";
       let cleanupResidueEntries = 0;
       let rlmInvocationCount = 0;
-      if (parsed.rlm_root !== null) {
+      const hostRecovery = await recoverRc7GateCHostLaunchLock(parsed.ledger_root, parsed.run_id);
+      const topLevelHostInterruption = hostRecovery.changed && hostRecovery.request_kind === "top-level";
+      if (topLevelHostInterruption) {
+        code = "HOST_TOP_LEVEL_INTERRUPTED_NO_REPLAY";
+      }
+      if (parsed.rlm_root !== null && !topLevelHostInterruption) {
         try {
           const recovered = await recoverRc7GateCRlmAttempt({ ledger_root: parsed.ledger_root, rlm_root: parsed.rlm_root, run_id: parsed.run_id });
           cleanupResidueEntries = recovered.terminal.cleanup_residue_entries;
@@ -79,18 +83,21 @@ async function main() {
         }
       }
       await recoverRc7GateCDispatchLedger(parsed.ledger_root);
-      await recoverRc7GateCResults(parsed.results_root, parsed.ledger_root);
+      if (row.selected_route === "rc-direct") await recoverRc7GateCResults(parsed.results_root, parsed.ledger_root);
       const attempt = await recoverRc7GateCAttemptTerminal(parsed.results_root, parsed.ledger_root, {
         cleanup_residue_entries: cleanupResidueEntries,
         error_code: code,
         rlm_invocation_count: rlmInvocationCount,
         run_id: parsed.run_id,
         wall_ms: Math.min(RC7_GATE_C_RETAINED_FAILURE_WALL_CEILING_MS, Math.max(0, Date.now() - started)),
-      });
+      }, parsed.rlm_root);
       process.stdout.write(`${JSON.stringify({ ok: true, command: "recover", run_id: parsed.run_id, state: attempt.state, attempt_sha256: attempt.attempt_sha256, replay_permitted: false })}\n`);
       return;
     }
-    await beginRc7GateCAttempt(parsed.results_root, parsed.run_id);
+    const begun = await beginRc7GateCAttemptWithExecutionLock(
+      parsed.results_root, parsed.ledger_root, parsed.run_id, parsed.rlm_root,
+    );
+    executionLock = begun.owner;
     const execution = await executeRc7GateCAttempt({
       ledger_root: parsed.ledger_root,
       rlm_root: parsed.rlm_root,
@@ -98,11 +105,22 @@ async function main() {
       runtime_root: parsed.runtime_root,
       stage_root: parsed.stage_root,
     });
-    const attempt = await publishRc7GateCAttempt(parsed.results_root, parsed.ledger_root, { execution, failure: null, rlm_root: parsed.rlm_root });
+    const attempt = await publishRc7GateCAttemptWithExecutionLock(
+      parsed.results_root, parsed.ledger_root, { execution, failure: null, rlm_root: parsed.rlm_root }, executionLock,
+    );
+    executionLock = null;
     process.stdout.write(`${JSON.stringify({ ok: true, command: "run", run_id: parsed.run_id, state: attempt.state, attempt_sha256: attempt.attempt_sha256 })}\n`);
   } catch (error) {
     if (parsed.command === "recover") throw error;
-    let code = failureCode(error);
+    if (executionLock === null) {
+      if (error?.code === "SYSTEMIC_FAILURE_CIRCUIT_OPEN") {
+        process.stderr.write(`${JSON.stringify({ ok: false, code: error.code, run_id: parsed.run_id, circuit: error.details, replay_permitted: false, provider_authority_permitted: false })}\n`);
+        process.exitCode = 2;
+        return;
+      }
+      throw error;
+    }
+    let code = rc7GateCClosedFailureCode(error);
     let cleanupResidueEntries = code === "CLEANUP_RESIDUE" ? 1 : 0;
     if (parsed.rlm_root !== null && error.rc7_gate_c_rlm_invocation_count === 1) {
       try {
@@ -114,7 +132,7 @@ async function main() {
       }
     }
     await recoverRc7GateCDispatchLedger(parsed.ledger_root);
-    const attempt = await publishRc7GateCAttempt(parsed.results_root, parsed.ledger_root, {
+    const attempt = await publishRc7GateCAttemptWithExecutionLock(parsed.results_root, parsed.ledger_root, {
       execution: null,
       rlm_root: parsed.rlm_root,
       failure: {
@@ -124,7 +142,8 @@ async function main() {
         run_id: parsed.run_id,
         wall_ms: Math.min(RC7_GATE_C_RETAINED_FAILURE_WALL_CEILING_MS, Math.max(0, Date.now() - started)),
       },
-    });
+    }, executionLock);
+    executionLock = null;
     process.stderr.write(`${JSON.stringify({ ok: false, code, run_id: parsed.run_id, state: attempt.state, attempt_sha256: attempt.attempt_sha256, replay_permitted: false })}\n`);
     process.exitCode = 1;
   } finally {

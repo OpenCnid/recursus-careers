@@ -1,9 +1,11 @@
 import assert from "node:assert/strict";
+import { spawn } from "node:child_process";
 import { link, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { after, test } from "node:test";
+import { fileURLToPath } from "node:url";
 
-import { __test as brokerTest, buildRc7GateCFinalApprovalFreeze } from "../../lib/recursus/rc7-rlm-gate-c-broker.mjs";
+import { __test as brokerTest } from "../../lib/recursus/rc7-rlm-gate-c-broker.mjs";
 import { RC7_GATE_C_EXECUTOR_ID } from "../../lib/recursus/rc7-rlm-gate-c-executor.mjs";
 import { buildRc7GateCPreregistrationPackage } from "../../lib/recursus/rc7-rlm-gate-c-preregistration.mjs";
 import {
@@ -13,6 +15,7 @@ import {
   Rc7GateCResultsError,
   __test,
   beginRc7GateCAttempt,
+  beginRc7GateCAttemptWithExecutionLock,
   initializeRc7GateCResults,
   inspectRc7GateCResults,
   recoverRc7GateCResults,
@@ -44,14 +47,47 @@ async function expectCode(action, code) {
   await assert.rejects(action, (error) => error instanceof Rc7GateCResultsError && error.code === code);
 }
 
+test("the score-bearing route-output bridge preserves exactly one final LF", () => {
+  const routeOutput = output("LAB-01");
+  const observed = __test.canonicalRouteOutputBytes(routeOutput);
+  const expected = Buffer.from(canonicalJsonV1(routeOutput), "utf8");
+  assert.deepEqual(observed, expected);
+  assert.equal(observed.at(-1), 0x0a);
+  assert.notEqual(observed.at(-2), 0x0a);
+  assert.equal(sha256V1(observed), sha256V1(canonicalJsonV1(routeOutput)));
+});
+
+async function runExecutor(args) {
+  const script = fileURLToPath(new URL("../../scripts/recursus/rc7-rlm-gate-c-executor.mjs", import.meta.url));
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [script, ...args], { cwd: brokerTest.REPOSITORY_ROOT, stdio: ["ignore", "pipe", "pipe"] });
+    const stdout = [];
+    const stderr = [];
+    child.stdout.on("data", (chunk) => stdout.push(chunk));
+    child.stderr.on("data", (chunk) => stderr.push(chunk));
+    child.once("error", reject);
+    child.once("close", (code, signal) => resolve({ code, signal, stdout: Buffer.concat(stdout).toString("utf8"), stderr: Buffer.concat(stderr).toString("utf8") }));
+  });
+}
+
 function withDigest(value, field) {
   return { ...value, [field]: sha256V1(canonicalJsonV1(value)) };
 }
 
+function syntheticRlmRootIdentity(root, ordinal) {
+  return withDigest({
+    schema_version: "rc7-gate-c-rlm-root-identity-v1",
+    normalized_physical_root: path.resolve(root).replaceAll("/", "\\").replace(/\\+$/u, "").toLowerCase(),
+    device_id: "1",
+    file_id: String(10_000 + ordinal),
+    birthtime_ns: String(20_000 + ordinal),
+  }, "rlm_root_sha256");
+}
+
 async function emptyAccounting(ledgerRoot, resultsRoot, entries = [], identities = {}) {
-  const [freeze, preregistration] = await Promise.all([buildRc7GateCFinalApprovalFreeze(ledgerRoot, resultsRoot), buildRc7GateCPreregistrationPackage()]);
+  const [freeze, preregistration] = await Promise.all([brokerTest.buildTestOnlyFinalApprovalFreeze(ledgerRoot, resultsRoot), buildRc7GateCPreregistrationPackage()]);
   const value = {
-    schema_version: "rc7-gate-c-ledger-accounting-v4",
+    schema_version: "rc7-gate-c-ledger-accounting-v6",
     state: "settled-broker-derived",
     activation_sha256: freeze.future_activation_sha256,
     preregistration_sha256: preregistration.preregistration_sha256,
@@ -106,7 +142,44 @@ function trustedLedgerEntry(row, values = {}) {
     automatic_retry_count: 0,
     provider_active_milliseconds: values.provider_active_milliseconds ?? 25,
     input_tokens: values.input_tokens ?? 10,
-    output_plus_reasoning_tokens: values.output_plus_reasoning_tokens ?? 50,
+    accepted_output_plus_reasoning_tokens: values.output_plus_reasoning_tokens ?? 50,
+    hard_output_plus_reasoning_token_accounting: values.output_plus_reasoning_tokens ?? 50,
+  };
+}
+
+function indeterminateCommittedLedgerEntry(row) {
+  return {
+    reservation_ordinal: 1,
+    reservation_key: "1".repeat(64),
+    run_id: row.run_id,
+    case_id: row.case_id,
+    arm: row.arm,
+    selected_route: row.selected_route,
+    request_kind: "top-level",
+    child_sequence: 0,
+    semantic_request_sha256: "2".repeat(64),
+    dispatch_sha256: "3".repeat(64),
+    terminal_state: "indeterminate-no-replay",
+    terminal_sha256: "4".repeat(64),
+    sealed_result_sha256: null,
+    artifact_sha256: null,
+    usage_sha256: null,
+    provenance_sha256: null,
+    permission_sha256: null,
+    authority_sha256: null,
+    cleanup_sha256: null,
+    trusted_route_observation_sha256: null,
+    durable_handoff_sha256: "d".repeat(64),
+    gate_b_attestation_sha256: "e".repeat(64),
+    provider_reachability_committed: true,
+    accounting_basis: "conservative-upper-bound-after-indeterminate-handoff",
+    provider_posts: 1,
+    oauth_refresh_posts: 1,
+    automatic_retry_count: 0,
+    provider_active_milliseconds: 300_000,
+    input_tokens: 32_768,
+    accepted_output_plus_reasoning_tokens: 0,
+    hard_output_plus_reasoning_token_accounting: 128_000,
   };
 }
 
@@ -166,7 +239,7 @@ test("trusted success bridge binds the structured artifact to one settled broker
   const preregistration = await buildRc7GateCPreregistrationPackage();
   const row = preregistration.ablation.schedule.find((item) => item.case_id === "FACT-01" && item.arm === "rc-direct");
   const start = __test.attemptStart(preregistration, row);
-  const raw = Buffer.from(`${canonicalJsonV1(output(row.case_id))}\n`, "utf8");
+  const raw = Buffer.from(canonicalJsonV1(output(row.case_id)), "utf8");
   const dispatch = withDigest({
     schema_version: "rc7-gate-c-dispatch-checkpoint-v2",
     activation_sha256: "0".repeat(64),
@@ -303,7 +376,8 @@ test("trusted success bridge binds the structured artifact to one settled broker
     automatic_retry_count: 0,
     provider_active_milliseconds: 25,
     input_tokens: 10,
-    output_plus_reasoning_tokens: 50,
+    accepted_output_plus_reasoning_tokens: 50,
+    hard_output_plus_reasoning_token_accounting: 50,
   }]);
   const record = await __test.successRecord({
     schema_version: "rc7-gate-c-attempt-execution-v1",
@@ -344,7 +418,7 @@ test("trusted success bridge binds the structured artifact to one settled broker
   await expectCode(() => __test.successRecord({
     schema_version: "rc7-gate-c-attempt-execution-v1", executor_identity: RC7_GATE_C_EXECUTOR_ID,
     state: "trusted-direct-attempt-complete", row, top_level: request, children: [], rlm: null,
-    raw_output: Buffer.from(`${canonicalJsonV1(substitutedOutput)}\n`, "utf8"), wall_ms: 25, rlm_invocation_count: 0,
+    raw_output: Buffer.from(canonicalJsonV1(substitutedOutput), "utf8"), wall_ms: 25, rlm_invocation_count: 0,
   }, row, accounting, start, null), "ATTEMPT_PROVENANCE_MISMATCH");
 
   const replaced = structuredClone(record);
@@ -358,17 +432,21 @@ test("trusted success bridge binds the structured artifact to one settled broker
   assert.throws(() => validateRc7GateCAttemptRecord(attacker), (error) => error instanceof Rc7GateCResultsError && error.code === "MALFORMED_RESULTS");
 });
 
-test("all 36 ordinary frozen failures remain retained and produce one exact noncritical NO_RLM aggregate", async () => {
+test("all 36 ordinary frozen failures remain retained and produce one exact noncritical rebuild aggregate", async () => {
   const prepared = await freshRoot();
   const ledger = await freshRoot("ledger");
   const accounting = await emptyAccounting(ledger.root, prepared.root);
   await __test.initializeResultsWithAccounting(prepared.root, accounting);
   const preregistration = await buildRc7GateCPreregistrationPackage();
-  for (const row of preregistration.ablation.schedule) {
-    await beginRc7GateCAttempt(prepared.root, row.run_id);
+  const unboundTreatment = preregistration.ablation.schedule.find((item) => item.selected_route === "rc-rlm");
+  await expectCode(() => beginRc7GateCAttempt(prepared.root, unboundTreatment.run_id), "ATTEMPT_ROUTE_MISMATCH");
+  for (const [index, row] of preregistration.ablation.schedule.entries()) {
+    const rlmRoot = row.selected_route === "rc-rlm" ? path.join(prepared.parent, `synthetic-rlm-${index + 1}`) : null;
+    if (rlmRoot === null) await beginRc7GateCAttempt(prepared.root, row.run_id);
+    else await __test.beginAttemptWithExecutionLock(prepared.root, row.run_id, false, { prequalified_rlm_root_identity: syntheticRlmRootIdentity(rlmRoot, index + 1) });
     await __test.publishAttemptWithAccounting(prepared.root, accounting, {
       execution: null,
-      rlm_root: null,
+      rlm_root: rlmRoot,
       failure: { cleanup_residue_entries: 0, error_code: "PROVIDER_FREE_SYNTHETIC_FAILURE", rlm_invocation_count: 0, run_id: row.run_id, wall_ms: 0 },
     });
   }
@@ -378,17 +456,401 @@ test("all 36 ordinary frozen failures remain retained and produce one exact nonc
   assert.equal(input.authority_and_budget.recovery_failures, 0);
   assert.equal(input.authority_and_budget.top_level_generation_reservations_consumed, 0);
   const aggregate = await aggregateRc7GateCScores(input);
-  assert.equal(aggregate.terminal_decision, "NO_RLM");
+  assert.equal(aggregate.terminal_decision, "REBUILD_RLM_CANDIDATE");
+  assert.equal(aggregate.verified_attempt_completions, 0);
   assert.equal(aggregate.attempt_count, 36);
   assert.equal(aggregate.critical_failure_count, 0);
   await writeFile(path.join(prepared.root, "aggregate.json.stage"), "{\"partial\":", { flag: "wx" });
   const retained = await __test.publishAggregateWithAccounting(prepared.root, accounting);
-  assert.equal(retained.terminal_decision, "NO_RLM");
+  assert.equal(retained.terminal_decision, "REBUILD_RLM_CANDIDATE");
   assert.equal(retained.ledger_accounting_sha256, accounting.accounting_sha256);
   assert.equal((await readdir(prepared.root)).includes("aggregate.json.stage"), false);
   const inspected = await inspectRc7GateCResults(prepared.root);
   assert.equal(inspected.state, "sealed-36-attempt-terminal");
   assert.equal(inspected.aggregate_sha256, retained.results_aggregate_sha256);
+});
+
+test("two identical shared usage-budget failures across cases open the pre-reservation circuit", async () => {
+  const ledger = await freshRoot("ledger");
+  const results = await freshRoot("results");
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const rows = ["SAFE-01", "FACT-01"].map((caseId) => preregistration.ablation.schedule.find((item) => item.case_id === caseId));
+  const accounting = await emptyAccounting(ledger.root, results.root, rows.map((row) => trustedLedgerEntry(row)));
+  const records = rows.map((row) => __test.failureRecord({
+    cleanup_residue_entries: 0,
+    error_code: "USAGE_BUDGET_EXCEEDED",
+    rlm_invocation_count: 0,
+    run_id: row.run_id,
+    wall_ms: 1,
+  }, row, accounting, __test.attemptStart(preregistration, row)));
+  const circuit = __test.classifyRc7GateCSystemicFailureCircuit(records);
+  assert.equal(circuit.state, "open");
+  assert.equal(circuit.provider_authority_permitted, false);
+  assert.equal(circuit.failure_code, "USAGE_BUDGET_EXCEEDED");
+  assert.deepEqual(circuit.case_ids, ["FACT-01", "SAFE-01"]);
+  assert.equal(__test.classifyRc7GateCSystemicFailureCircuit(records.slice(0, 1)).state, "closed");
+});
+
+test("the executor subprocess stops at an open systemic-failure circuit before a third attempt start", async () => {
+  const ledger = await freshRoot("circuit-ledger");
+  const results = await freshRoot("circuit-results");
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const rows = ["SAFE-01", "FACT-01"].map((caseId, index) => ({
+    row: preregistration.ablation.schedule.find((item) => item.case_id === caseId && item.arm === "rc-direct"),
+    index,
+  }));
+  const entries = rows.map(({ row, index }) => trustedLedgerEntry(row, {
+    reservation_ordinal: index + 1,
+    reservation_key: String(index + 1).repeat(64),
+    dispatch_sha256: String(index + 3).repeat(64),
+    terminal_sha256: String(index + 5).repeat(64),
+  }));
+  const accounting = await emptyAccounting(ledger.root, results.root, entries);
+  await __test.initializeResultsWithAccounting(results.root, accounting);
+  for (const { row } of rows) {
+    await beginRc7GateCAttempt(results.root, row.run_id);
+    await __test.publishAttemptWithAccounting(results.root, accounting, {
+      execution: null,
+      rlm_root: null,
+      failure: { cleanup_residue_entries: 0, error_code: "USAGE_BUDGET_EXCEEDED", rlm_invocation_count: 0, run_id: row.run_id, wall_ms: 1 },
+    });
+  }
+  const third = preregistration.ablation.schedule.find((item) => item.case_id === "FACT-03" && item.arm === "rc-direct");
+  const beforeStarts = await readdir(path.join(results.root, RC7_GATE_C_STARTS_DIR));
+  const beforeAttempts = await readdir(path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR));
+  const completed = await runExecutor([
+    "run", "--ledger-root", ledger.root, "--results-root", results.root,
+    "--runtime-root", results.parent, "--stage-root", results.parent, "--run-id", third.run_id,
+  ]);
+  assert.equal(completed.code, 2);
+  assert.equal(completed.signal, null);
+  assert.equal(completed.stdout, "");
+  const closed = JSON.parse(completed.stderr.trim());
+  assert.equal(closed.code, "SYSTEMIC_FAILURE_CIRCUIT_OPEN");
+  assert.equal(closed.provider_authority_permitted, false);
+  assert.equal(closed.circuit.failure_code, "USAGE_BUDGET_EXCEEDED");
+  assert.deepEqual(await readdir(path.join(results.root, RC7_GATE_C_STARTS_DIR)), beforeStarts);
+  assert.deepEqual(await readdir(path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR)), beforeAttempts);
+});
+
+test("one root-bound execution lock closes the concurrent second-failure to third-start race", async () => {
+  const ledger = await freshRoot("atomic-circuit-ledger");
+  const results = await freshRoot("atomic-circuit-results");
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const rows = ["SAFE-01", "FACT-01", "FACT-03"].map((caseId, index) => ({
+    row: preregistration.ablation.schedule.find((item) => item.case_id === caseId && item.arm === "rc-direct"),
+    index,
+  }));
+  const accounting = await emptyAccounting(ledger.root, results.root, rows.slice(0, 2).map(({ row, index }) => trustedLedgerEntry(row, {
+    reservation_ordinal: index + 1,
+    reservation_key: String(index + 1).repeat(64),
+    dispatch_sha256: String(index + 3).repeat(64),
+    terminal_sha256: String(index + 5).repeat(64),
+  })));
+  await __test.initializeResultsWithAccounting(results.root, accounting);
+  await beginRc7GateCAttempt(results.root, rows[0].row.run_id);
+  await __test.publishAttemptWithAccounting(results.root, accounting, {
+    execution: null,
+    rlm_root: null,
+    failure: { cleanup_residue_entries: 0, error_code: "USAGE_BUDGET_EXCEEDED", rlm_invocation_count: 0, run_id: rows[0].row.run_id, wall_ms: 1 },
+  });
+  const second = await __test.beginAttemptWithExecutionLock(results.root, rows[1].row.run_id, true);
+  await expectCode(() => __test.beginAttemptWithExecutionLock(results.root, rows[2].row.run_id, true), "CONCURRENT_RESULTS_RECOVERY");
+  try {
+    await __test.publishAttemptWithAccounting(results.root, accounting, {
+      execution: null,
+      rlm_root: null,
+      failure: { cleanup_residue_entries: 0, error_code: "USAGE_BUDGET_EXCEEDED", rlm_invocation_count: 0, run_id: rows[1].row.run_id, wall_ms: 1 },
+    }, second.owner);
+  } finally {
+    await __test.releaseResultsRecoveryLock(results.root, second.owner);
+  }
+  await expectCode(() => __test.beginAttemptWithExecutionLock(results.root, rows[2].row.run_id, true), "SYSTEMIC_FAILURE_CIRCUIT_OPEN");
+  assert.equal((await readdir(path.join(results.root, RC7_GATE_C_STARTS_DIR))).length, 2);
+  assert.equal((await readdir(path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR))).length, 2);
+});
+
+test("a treatment start durably binds one fresh physical RLM root and rejects cross-run reuse", async () => {
+  const ledger = await freshRoot("rlm-binding-ledger");
+  const results = await freshRoot("rlm-binding-results");
+  const rlm = await freshRoot("rlm-binding-root");
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const rows = preregistration.ablation.schedule.filter((item) => item.selected_route === "rc-rlm").slice(0, 2);
+  const accounting = await emptyAccounting(ledger.root, results.root);
+  await __test.initializeResultsWithAccounting(results.root, accounting);
+  const identity = await brokerTest.rlmHistoricalRootIdentity(rlm.root, true);
+  const first = await __test.beginAttemptWithExecutionLock(results.root, rows[0].run_id, true, { prequalified_rlm_root_identity: identity });
+  assert.deepEqual(first.start.rlm_root_identity, identity);
+  await __test.releaseResultsRecoveryLock(results.root, first.owner);
+  const retained = JSON.parse(await readFile(path.join(results.root, RC7_GATE_C_STARTS_DIR, `${rows[0].run_id}.json`), "utf8"));
+  assert.deepEqual(retained.rlm_root_identity, identity);
+  await expectCode(() => __test.publishAttemptWithAccounting(results.root, accounting, {
+    execution: null,
+    rlm_root: null,
+    failure: { cleanup_residue_entries: 0, error_code: "PROVIDER_FREE_SYNTHETIC_FAILURE", rlm_invocation_count: 0, run_id: rows[0].run_id, wall_ms: 0 },
+  }), "RLM_ROOT_IDENTITY_MISMATCH");
+  await __test.publishAttemptWithAccounting(results.root, accounting, {
+    execution: null,
+    rlm_root: rlm.root,
+    failure: { cleanup_residue_entries: 0, error_code: "PROVIDER_FREE_SYNTHETIC_FAILURE", rlm_invocation_count: 0, run_id: rows[0].run_id, wall_ms: 0 },
+  });
+  await expectCode(
+    () => __test.beginAttemptWithExecutionLock(results.root, rows[1].run_id, true, { prequalified_rlm_root_identity: identity }),
+    "RLM_ROOT_REUSE",
+  );
+  assert.equal((await readdir(path.join(results.root, RC7_GATE_C_STARTS_DIR))).length, 1);
+});
+
+test("treatment publication requires the execution lock and rejects same-path RLM-root replacement", async () => {
+  const ledger = await freshRoot("rlm-publication-ledger");
+  const results = await freshRoot("rlm-publication-results");
+  const rlm = await freshRoot("rlm-publication-root");
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const row = preregistration.ablation.schedule.find((item) => item.selected_route === "rc-rlm");
+  const accounting = await emptyAccounting(ledger.root, results.root);
+  await __test.initializeResultsWithAccounting(results.root, accounting);
+  const identity = await brokerTest.rlmHistoricalRootIdentity(rlm.root, true);
+  const begun = await __test.beginAttemptWithExecutionLock(results.root, row.run_id, true, { prequalified_rlm_root_identity: identity });
+  const input = {
+    execution: null,
+    rlm_root: rlm.root,
+    failure: { cleanup_residue_entries: 0, error_code: "PROVIDER_FREE_SYNTHETIC_FAILURE", rlm_invocation_count: 0, run_id: row.run_id, wall_ms: 0 },
+  };
+  await expectCode(() => __test.publishUnboundAttemptWithAccounting(results.root, accounting, input), "RLM_ROOT_EXECUTION_LOCK_REQUIRED");
+  await rm(rlm.root, { recursive: true });
+  await mkdir(rlm.root);
+  await expectCode(
+    () => __test.publishAttemptWithExecutionLockAndAccounting(
+      results.root,
+      ledger.root,
+      accounting,
+      input,
+      begun.owner,
+      async (_ledgerRoot, _resultsRoot, _runId, rlmRoot) => brokerTest.rlmHistoricalRootIdentity(rlmRoot, false),
+    ),
+    "RLM_ROOT_IDENTITY_MISMATCH",
+  );
+  assert.equal((await readdir(path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR))).length, 0);
+});
+
+test("treatment recovery rejects another run's bound RLM root before mutation and seals one exact fresh binding", async () => {
+  const ledger = await freshRoot("rlm-recovery-ledger");
+  const results = await freshRoot("rlm-recovery-results");
+  const firstRlm = await freshRoot("rlm-recovery-first");
+  const secondRlm = await freshRoot("rlm-recovery-second");
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const rows = preregistration.ablation.schedule.filter((item) => item.selected_route === "rc-rlm").slice(0, 2);
+  const accounting = await emptyAccounting(ledger.root, results.root);
+  await __test.initializeResultsWithAccounting(results.root, accounting);
+  const firstIdentity = await brokerTest.rlmHistoricalRootIdentity(firstRlm.root, true);
+  const first = await __test.beginAttemptWithExecutionLock(results.root, rows[0].run_id, true, { prequalified_rlm_root_identity: firstIdentity });
+  await __test.releaseResultsRecoveryLock(results.root, first.owner);
+  await __test.publishAttemptWithAccounting(results.root, accounting, {
+    execution: null,
+    rlm_root: firstRlm.root,
+    failure: { cleanup_residue_entries: 0, error_code: "PROVIDER_FREE_SYNTHETIC_FAILURE", rlm_invocation_count: 0, run_id: rows[0].run_id, wall_ms: 0 },
+  });
+
+  const beforeStarts = await Promise.all((await readdir(path.join(results.root, RC7_GATE_C_STARTS_DIR))).sort().map(async (name) => [name, await readFile(path.join(results.root, RC7_GATE_C_STARTS_DIR, name))]));
+  const beforeAttempts = await Promise.all((await readdir(path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR))).sort().map(async (name) => [name, await readFile(path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR, name))]));
+  const recoveryFailure = { cleanup_residue_entries: 0, error_code: "RECOVERY_GATE_FAILED", rlm_invocation_count: 1, run_id: rows[1].run_id, wall_ms: 1 };
+  await expectCode(
+    () => __test.recoverAttemptTerminalWithAccounting(results.root, accounting, recoveryFailure, firstIdentity),
+    "RLM_ROOT_REUSE",
+  );
+  const afterStarts = await Promise.all((await readdir(path.join(results.root, RC7_GATE_C_STARTS_DIR))).sort().map(async (name) => [name, await readFile(path.join(results.root, RC7_GATE_C_STARTS_DIR, name))]));
+  const afterAttempts = await Promise.all((await readdir(path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR))).sort().map(async (name) => [name, await readFile(path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR, name))]));
+  assert.deepEqual(afterStarts, beforeStarts);
+  assert.deepEqual(afterAttempts, beforeAttempts);
+
+  const secondIdentity = await brokerTest.rlmHistoricalRootIdentity(secondRlm.root, true);
+  const recovered = await __test.recoverAttemptTerminalWithAccounting(results.root, accounting, recoveryFailure, secondIdentity);
+  assert.equal(recovered.state, "sealed-zero-score-failure");
+  const repeated = await __test.recoverAttemptTerminalWithAccounting(results.root, accounting, recoveryFailure, secondIdentity);
+  assert.equal(repeated.attempt_sha256, recovered.attempt_sha256);
+  const retainedStart = JSON.parse(await readFile(path.join(results.root, RC7_GATE_C_STARTS_DIR, `${rows[1].run_id}.json`), "utf8"));
+  assert.deepEqual(retainedStart.rlm_root_identity, secondIdentity);
+});
+
+test("treatment recovery physically reidentifies and rejects replaced, missing, and substituted RLM roots before mutation", async () => {
+  const ledger = await freshRoot("rlm-recovery-reidentify-ledger");
+  const results = await freshRoot("rlm-recovery-reidentify-results");
+  const rlm = await freshRoot("rlm-recovery-reidentify-root");
+  const substitute = await freshRoot("rlm-recovery-substitute-root");
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const row = preregistration.ablation.schedule.find((item) => item.selected_route === "rc-rlm");
+  const accounting = await emptyAccounting(ledger.root, results.root);
+  await __test.initializeResultsWithAccounting(results.root, accounting);
+  const identity = await brokerTest.rlmHistoricalRootIdentity(rlm.root, true);
+  const begun = await __test.beginAttemptWithExecutionLock(results.root, row.run_id, true, { prequalified_rlm_root_identity: identity });
+  await __test.releaseResultsRecoveryLock(results.root, begun.owner);
+  const failure = { cleanup_residue_entries: 0, error_code: "RECOVERY_GATE_FAILED", rlm_invocation_count: 1, run_id: row.run_id, wall_ms: 1 };
+  const startsRoot = path.join(results.root, RC7_GATE_C_STARTS_DIR);
+  const attemptsRoot = path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR);
+  const beforeStarts = await Promise.all((await readdir(startsRoot)).sort().map(async (name) => [name, await readFile(path.join(startsRoot, name))]));
+  const beforeAttempts = await Promise.all((await readdir(attemptsRoot)).sort().map(async (name) => [name, await readFile(path.join(attemptsRoot, name))]));
+  const physicalResolver = async ({ safe_root: safeRoot, row: resolvedRow }) => brokerTest.rlmHistoricalRootIdentity(
+    resolvedRow.run_id === row.run_id ? rlm.root : safeRoot,
+    false,
+  );
+
+  await rm(rlm.root, { recursive: true });
+  await mkdir(rlm.root);
+  await expectCode(
+    () => __test.recoverAttemptTerminalWithAccounting(results.root, accounting, failure, null, physicalResolver),
+    "RLM_ROOT_IDENTITY_MISMATCH",
+  );
+  await rm(rlm.root, { recursive: true });
+  await assert.rejects(
+    () => __test.recoverAttemptTerminalWithAccounting(results.root, accounting, failure, null, physicalResolver),
+    (error) => error?.code === "MISSING_OUTPUT_ROOT",
+  );
+  await expectCode(
+    () => __test.recoverAttemptTerminalWithAccounting(
+      results.root,
+      accounting,
+      failure,
+      null,
+      async () => brokerTest.rlmHistoricalRootIdentity(substitute.root, false),
+    ),
+    "RLM_ROOT_IDENTITY_MISMATCH",
+  );
+  const afterStarts = await Promise.all((await readdir(startsRoot)).sort().map(async (name) => [name, await readFile(path.join(startsRoot, name))]));
+  const afterAttempts = await Promise.all((await readdir(attemptsRoot)).sort().map(async (name) => [name, await readFile(path.join(attemptsRoot, name))]));
+  assert.deepEqual(afterStarts, beforeStarts);
+  assert.deepEqual(afterAttempts, beforeAttempts);
+});
+
+test("treatment recovery never replaces an interrupted start stage after RLM-root replacement", async () => {
+  const ledger = await freshRoot("rlm-staged-recovery-ledger");
+  const results = await freshRoot("rlm-staged-recovery-results");
+  const rlm = await freshRoot("rlm-staged-recovery-root");
+  const substitute = await freshRoot("rlm-staged-recovery-substitute");
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const row = preregistration.ablation.schedule.find((item) => item.selected_route === "rc-rlm");
+  const accounting = await emptyAccounting(ledger.root, results.root);
+  await __test.initializeResultsWithAccounting(results.root, accounting);
+  const originalIdentity = await brokerTest.rlmHistoricalRootIdentity(rlm.root, true);
+  const stagedStart = __test.attemptStart(preregistration, row, originalIdentity);
+  const startsRoot = path.join(results.root, RC7_GATE_C_STARTS_DIR);
+  const attemptsRoot = path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR);
+  const stagedStartPath = path.join(startsRoot, `${row.run_id}.json.stage`);
+  const finalStartPath = path.join(startsRoot, `${row.run_id}.json`);
+  const finalAttemptPath = path.join(attemptsRoot, `${row.run_id}.json`);
+  await writeFile(stagedStartPath, `${canonicalJsonV1(stagedStart)}\n`, { flag: "wx" });
+  const stagedStartBytes = await readFile(stagedStartPath);
+  const failure = { cleanup_residue_entries: 0, error_code: "RECOVERY_GATE_FAILED", rlm_invocation_count: 1, run_id: row.run_id, wall_ms: 1 };
+  const physicalResolver = async () => brokerTest.rlmHistoricalRootIdentity(rlm.root, false);
+  const assertUnchanged = async () => {
+    assert.deepEqual(await readFile(stagedStartPath), stagedStartBytes);
+    await assert.rejects(() => readFile(finalStartPath), (error) => error?.code === "ENOENT");
+    await assert.rejects(() => readFile(finalAttemptPath), (error) => error?.code === "ENOENT");
+  };
+
+  await rm(rlm.root, { recursive: true });
+  await mkdir(rlm.root);
+  await expectCode(
+    () => __test.recoverAttemptTerminalWithAccounting(results.root, accounting, failure, null, physicalResolver),
+    "CONFLICTING_RESULTS_STAGE",
+  );
+  await assertUnchanged();
+
+  await rm(rlm.root, { recursive: true });
+  await assert.rejects(
+    () => __test.recoverAttemptTerminalWithAccounting(results.root, accounting, failure, null, physicalResolver),
+    (error) => error?.code === "MISSING_OUTPUT_ROOT",
+  );
+  await assertUnchanged();
+
+  await expectCode(
+    () => __test.recoverAttemptTerminalWithAccounting(
+      results.root,
+      accounting,
+      failure,
+      null,
+      async () => brokerTest.rlmHistoricalRootIdentity(substitute.root, false),
+    ),
+    "CONFLICTING_RESULTS_STAGE",
+  );
+  await assertUnchanged();
+});
+
+test("general results recovery is direct-only and preserves interrupted treatment start and terminal stages", async () => {
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const rows = preregistration.ablation.schedule.filter((item) => item.selected_route === "rc-rlm").slice(0, 2);
+
+  const startLedger = await freshRoot("general-recovery-start-ledger");
+  const startResults = await freshRoot("general-recovery-start-results");
+  const startRlm = await freshRoot("general-recovery-start-rlm");
+  const startAccounting = await emptyAccounting(startLedger.root, startResults.root);
+  await __test.initializeResultsWithAccounting(startResults.root, startAccounting);
+  const startIdentity = await brokerTest.rlmHistoricalRootIdentity(startRlm.root, true);
+  const stagedStart = __test.attemptStart(preregistration, rows[0], startIdentity);
+  const stagedStartPath = path.join(startResults.root, RC7_GATE_C_STARTS_DIR, `${rows[0].run_id}.json.stage`);
+  const finalStartPath = path.join(startResults.root, RC7_GATE_C_STARTS_DIR, `${rows[0].run_id}.json`);
+  await writeFile(stagedStartPath, `${canonicalJsonV1(stagedStart)}\n`, { flag: "wx" });
+  const stagedStartBytes = await readFile(stagedStartPath);
+  await rm(startRlm.root, { recursive: true });
+  await mkdir(startRlm.root);
+  await expectCode(() => __test.recoverResultsWithAccounting(startResults.root, startAccounting), "RLM_ROOT_REQUIRED_FOR_RECOVERY");
+  assert.deepEqual(await readFile(stagedStartPath), stagedStartBytes);
+  await assert.rejects(() => readFile(finalStartPath), (error) => error?.code === "ENOENT");
+
+  const attemptLedger = await freshRoot("general-recovery-attempt-ledger");
+  const attemptResults = await freshRoot("general-recovery-attempt-results");
+  const attemptRlm = await freshRoot("general-recovery-attempt-rlm");
+  const attemptAccounting = await emptyAccounting(attemptLedger.root, attemptResults.root);
+  await __test.initializeResultsWithAccounting(attemptResults.root, attemptAccounting);
+  const attemptIdentity = await brokerTest.rlmHistoricalRootIdentity(attemptRlm.root, true);
+  const begun = await __test.beginAttemptWithExecutionLock(attemptResults.root, rows[1].run_id, true, { prequalified_rlm_root_identity: attemptIdentity });
+  await __test.releaseResultsRecoveryLock(attemptResults.root, begun.owner);
+  const stagedAttempt = __test.failureRecord({
+    cleanup_residue_entries: 0,
+    error_code: "RECOVERY_GATE_FAILED",
+    rlm_invocation_count: 1,
+    run_id: rows[1].run_id,
+    wall_ms: 1,
+  }, rows[1], attemptAccounting, begun.start);
+  const stagedAttemptPath = path.join(attemptResults.root, RC7_GATE_C_ATTEMPTS_DIR, `${rows[1].run_id}.json.stage`);
+  const finalAttemptPath = path.join(attemptResults.root, RC7_GATE_C_ATTEMPTS_DIR, `${rows[1].run_id}.json`);
+  await writeFile(stagedAttemptPath, `${canonicalJsonV1(stagedAttempt)}\n`, { flag: "wx" });
+  const stagedAttemptBytes = await readFile(stagedAttemptPath);
+  await rm(attemptRlm.root, { recursive: true });
+  await expectCode(() => __test.recoverResultsWithAccounting(attemptResults.root, attemptAccounting), "RLM_ROOT_REQUIRED_FOR_RECOVERY");
+  assert.deepEqual(await readFile(stagedAttemptPath), stagedAttemptBytes);
+  await assert.rejects(() => readFile(finalAttemptPath), (error) => error?.code === "ENOENT");
+});
+
+test("exported mutation test hooks refuse any results root not durably marked provider-unreachable test-only", async () => {
+  const ledger = await freshRoot("test-hook-authority-ledger");
+  const results = await freshRoot("test-hook-authority-results");
+  const accounting = await emptyAccounting(ledger.root, results.root);
+  const initialized = await __test.initializeResultsWithAccounting(results.root, accounting);
+  const body = structuredClone(initialized.meta);
+  delete body.meta_sha256;
+  body.authority_state = "successful-treatment-proof-bound";
+  const productionShaped = withDigest(body, "meta_sha256");
+  await writeFile(path.join(results.root, RC7_GATE_C_RESULTS_META), `${canonicalJsonV1(productionShaped)}\n`);
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  await expectCode(
+    () => __test.beginAttemptWithExecutionLock(results.root, preregistration.ablation.schedule[0].run_id, true),
+    "TEST_ONLY_RESULTS_REQUIRED",
+  );
+  assert.equal((await readdir(results.root)).some((item) => item.startsWith(".gate-c-results-recovery")), false);
+});
+
+test("an interrupted execution lock cannot be bypassed before no-replay recovery", async () => {
+  const ledger = await freshRoot("interrupted-lock-ledger");
+  const results = await freshRoot("interrupted-lock-results");
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const rows = preregistration.ablation.schedule.filter((item) => item.arm === "rc-direct").slice(0, 2);
+  const accounting = await emptyAccounting(ledger.root, results.root);
+  await __test.initializeResultsWithAccounting(results.root, accounting);
+  const interrupted = await __test.beginAttemptWithExecutionLock(results.root, rows[0].run_id, true);
+  await __test.releaseResultsRecoveryLock(results.root, interrupted.owner);
+  await expectCode(() => __test.beginAttemptWithExecutionLock(results.root, rows[1].run_id, true), "ATTEMPT_RECOVERY_REQUIRED_NO_REPLAY");
+  assert.equal((await readdir(path.join(results.root, RC7_GATE_C_STARTS_DIR))).length, 1);
+  assert.equal((await readdir(path.join(results.root, RC7_GATE_C_ATTEMPTS_DIR))).length, 0);
 });
 
 test("critical failure taxonomy survives the bridge and forces a critical zero score", async () => {
@@ -450,6 +912,29 @@ test("failed-attempt request accounting rejects exact numeric substitution at ag
   assert.throws(() => __test.authorityAndBudget([substituted], accounting, preregistration), (error) => error instanceof Rc7GateCResultsError && error.code === "ATTEMPT_PROVENANCE_MISMATCH");
 });
 
+test("an indeterminate committed handoff retains zero accepted usage and the full hard output authority", async () => {
+  const ledger = await freshRoot("ledger");
+  const results = await freshRoot("results");
+  const preregistration = await buildRc7GateCPreregistrationPackage();
+  const row = preregistration.ablation.schedule.find((item) => item.case_id === "FACT-01" && item.arm === "rc-direct");
+  const entry = indeterminateCommittedLedgerEntry(row);
+  const accounting = await emptyAccounting(ledger.root, results.root, [entry]);
+  const record = __test.failureRecord({
+    cleanup_residue_entries: 0,
+    error_code: "INTERRUPTED_EXECUTION_RECOVERED_NO_REPLAY",
+    rlm_invocation_count: 0,
+    run_id: row.run_id,
+    wall_ms: 300_000,
+  }, row, accounting, __test.attemptStart(preregistration, row));
+  validateRc7GateCAttemptRecord(record);
+  assert.equal(record.requests[0].accepted_output_plus_reasoning_tokens, 0);
+  assert.equal(record.requests[0].hard_output_plus_reasoning_token_accounting, 128_000);
+  const authority = __test.authorityAndBudget([record], accounting, preregistration);
+  assert.equal(authority.accepted_output_plus_reasoning_tokens_consumed, 0);
+  assert.equal(authority.hard_output_plus_reasoning_token_accounting_consumed, 128_000);
+  assert.equal(authority.maximum_hard_output_plus_reasoning_token_accounting_any_request, 128_000);
+});
+
 test("a trusted-sealed request in a failed RLM attempt retains exact ledger-derived accounting", async () => {
   const ledger = await freshRoot("ledger");
   const results = await freshRoot("results");
@@ -461,13 +946,14 @@ test("a trusted-sealed request in a failed RLM attempt retains exact ledger-deri
     output_plus_reasoning_tokens: 654,
   });
   const accounting = await emptyAccounting(ledger.root, results.root, [entry]);
+  const rlmRootIdentity = syntheticRlmRootIdentity(path.join(results.parent, "trusted-sealed-failed-rlm"), 1);
   const record = __test.failureRecord({
     cleanup_residue_entries: 0,
     error_code: "MALFORMED_PROVIDER_OUTPUT",
     rlm_invocation_count: 1,
     run_id: row.run_id,
     wall_ms: 118,
-  }, row, accounting, __test.attemptStart(preregistration, row));
+  }, row, accounting, __test.attemptStart(preregistration, row, rlmRootIdentity));
   validateRc7GateCAttemptRecord(record);
   assert.equal(record.state, "sealed-zero-score-failure");
   assert.equal(record.requests[0].accounting_basis, "exact-sealed-provider-observation");
@@ -476,7 +962,8 @@ test("a trusted-sealed request in a failed RLM attempt retains exact ledger-deri
   assert.equal(authority.oauth_refresh_https_post_requests_consumed, 0);
   assert.equal(authority.provider_active_milliseconds_consumed, 117);
   assert.equal(authority.input_token_accounting_consumed, 321);
-  assert.equal(authority.output_plus_reasoning_token_accounting_consumed, 654);
+  assert.equal(authority.accepted_output_plus_reasoning_tokens_consumed, 654);
+  assert.equal(authority.hard_output_plus_reasoning_token_accounting_consumed, 654);
 });
 
 test("aliased retained-attempt directories fail closed", async () => {

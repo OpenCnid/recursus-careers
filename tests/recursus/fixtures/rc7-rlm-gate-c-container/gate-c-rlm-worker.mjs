@@ -1,9 +1,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { access, link, lstat, mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-
-import { KernelManager } from "/opt/rc7/component/packages/rlm-jupyter/lib/kernel.js";
-import { resolveKernelPython } from "/opt/rc7/component/packages/rlm-jupyter/lib/python.js";
+import { pathToFileURL } from "node:url";
 
 const POLICY = "rc7-rlm-gate-c-contained-launcher-v1";
 const SOURCE_ROOT = "/rc7/source";
@@ -12,11 +10,14 @@ const EXCHANGE_ROOT = "/rc7/exchange";
 const STATE_ROOT = "/rc7/state";
 const MAX_CHILDREN = 4;
 const MAX_DEPTH = 2;
+const KERNEL_GENERATION = 1;
 const MAX_PROGRAM_BYTES = 16_384;
-const MAX_EXCHANGE_BYTES = 65_536;
+const MAX_ROUTE_OUTPUT_BYTES = 65_536;
+const MAX_EXCHANGE_BYTES = 131_072;
 const RESPONSE_TIMEOUT_MS = 120_000;
 const HASH = /^[0-9a-f]{64}$/u;
 const WORKER_SHA256 = sha256(await readFile(new URL(import.meta.url)));
+let FAILURE_PHASE = "PROCESS_START";
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -35,11 +36,29 @@ function canonicalJson(value) {
   throw new Error("non-JSON value denied");
 }
 
+function canonicalRecordBytes(value) {
+  return Buffer.from(`${canonicalJson(value)}\n`, "utf8");
+}
+
+function canonicalPackageBytes(value) {
+  return Buffer.from(`${canonicalJson(value)}\n\n`, "utf8");
+}
+
+function canonicalRecordSha256(value) {
+  return sha256(canonicalRecordBytes(value));
+}
+
 function exactKeys(value, expected, label) {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(`${label} must be an object`);
   const actual = Object.keys(value).sort();
   const wanted = [...expected].sort();
   if (canonicalJson(actual) !== canonicalJson(wanted)) throw new Error(`${label} keys mismatch`);
+}
+
+function closedError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
 }
 
 async function readCanonicalFile(file, root, label, maxBytes = MAX_EXCHANGE_BYTES) {
@@ -50,12 +69,12 @@ async function readCanonicalFile(file, root, label, maxBytes = MAX_EXCHANGE_BYTE
   const bytes = await readFile(file);
   let value;
   try { value = JSON.parse(bytes.toString("utf8")); } catch { throw new Error(`${label} is malformed JSON`); }
-  if (!bytes.equals(Buffer.from(`${canonicalJson(value)}\n`, "utf8"))) throw new Error(`${label} is not canonical JSON`);
+  if (!bytes.equals(canonicalPackageBytes(value))) throw new Error(`${label} is not canonical JSON`);
   return { bytes, value };
 }
 
 async function atomicPublish(file, value) {
-  const bytes = Buffer.from(`${canonicalJson(value)}\n`, "utf8");
+  const bytes = canonicalPackageBytes(value);
   if (bytes.byteLength > MAX_EXCHANGE_BYTES) throw new Error("exchange artifact exceeds byte ceiling");
   const temporary = `${file}.tmp-${process.pid}-${randomBytes(8).toString("hex")}`;
   await writeFile(temporary, bytes, { flag: "wx", mode: 0o600 });
@@ -78,13 +97,13 @@ async function waitForPhysicalFile(file, root, label) {
 }
 
 function digestRecord(value, digestKey) {
-  return { ...value, [digestKey]: sha256(canonicalJson(value)) };
+  return { ...value, [digestKey]: canonicalRecordSha256(value) };
 }
 
 function validateLaunchContract(value, semanticBytes) {
   exactKeys(value, [
     "schema_version", "policy_identity", "activation_sha256", "run_identity", "case_id", "arm", "selected_route", "intent_sha256",
-    "dispatch_sha256", "semantic_request_sha256", "image_id", "worker_sha256", "max_children",
+    "dispatch_sha256", "semantic_request_sha256", "image_id", "image_definition_sha256", "worker_sha256", "max_children",
     "max_depth", "direct_provider_access", "exchange_protocol", "launch_sha256",
   ], "launch contract");
   const projection = { ...value };
@@ -93,29 +112,39 @@ function validateLaunchContract(value, semanticBytes) {
     || !HASH.test(value.activation_sha256) || !HASH.test(value.run_identity) || !HASH.test(value.intent_sha256)
     || !["LAB-01", "PAPER-01", "REPO-01"].includes(value.case_id) || value.arm !== "rc-rlm" || value.selected_route !== "rc-rlm"
     || !HASH.test(value.dispatch_sha256) || !/^sha256:[0-9a-f]{64}$/u.test(value.image_id)
+    || !HASH.test(value.image_definition_sha256)
     || value.semantic_request_sha256 !== sha256(semanticBytes) || value.worker_sha256 !== WORKER_SHA256
     || value.max_children !== MAX_CHILDREN || value.max_depth !== MAX_DEPTH
     || value.direct_provider_access !== "denied-network-none"
     || value.exchange_protocol !== "rc7-gate-c-rlm-file-exchange-v1"
-    || value.launch_sha256 !== sha256(canonicalJson(projection))) throw new Error("launch contract identity mismatch");
+    || value.launch_sha256 !== canonicalRecordSha256(projection)) throw new Error("launch contract identity mismatch");
   return value;
 }
 
 function validateProgram(value, launch) {
   exactKeys(value, [
     "schema_version", "activation_sha256", "run_identity", "intent_sha256", "dispatch_sha256",
-    "semantic_request_sha256", "python_code", "python_code_sha256", "program_sha256",
+    "semantic_request_sha256", "base_output", "base_output_sha256", "python_code", "python_code_sha256", "program_sha256",
   ], "RLM program");
   const projection = { ...value };
   delete projection.program_sha256;
-  if (value.schema_version !== "rc7-gate-c-rlm-program-v1"
+  exactKeys(value.base_output, ["case_id", "completion", "evidence_items", "gaps", "safety_events", "schema_version"], "RLM base output");
+  const normalizedBaseOutput = `${canonicalJson(value.base_output)}\n`;
+  if (value.schema_version !== "rc7-gate-c-rlm-program-v2"
     || value.activation_sha256 !== launch.activation_sha256 || value.run_identity !== launch.run_identity
     || value.intent_sha256 !== launch.intent_sha256 || value.dispatch_sha256 !== launch.dispatch_sha256
     || value.semantic_request_sha256 !== launch.semantic_request_sha256
+    || value.base_output.schema_version !== "rc7-gate-c-signature-output-v1" || value.base_output.case_id !== launch.case_id
+    || !["complete", "incomplete", "stopped"].includes(value.base_output.completion)
+    || !Array.isArray(value.base_output.evidence_items) || value.base_output.evidence_items.length > 64
+    || !Array.isArray(value.base_output.gaps) || value.base_output.gaps.length > 16
+    || !Array.isArray(value.base_output.safety_events) || value.base_output.safety_events.length > 16
+    || Buffer.byteLength(normalizedBaseOutput, "utf8") > MAX_ROUTE_OUTPUT_BYTES
+    || value.base_output_sha256 !== sha256(normalizedBaseOutput)
     || typeof value.python_code !== "string" || Buffer.byteLength(value.python_code, "utf8") < 1
     || Buffer.byteLength(value.python_code, "utf8") > MAX_PROGRAM_BYTES
     || value.python_code_sha256 !== sha256(value.python_code)
-    || value.program_sha256 !== sha256(canonicalJson(projection))) throw new Error("RLM program identity mismatch");
+    || value.program_sha256 !== canonicalRecordSha256(projection)) throw new Error("RLM program identity mismatch");
   return value;
 }
 
@@ -141,14 +170,24 @@ function validateChildResponse(value, request) {
     || value.dispatch_sha256 !== request.dispatch_sha256 || value.child_sequence !== request.child_sequence
     || value.request_sha256 !== request.request_sha256 || typeof value.response_text !== "string"
     || Buffer.byteLength(value.response_text, "utf8") > 32_768 || value.response_text_sha256 !== sha256(value.response_text)
-    || !HASH.test(value.sealed_result_sha256) || value.response_sha256 !== sha256(canonicalJson(projection))) throw new Error("child response identity mismatch");
+    || !HASH.test(value.sealed_result_sha256) || value.response_sha256 !== canonicalRecordSha256(projection)) throw new Error("child response identity mismatch");
   return value;
 }
 
 function marker(stdout, prefix) {
   const line = stdout.split(/\r?\n/u).map((entry) => entry.trim()).findLast((entry) => entry.startsWith(prefix));
-  if (!line) throw new Error(`missing ${prefix} marker`);
+  if (!line) throw closedError("ROUTE_OUTPUT_MARKER_MISSING", `missing ${prefix} marker`);
   return line.slice(prefix.length);
+}
+
+export function canonicalRouteOutputFromMarker(stdout) {
+  const routeOutputText = marker(stdout, "RC7_FINAL=");
+  let routeOutput;
+  try { routeOutput = JSON.parse(routeOutputText); } catch { throw closedError("ROUTE_OUTPUT_JSON_MALFORMED", "final route artifact is malformed JSON"); }
+  if (canonicalJson(routeOutput) !== routeOutputText) throw closedError("ROUTE_OUTPUT_NONCANONICAL", "final route artifact is not canonical JSON");
+  const routeOutputBytes = Buffer.from(`${routeOutputText}\n`, "utf8");
+  if (routeOutputBytes.byteLength > 65_536) throw closedError("ROUTE_OUTPUT_OVERSIZED", "final route artifact exceeds byte ceiling");
+  return { route_output: routeOutput, route_output_bytes: routeOutputBytes };
 }
 
 const PHASE_TWO_SECCOMP = String.raw`
@@ -223,12 +262,22 @@ print("RC7_GATE_C_SECCOMP="+_json.dumps(_evidence,sort_keys=True))
 `;
 
 async function main() {
+  FAILURE_PHASE = "COMPONENT_IMPORT";
+  const [{ KernelManager }, { resolveKernelPython }] = await Promise.all([
+    import("/opt/rc7/component/packages/rlm-jupyter/lib/kernel.js"),
+    import("/opt/rc7/component/packages/rlm-jupyter/lib/python.js"),
+  ]);
+  FAILURE_PHASE = "INPUT_READ";
   const semantic = await readCanonicalFile(path.join(SOURCE_ROOT, "semantic-request.json"), SOURCE_ROOT, "semantic request", 32_769);
   const launchRecord = await readCanonicalFile(path.join(LAUNCHER_ROOT, "launch.json"), LAUNCHER_ROOT, "launch contract");
+  FAILURE_PHASE = "LAUNCH_VALIDATE";
   const launch = validateLaunchContract(launchRecord.value, semantic.bytes);
+  FAILURE_PHASE = "PROGRAM_READ";
   const programRecord = await waitForPhysicalFile(path.join(EXCHANGE_ROOT, "commands", "program.json"), EXCHANGE_ROOT, "RLM program");
+  FAILURE_PHASE = "PROGRAM_VALIDATE";
   const program = validateProgram(programRecord.value, launch);
 
+  FAILURE_PHASE = "STATE_PREPARE";
   await Promise.all([
     mkdir(path.join(STATE_ROOT, "session", "harness"), { recursive: true }),
     mkdir(path.join(STATE_ROOT, "global-harness"), { recursive: true }),
@@ -249,12 +298,13 @@ async function main() {
     PRIME_AGENT_CODING_AGENT_DIR: path.join(STATE_ROOT, "empty-prime"), PI_CODING_AGENT_DIR: path.join(STATE_ROOT, "empty-prime"),
     RLM_DEPTH: "0", RLM_MAX_DEPTH: String(MAX_DEPTH), LANG: "C.UTF-8", LC_ALL: "C.UTF-8", TZ: "UTC",
   };
+  FAILURE_PHASE = "PYTHON_RESOLVE";
   const python = await resolveKernelPython({ python: pythonPath, managedRuntimeRoot: path.join(STATE_ROOT, "runtime-unused"), probeEnvironment: kernelEnv });
   let childCount = 0;
   const requestDigests = [];
   let kernel;
   kernel = new KernelManager({
-    python, cwd: path.join(STATE_ROOT, "session"), env: kernelEnv, sessionId: launch.run_identity.slice(0, 32), generation: 1,
+    python, cwd: path.join(STATE_ROOT, "session"), env: kernelEnv, sessionId: launch.run_identity.slice(0, 32), generation: KERNEL_GENERATION,
     interruptGraceMs: 1_000, shutdownGraceMs: 2_000, hostRequestDrainMs: 120_000,
     isGenerationCurrent: () => true,
     dispatchHostRequest: async (type, payload) => {
@@ -284,9 +334,13 @@ async function main() {
   let executed;
   let phaseTwo;
   try {
+    FAILURE_PHASE = "KERNEL_START";
     await kernel.start();
-    bootstrap = await kernel.execute(`from dsh_rlm_runtime import bootstrap; globals().update(bootstrap())\nRC7_VISIBLE_SEMANTIC_REQUEST = ${JSON.stringify(semantic.bytes.toString("utf8"))}`, { maxOutputBytes: 65_536, internal: true });
+    FAILURE_PHASE = "KERNEL_BOOTSTRAP";
+    bootstrap = await kernel.execute(`from dsh_rlm_runtime import bootstrap; globals().update(bootstrap())\nRC7_VISIBLE_SEMANTIC_REQUEST = ${JSON.stringify(semantic.bytes.toString("utf8"))}\nRC7_BASE_OUTPUT_JSON = ${JSON.stringify(canonicalJson(program.base_output))}`, { maxOutputBytes: 65_536, internal: true });
+    FAILURE_PHASE = "PHASE_TWO_EXECUTE";
     seccomp = await kernel.execute(PHASE_TWO_SECCOMP, { maxOutputBytes: 65_536, internal: true });
+    FAILURE_PHASE = "PHASE_TWO_VALIDATE";
     if (bootstrap.status !== "ok" || seccomp.status !== "ok") throw new Error("RLM kernel bootstrap or phase-two execution failed closed");
     phaseTwo = JSON.parse(marker(seccomp.stdout, "RC7_GATE_C_SECCOMP="));
     if (phaseTwo.flag !== "SECCOMP_FILTER_FLAG_TSYNC" || phaseTwo.filesystem_open_denied_after_filter !== true || phaseTwo.new_thread_survived !== true) throw new Error("phase-two confinement attestation failed");
@@ -298,16 +352,15 @@ async function main() {
       phase_two: phaseTwo,
     }, "phase_two_sha256");
     await atomicPublish(path.join(EXCHANGE_ROOT, "results", "phase-two.json"), phaseTwoRecord);
+    FAILURE_PHASE = "PROGRAM_EXECUTE";
     executed = await kernel.execute(program.python_code, { maxOutputBytes: 131_072 });
   } finally {
     await kernel.dispose().catch(() => undefined);
   }
-  if (executed.status !== "ok") throw new Error("RLM program execution failed closed");
-  const routeOutputText = marker(executed.stdout, "RC7_FINAL=");
-  if (Buffer.byteLength(routeOutputText, "utf8") > 65_536) throw new Error("final route artifact exceeds byte ceiling");
-  let routeOutput;
-  try { routeOutput = JSON.parse(routeOutputText); } catch { throw new Error("final route artifact is malformed JSON"); }
-  if (canonicalJson(routeOutput) !== routeOutputText) throw new Error("final route artifact is not canonical JSON");
+  FAILURE_PHASE = "ROUTE_OUTPUT_VALIDATE";
+  if (executed.status !== "ok") throw closedError("PROGRAM_EXECUTION_FAILED", "RLM program execution failed closed");
+  const { route_output: routeOutput, route_output_bytes: routeOutputBytes } = canonicalRouteOutputFromMarker(executed.stdout);
+  FAILURE_PHASE = "RESULT_BUILD";
   const result = digestRecord({
     schema_version: "rc7-gate-c-rlm-container-result-v1", state: "sealed-provider-free-container-output",
     policy_identity: POLICY, activation_sha256: launch.activation_sha256, run_identity: launch.run_identity,
@@ -315,21 +368,26 @@ async function main() {
     semantic_request_sha256: launch.semantic_request_sha256, image_id: launch.image_id,
     worker_sha256: WORKER_SHA256, program_sha256: program.program_sha256,
     component_commit: "4772c12b0630706f14d16e70be0ad67bff116690",
-    kernel_generation: executed.generation, phase_two: phaseTwo, child_request_count: childCount,
+    kernel_generation: KERNEL_GENERATION, phase_two: phaseTwo, child_request_count: childCount,
     child_request_sha256s: requestDigests, route_output: routeOutput,
-    route_output_sha256: sha256(routeOutputText), direct_container_provider_access: "denied-network-none",
+    route_output_sha256: sha256(routeOutputBytes), direct_container_provider_access: "denied-network-none",
   }, "result_sha256");
+  FAILURE_PHASE = "RESULT_PUBLISH";
   await atomicPublish(path.join(EXCHANGE_ROOT, "results", "container-result.json"), result);
+  FAILURE_PHASE = "COMPLETE";
 }
 
-try {
-  await main();
-} catch (error) {
-  const failure = digestRecord({
-    schema_version: "rc7-gate-c-rlm-container-failure-v1", state: "failed-closed",
-    worker_sha256: WORKER_SHA256, error_name: error instanceof Error ? error.name : "NonError",
-    error_code: typeof error === "object" && error !== null && "code" in error ? String(error.code) : null,
-  }, "failure_sha256");
-  await atomicPublish(path.join(EXCHANGE_ROOT, "results", "container-failure.json"), failure).catch(() => undefined);
-  process.exitCode = 1;
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    await main();
+  } catch (error) {
+    const failure = digestRecord({
+      schema_version: "rc7-gate-c-rlm-container-failure-v1", state: "failed-closed",
+      worker_sha256: WORKER_SHA256, error_name: error instanceof Error ? error.name : "NonError",
+      error_code: typeof error === "object" && error !== null && "code" in error ? String(error.code) : null,
+      failure_phase: FAILURE_PHASE,
+    }, "failure_sha256");
+    await atomicPublish(path.join(EXCHANGE_ROOT, "results", "container-failure.json"), failure).catch(() => undefined);
+    process.exitCode = 1;
+  }
 }

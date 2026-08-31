@@ -72,7 +72,7 @@ function routeOutput() {
 
 function successHostResult(lane) {
   const output = routeOutput();
-  const raw = Buffer.from(`${canonicalJsonV1(output)}\n`, "utf8");
+  const raw = Buffer.from(canonicalJsonV1(output), "utf8");
   return {
     schema_version: "rc7-gate-c-host-launch-result-v1",
     state: "one-shot-child-complete",
@@ -485,7 +485,7 @@ test("shared host and capsule accept the smoke handoff while rejecting mixed sch
   });
   assert.doesNotMatch(subprocess.stdout, /(?:provider prose|request-id-must-not-be-retained|provider_message|request_id)/u);
 
-  const output = `${canonicalJsonV1(routeOutput())}\n`;
+  const output = canonicalJsonV1(routeOutput());
   let successfulStream = createRc7GateCStreamState();
   successfulStream = reduceRc7GateCStreamChunk(successfulStream, { type: "block-start", index: 0, blockType: "text" });
   successfulStream = reduceRc7GateCStreamChunk(successfulStream, { type: "text-delta", index: 0, text: output });

@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 
 import {
+  RC7_GATE_C_CHILD_PROVIDER_TIMEOUT_MS,
   RC7_GATE_C_MAX_OUTPUT_PLUS_REASONING_TOKENS,
+  RC7_GATE_C_TREATMENT_PROOF_MAX_OUTPUT_PLUS_REASONING_TOKENS,
   RC7_GATE_C_MAX_SEMANTIC_REQUEST_BYTES,
   RC7_GATE_C_PROVIDER_TIMEOUT_MS,
   RC7_GATE_C_RUNTIME_CLOSURE,
@@ -16,7 +19,9 @@ import {
   buildRc7GateCSealedResult,
   buildRc7GateCWorkerConformancePackage,
   buildRc7GateCWorkerStageManifest,
+  chargeRc7GateCProviderActiveMilliseconds,
   createRc7GateCStreamState,
+  createRc7GateCTreatmentProofStreamState,
   decideRc7GateCFetch,
   finalizeRc7GateCStream,
   reduceRc7GateCStreamChunk,
@@ -27,6 +32,7 @@ import {
   validateRc7GateCWorkerStageManifest,
 } from "../../lib/recursus/rc7-rlm-gate-c-worker.mjs";
 import { __test as liveCapsuleTest } from "../../lib/recursus/rc7-rlm-gate-c-live-capsule.mjs";
+import { RC7_GATE_C_MAX_OUTPUT_BYTES } from "../../lib/recursus/rc7-rlm-gate-c-output-grammar.mjs";
 import { RC7_GATE_C_OUTPUT_SCHEMA } from "../../lib/recursus/rc7-rlm-gate-c-scorer.mjs";
 import { canonicalJsonV1, sha256V1 } from "../../lib/recursus/prompt-context-v1.mjs";
 
@@ -115,14 +121,14 @@ function sealedRequest() {
 }
 
 function routeOutput(caseId = "FACT-01") {
-  return Buffer.from(`${canonicalJsonV1({
+  return Buffer.from(canonicalJsonV1({
     schema_version: RC7_GATE_C_OUTPUT_SCHEMA,
     case_id: caseId,
     completion: "complete",
     evidence_items: [],
     gaps: [{ code: "insufficient_evidence", locators: [] }],
     safety_events: [],
-  })}\n`, "utf8");
+  }), "utf8");
 }
 
 function validStream(caseId = "FACT-01") {
@@ -140,8 +146,15 @@ function validStream(caseId = "FACT-01") {
 
 test("semantic request freezes the standard system-slot path and exact limits", () => {
   const request = validateRc7GateCSemanticRequest(semantic());
-  assert.equal(request.value.max_output_plus_reasoning_tokens, 8_192);
-  assert.equal(request.value.timeout_ms, 120_000);
+  assert.equal(request.value.max_output_plus_reasoning_tokens, 128_000);
+  assert.equal(request.value.timeout_ms, 300_000);
+  const child = validateRc7GateCSemanticRequest(buildRc7GateCSemanticRequest({
+    system_text: "child system",
+    user_text: "child user",
+    session_id: "2".repeat(32),
+    timeout_ms: RC7_GATE_C_CHILD_PROVIDER_TIMEOUT_MS,
+  }));
+  assert.equal(child.value.timeout_ms, 120_000);
   assert.equal(request.value.automatic_retries, 0);
   assert.equal(request.value.transport, "sse");
   assert.deepEqual(request.value.tools, []);
@@ -149,6 +162,15 @@ test("semantic request freezes the standard system-slot path and exact limits", 
   assert.equal(request.sha256, sha256V1(request.bytes));
   assert.throws(() => buildRc7GateCSemanticRequest({ system_text: "x", user_text: "https://example.com/live", session_id: "1".repeat(32) }), /external URL/u);
   assert.throws(() => buildRc7GateCSemanticRequest({ system_text: "x", user_text: "z".repeat(RC7_GATE_C_MAX_SEMANTIC_REQUEST_BYTES), session_id: "1".repeat(32) }), /byte ceiling/u);
+  assert.throws(() => buildRc7GateCSemanticRequest({ system_text: "x", user_text: "y", session_id: "1".repeat(32), timeout_ms: 121_000 }), /closed authority/u);
+});
+
+test("provider timing charges never exceed the approved timeout after local abort settlement", () => {
+  assert.equal(chargeRc7GateCProviderActiveMilliseconds(1_000, 2_000), 1_000);
+  assert.equal(chargeRc7GateCProviderActiveMilliseconds(1_000, 301_001), RC7_GATE_C_PROVIDER_TIMEOUT_MS);
+  assert.equal(chargeRc7GateCProviderActiveMilliseconds(1_000, 301_001, RC7_GATE_C_CHILD_PROVIDER_TIMEOUT_MS), RC7_GATE_C_CHILD_PROVIDER_TIMEOUT_MS);
+  assert.throws(() => chargeRc7GateCProviderActiveMilliseconds(1_000, 2_000, 121_000), /route-specific/u);
+  assert.throws(() => chargeRc7GateCProviderActiveMilliseconds(2_000, 1_000), /timing observations/u);
 });
 
 test("sealed worker preflight independently closes activation, intent, permit, and semantic bytes", () => {
@@ -160,21 +182,37 @@ test("sealed worker preflight independently closes activation, intent, permit, a
   const tampered = structuredClone(value);
   tampered.semantic_request.user_text += "x";
   assert.throws(() => validateRc7GateCSealedWorkerRequest(tampered, expectedClosure()), /identities do not close/u);
+  const crossFieldMismatch = structuredClone(value);
+  crossFieldMismatch.semantic_request.timeout_ms = RC7_GATE_C_CHILD_PROVIDER_TIMEOUT_MS;
+  const changedSemantic = validateRc7GateCSemanticRequest(crossFieldMismatch.semantic_request);
+  crossFieldMismatch.semantic_request_sha256 = changedSemantic.sha256;
+  crossFieldMismatch.semantic_request_byte_count = changedSemantic.byte_count;
+  crossFieldMismatch.intent.semantic_request_sha256 = changedSemantic.sha256;
+  crossFieldMismatch.intent.semantic_request_byte_count = changedSemantic.byte_count;
+  delete crossFieldMismatch.intent.intent_sha256;
+  withDigest(crossFieldMismatch.intent, "intent_sha256");
+  crossFieldMismatch.permit.intent_sha256 = crossFieldMismatch.intent.intent_sha256;
+  crossFieldMismatch.permit.semantic_request_sha256 = changedSemantic.sha256;
+  crossFieldMismatch.permit.semantic_request_byte_count = changedSemantic.byte_count;
+  delete crossFieldMismatch.permit.permit_sha256;
+  withDigest(crossFieldMismatch.permit, "permit_sha256");
+  delete crossFieldMismatch.sealed_request_sha256;
+  withDigest(crossFieldMismatch, "sealed_request_sha256");
+  assert.throws(() => validateRc7GateCSealedWorkerRequest(crossFieldMismatch, expectedClosure()), /identities do not close/u);
   assert.throws(() => validateRc7GateCSealedWorkerRequest(value, { ...expectedClosure(), worker_package_sha256: "9".repeat(64) }), /mismatched/u);
 });
 
-test("provider wire contract closes model, prompt, tools, reasoning, and output ceiling", () => {
+test("provider wire contract closes the native Codex body and rejects the unsupported token-cap extension", () => {
   const request = semantic();
   const body = __test.expectedProviderWireBody(request);
   assert.equal(validateRc7GateCProviderWireRequest(body, request), body);
-  const pinnedAdapterBody = structuredClone(body);
-  delete pinnedAdapterBody.max_output_tokens;
-  assert.deepEqual(buildRc7GateCProviderWireRequest(pinnedAdapterBody, request), body);
-  const widenedAdapterBody = structuredClone(pinnedAdapterBody);
+  assert.equal(Object.hasOwn(body, "max_output_tokens"), false);
+  assert.deepEqual(buildRc7GateCProviderWireRequest(body, request), body);
+  const widenedAdapterBody = structuredClone(body);
   widenedAdapterBody.input[0].content[0].text += " widened";
-  assert.throws(() => buildRc7GateCProviderWireRequest(widenedAdapterBody, request), /adapter body widened or mismatched/u);
+  assert.throws(() => buildRc7GateCProviderWireRequest(widenedAdapterBody, request), /native body widened or mismatched/u);
   for (const mutate of [
-    (value) => { delete value.max_output_tokens; },
+    (value) => { value.max_output_tokens = 8_192; },
     (value) => { value.max_output_tokens = 4_000; },
     (value) => { value.model = "gpt-5.6"; },
     (value) => { value.tools = []; },
@@ -221,15 +259,87 @@ test("pure stream reducer validates lifecycle and retains only bounded canonical
   assert.equal(canonicalJsonV1(finalized.artifact).includes("discarded"), false);
 });
 
+test("stream reducer follows the canonical DSH assembler for delta-only, authoritative close, stragglers, and bounded replay metadata", () => {
+  const text = routeOutput("FACT-01").toString("utf8");
+  let state = createRc7GateCStreamState();
+  state = reduceRc7GateCStreamChunk(state, { type: "reasoning-delta", index: 0, text: "partial reasoning" });
+  state = reduceRc7GateCStreamChunk(state, { type: "block-end", index: 0, block: { type: "reasoning", text: "authoritative reasoning" } });
+  state = reduceRc7GateCStreamChunk(state, { type: "reasoning-delta", index: 0, text: "ignored straggler" });
+  state = reduceRc7GateCStreamChunk(state, { type: "text-delta", index: 1, text: "partial" });
+  state = reduceRc7GateCStreamChunk(state, { type: "block-end", index: 1, block: { type: "text", text } });
+  state = reduceRc7GateCStreamChunk(state, { type: "text-delta", index: 1, text: "ignored straggler" });
+  state = reduceRc7GateCStreamChunk(state, { type: "usage", usage: { inputTokens: 100, outputTokens: 200 } });
+  state = reduceRc7GateCStreamChunk(state, {
+    type: "finish",
+    reason: { kind: "stop" },
+    replayState: { response: { kind: "pi-ai" }, blocks: [{ type: "reasoning", thinkingSignature: "x".repeat(65_536) }] },
+  });
+  const finalized = finalizeRc7GateCStream(state, "FACT-01");
+  assert.equal(finalized.artifact.output_sha256, sha256V1(routeOutput("FACT-01")));
+  assert.doesNotMatch(canonicalJsonV1(finalized.artifact.output), /authoritative reasoning|thinkingSignature|ignored straggler/u);
+});
+
+test("stream reducer closes type conflicts, byte ceilings, chunk/index limits, and replay-state boundaries", () => {
+  const malformedPhase = (callback, phase) => assert.throws(
+    callback,
+    (error) => error?.code === "MALFORMED_STREAM" && error.details?.stream_failure_phase === phase,
+    phase,
+  );
+
+  let startedText = reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "block-start", index: 0, blockType: "text" });
+  malformedPhase(() => reduceRc7GateCStreamChunk(startedText, { type: "reasoning-delta", index: 0, text: "conflict" }), "DELTA");
+  let deltaText = reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "text-delta", index: 0, text: "text" });
+  malformedPhase(() => reduceRc7GateCStreamChunk(deltaText, { type: "reasoning-delta", index: 0, text: "conflict" }), "DELTA");
+  malformedPhase(() => reduceRc7GateCStreamChunk(startedText, { type: "block-start", index: 0, blockType: "reasoning" }), "BLOCK_START");
+  malformedPhase(() => reduceRc7GateCStreamChunk(startedText, { type: "block-end", index: 0, block: { type: "reasoning", text: "conflict" } }), "BLOCK_END");
+  assert.doesNotThrow(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "text-delta", index: 8, text: "x" }));
+  assert.doesNotThrow(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "text-delta", index: __test.MAX_STREAM_BLOCK_INDEX, text: "x" }));
+  malformedPhase(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "text-delta", index: __test.MAX_STREAM_BLOCK_INDEX + 1, text: "x" }), "BLOCK_INDEX");
+  const chunkMaxed = createRc7GateCStreamState();
+  chunkMaxed.chunk_count = __test.MAX_STREAM_CHUNKS;
+  malformedPhase(() => reduceRc7GateCStreamChunk(chunkMaxed, { type: "text-delta", index: 0, text: "x" }), "CHUNK_CEILING");
+
+  assert.doesNotThrow(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "text-delta", index: 0, text: "x".repeat(RC7_GATE_C_MAX_OUTPUT_BYTES) }));
+  assert.throws(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "text-delta", index: 0, text: "x".repeat(RC7_GATE_C_MAX_OUTPUT_BYTES + 1) }), (error) => error?.code === "OUTPUT_BUDGET_EXCEEDED");
+  assert.doesNotThrow(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "reasoning-delta", index: 0, text: "x".repeat(__test.MAX_REASONING_STREAM_BYTES) }));
+  assert.throws(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "reasoning-delta", index: 0, text: "x".repeat(__test.MAX_REASONING_STREAM_BYTES + 1) }), (error) => error?.code === "OUTPUT_BUDGET_EXCEEDED");
+
+  const replayStateAt = (byteCount) => {
+    const overhead = Buffer.byteLength(canonicalJsonV1({ opaque: "" }), "utf8");
+    const value = { opaque: "x".repeat(byteCount - overhead) };
+    assert.equal(Buffer.byteLength(canonicalJsonV1(value), "utf8"), byteCount);
+    return value;
+  };
+  const usageSeen = reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "usage", usage: { inputTokens: 1, outputTokens: 1 } });
+  assert.doesNotThrow(() => reduceRc7GateCStreamChunk(usageSeen, { type: "finish", reason: { kind: "stop" }, replayState: replayStateAt(__test.MAX_DISCARDED_REPLAY_STATE_BYTES) }));
+  malformedPhase(
+    () => reduceRc7GateCStreamChunk(usageSeen, { type: "finish", reason: { kind: "stop" }, replayState: replayStateAt(__test.MAX_DISCARDED_REPLAY_STATE_BYTES + 1) }),
+    "REPLAY_CEILING",
+  );
+});
+
 test("stream reducer rejects tools, bad ordering, mismatch, over-budget usage, duplicate terminals, and non-stop publication", () => {
   assert.throws(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "tool-call-delta", index: 0, id: "x", argumentsDelta: "{}" }), /Tool or unknown/u);
-  assert.throws(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "text-delta", index: 0, text: "x" }), /ordering/u);
+  assert.throws(
+    () => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "text-delta", index: 0, text: 1 }),
+    (error) => error?.code === "MALFORMED_STREAM" && error.details?.stream_failure_phase === "DELTA",
+  );
   let state = reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "block-start", index: 0, blockType: "text" });
   state = reduceRc7GateCStreamChunk(state, { type: "text-delta", index: 0, text: "x" });
-  assert.throws(() => reduceRc7GateCStreamChunk(state, { type: "block-end", index: 0, block: { type: "text", text: "y" } }), /does not match/u);
-  assert.throws(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "usage", usage: { inputTokens: 1, outputTokens: 8_193 } }), /ceiling/u);
+  assert.throws(() => reduceRc7GateCStreamChunk(state, { type: "block-end", index: 0, block: { type: "reasoning", text: "y" } }), /does not match/u);
+  const matrixUsage = reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "usage", usage: { inputTokens: 1, outputTokens: 8_193 } });
+  assert.equal(matrixUsage.usage.output_tokens, 8_193);
+  assert.throws(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), {
+    type: "usage", usage: { inputTokens: 1, outputTokens: RC7_GATE_C_MAX_OUTPUT_PLUS_REASONING_TOKENS + 1 },
+  }), /ceiling/u);
+  const proofUsage = reduceRc7GateCStreamChunk(createRc7GateCTreatmentProofStreamState(), { type: "usage", usage: { inputTokens: 1, outputTokens: 8_193 } });
+  assert.equal(proofUsage.usage.output_tokens, 8_193);
+  assert.equal(proofUsage.output_plus_reasoning_token_ceiling, RC7_GATE_C_TREATMENT_PROOF_MAX_OUTPUT_PLUS_REASONING_TOKENS);
+  assert.throws(() => reduceRc7GateCStreamChunk(createRc7GateCTreatmentProofStreamState(), {
+    type: "usage", usage: { inputTokens: 1, outputTokens: RC7_GATE_C_TREATMENT_PROOF_MAX_OUTPUT_PLUS_REASONING_TOKENS + 1 },
+  }), /ceiling/u);
   assert.throws(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "usage", usage: { inputTokens: 20_000, cacheReadTokens: 12_000, cacheWriteTokens: 769, outputTokens: 1 } }), /Input, cache-read, and cache-write/u);
-  assert.throws(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "usage", usage: { inputTokens: 1, outputTokens: 4_096, reasoningTokens: 4_097 } }), /Visible output plus separately reported reasoning/u);
+  assert.throws(() => reduceRc7GateCStreamChunk(createRc7GateCStreamState(), { type: "usage", usage: { inputTokens: 1, outputTokens: 64_000, reasoningTokens: 64_001 } }), /Visible output plus separately reported reasoning/u);
   const finished = validStream();
   assert.throws(() => reduceRc7GateCStreamChunk(finished, { type: "finish", reason: { kind: "stop" } }), /after finish/u);
   let maxed = createRc7GateCStreamState();
@@ -272,6 +382,64 @@ test("stream terminal closure retains only the closed kind and sanitized adapter
   assert.throws(() => reduceRc7GateCStreamChunk(state, { type: "finish", reason: { kind: "error", failure: { message: "raw", code: "RAW_PROVIDER_BODY" } } }), /closed sanitized/u);
   assert.throws(() => reduceRc7GateCStreamChunk(state, { type: "finish", reason: { kind: "aborted", failure: { message: "safe", code: "AUTH" } } }), /differ/u);
   assert.throws(() => reduceRc7GateCStreamChunk(state, { type: "finish", reason: { kind: "stop", failure: { message: "widened", code: "AUTH" } } }), /keys mismatched/u);
+});
+
+test("a numeric provider HTTP status safely refines INTEGRATION without retaining status or provider prose", () => {
+  const observations = { provider_posts: 1, refresh_posts: 0, provider_active_milliseconds: 25, automatic_retry_count: 0 };
+  const error = new Rc7GateCWorkerError("PROVIDER_TERMINAL_REJECTED", "closed", {
+    terminal_kind: "error",
+    provider_failure_code: "INTEGRATION",
+  });
+  for (const [status, expected] of [[400, "INVALID_REQUEST"], [401, "AUTH"], [403, "PERMISSION"], [408, "TIMEOUT"], [429, "RATE_LIMIT"], [503, "UNAVAILABLE"]]) {
+    assert.equal(liveCapsuleTest.classifyProviderHttpStatus(status), expected);
+    const retained = liveCapsuleTest.closedFailureResultFromValidatedPreflight(error, { value: { authority_profile: "exact-matrix-request-diagnostic" } }, observations, status);
+    assert.equal(retained.provider_failure_code, expected);
+    assert.equal(retained.integration_failure_phase, null);
+    assert.equal(Object.hasOwn(retained, "provider_http_status"), false);
+    assert.doesNotMatch(canonicalJsonV1(retained), /provider prose|request[_ -]?id/u);
+  }
+  const streamFailure = liveCapsuleTest.closedFailureResultFromValidatedPreflight(error, { value: { authority_profile: "exact-matrix-request-diagnostic" } }, observations, 200);
+  assert.equal(streamFailure.provider_failure_code, "INTEGRATION");
+  assert.equal(streamFailure.integration_failure_phase, "PROVIDER_POST_ADMITTED");
+  assert.equal(liveCapsuleTest.classifyProviderHttpStatus(null), null);
+});
+
+test("the real guarded-fetch path captures a synthetic status in-process and retains only its closed class", () => {
+  const workerUrl = new URL("../../lib/recursus/rc7-rlm-gate-c-worker.mjs", import.meta.url).href;
+  const capsuleUrl = new URL("../../lib/recursus/rc7-rlm-gate-c-live-capsule.mjs", import.meta.url).href;
+  const code = `
+    import { Rc7GateCWorkerError, buildRc7GateCSemanticRequest } from ${JSON.stringify(workerUrl)};
+    import { __test } from ${JSON.stringify(capsuleUrl)};
+    const semantic = buildRc7GateCSemanticRequest({ system_text: "system", user_text: "user", session_id: "a".repeat(64) });
+    Object.defineProperty(globalThis, "fetch", { configurable: true, writable: true, value: async () => new Response("discarded-provider-body", { status: 401 }) });
+    const guard = __test.installSingleUseFetchGuard(semantic);
+    const adapterBody = {
+      model: semantic.model,
+      store: false,
+      stream: true,
+      instructions: semantic.system_text,
+      input: [{ role: "user", content: [{ type: "input_text", text: semantic.user_text }] }],
+      text: { verbosity: "low" },
+      include: ["reasoning.encrypted_content"],
+      prompt_cache_key: semantic.session_id,
+      tool_choice: "auto",
+      parallel_tool_calls: true,
+      reasoning: { effort: semantic.reasoning_effort, summary: "auto" },
+    };
+    await globalThis.fetch("https://chatgpt.com/backend-api/codex/responses", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(adapterBody) });
+    const observations = { ...guard.snapshot(), provider_active_milliseconds: 1, automatic_retry_count: 0 };
+    const error = new Rc7GateCWorkerError("PROVIDER_TERMINAL_REJECTED", "closed", { terminal_kind: "error", provider_failure_code: "INTEGRATION" });
+    const retained = __test.closedFailureResultFromValidatedPreflight(error, { value: { authority_profile: "exact-matrix-request-diagnostic" } }, observations, guard.providerHttpStatus());
+    process.stdout.write(JSON.stringify({ internal_status: guard.providerHttpStatus(), retained }));
+  `;
+  const run = spawnSync(process.execPath, ["--input-type=module", "-e", code], { encoding: "utf8", windowsHide: true });
+  assert.equal(run.status, 0, run.stderr);
+  const value = JSON.parse(run.stdout);
+  assert.equal(value.internal_status, 401);
+  assert.equal(value.retained.provider_failure_code, "AUTH");
+  assert.equal(value.retained.integration_failure_phase, null);
+  assert.equal(Object.hasOwn(value.retained, "provider_http_status"), false);
+  assert.doesNotMatch(JSON.stringify(value.retained), /401|discarded-provider-body/u);
 });
 
 test("artifact seals and worker conformance packages are deterministic and provider-unreachable", async () => {
@@ -438,6 +606,10 @@ test("host handoff fake pipes bind canonical handoff, pre-credential ack, and ex
   assert.equal(accepted.ack.capsule_sha256, trust.capsule_sha256);
   assert.equal(accepted.ack.dispatch_sha256, handoff.broker_result.dispatch.dispatch_sha256);
   assert.equal(accepted.commit.state, "host-ack-validated-execute-once");
+  assert.equal(
+    liveCapsuleTest.createStreamStateForAcceptedBroker(accepted.handoff.broker).output_plus_reasoning_token_ceiling,
+    RC7_GATE_C_MAX_OUTPUT_PLUS_REASONING_TOKENS,
+  );
 
   let rejectedAck;
   await assert.rejects(liveCapsuleTest.acceptHostHandoffWithIo({

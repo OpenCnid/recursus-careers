@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
+import { link, lstat, mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { after, test } from "node:test";
 
@@ -29,10 +29,12 @@ import {
   validateRc7GateCOperatorApprovalRecord,
   validateRc7GateCRequestIntent,
 } from "../../lib/recursus/rc7-rlm-gate-c-broker.mjs";
+import { parseRc7GateCStructuredOutput } from "../../lib/recursus/rc7-rlm-gate-c-output-grammar.mjs";
 import { buildRc7GateCPreregistrationPackage } from "../../lib/recursus/rc7-rlm-gate-c-preregistration.mjs";
 import { buildRc7GateCSealedResult } from "../../lib/recursus/rc7-rlm-gate-c-worker.mjs";
 import {
   RC7_GATE_C_RLM_IMAGE_ID,
+  RC7_GATE_C_RLM_INHERITED_ENVIRONMENT,
   RC7_GATE_C_RLM_LIMITS,
   buildRc7GateCRlmCreateArguments,
   prepareRc7GateCRlmLauncher,
@@ -96,7 +98,7 @@ async function directPreflightFixture(root, resultsRoot, caseId = "LAB-01") {
   const request = await requestFor(caseId, "rc-direct");
   const permit = await __test.authorizeTestDispatch(root, request.intent);
   const dispatch = await __test.consumeTestReservation(root, { intent: request.intent, permit });
-  const freeze = await buildRc7GateCFinalApprovalFreeze(root, resultsRoot);
+  const freeze = await __test.buildTestOnlyFinalApprovalFreeze(root, resultsRoot);
   const sealedRequest = withDigest({
     schema_version: "rc7-gate-c-sealed-worker-request-v1",
     activation_sha256: freeze.future_activation_sha256,
@@ -162,12 +164,19 @@ test("broker independently constructs exact semantic bytes for top-level and chi
   assert.match(first.semantic_request.user_text, /closed canonical-JSON output contract/u);
   assert.match(first.semantic_request.user_text, /SOURCE-GROUNDED-CV-01/u);
   assert.doesNotMatch(first.semantic_request.user_text, /(?:leak_canary|expected_relationships|CLAIM-GROUNDED|LAB-R01)/u);
+  const topLines = first.semantic_request.user_text.split("\n");
+  const topMarker = topLines.findIndex((line) => line.startsWith("Valid source-grounded shape example"));
+  assert.notEqual(topMarker, -1);
+  assert.doesNotThrow(() => parseRc7GateCStructuredOutput(Buffer.from(`${topLines[topMarker + 1]}\n`, "utf8"), "FACT-01"));
 
   const child = await requestFor("LAB-01", "rc-rlm", "recursive-child", 1);
   validateRc7GateCRequestIntent(child.intent);
   assert.equal(child.intent.selected_route, "rc-rlm");
   assert.match(child.semantic_request.user_text, /LAB-SOURCE-OVERVIEW-01/u);
   assert.match(child.semantic_request.user_text, /bounded subset of evidence items|Closed output contract/u);
+  const childLine = child.semantic_request.user_text.split("\n").find((line) => line.startsWith("Valid source-grounded shape example"));
+  assert.ok(childLine);
+  assert.doesNotThrow(() => parseRc7GateCStructuredOutput(Buffer.from(`${childLine.slice(childLine.indexOf(": ") + 2)}\n`, "utf8"), "LAB-01"));
 });
 
 test("caller assertions, generic/direct/fifth children, external questions, and unregistered excerpts fail closed", async () => {
@@ -191,12 +200,12 @@ test("caller assertions, generic/direct/fifth children, external questions, and 
 test("public hashes and test-only records cannot self-approve provider dispatch", async () => {
   const request = await requestFor("LAB-01");
   const empty = await freshRoot("no-approval");
-  await expectCode(() => authorizeRc7GateCProviderDispatch(empty.root, request.intent), "MISSING_LEDGER_PATH");
+  await assert.rejects(() => authorizeRc7GateCProviderDispatch(empty.root, request.intent));
   const root = await testLedger("test-only-approval");
   await expectCode(() => authorizeRc7GateCProviderDispatch(root.root, request.intent), "NUMERIC_APPROVAL_REQUIRED");
   await expectCode(() => initializeRc7GateCDispatchLedger(root.root), "NUMERIC_APPROVAL_REQUIRED");
   const testApproval = await __test.buildTestOnlyOperatorApprovalRecord(root.root, root.resultsRoot);
-  await expectCode(() => validateRc7GateCOperatorApprovalRecord(testApproval, root.root), "NUMERIC_APPROVAL_REQUIRED");
+  await expectCode(() => validateRc7GateCOperatorApprovalRecord(testApproval, root.root), "MATRIX_PROOF_REQUIRED");
 });
 
 test("a copied approval record cannot initialize an alternate ledger root", async () => {
@@ -211,15 +220,18 @@ test("alternate and same-path-recreated results roots invalidate the exact appro
   const ledger = await freshRoot("results-bound-ledger");
   const results = await freshRoot("results-bound-original");
   const alternate = await freshRoot("results-bound-alternate");
-  const freeze = await buildRc7GateCFinalApprovalFreeze(ledger.root, results.root);
-  const alternateFreeze = await buildRc7GateCFinalApprovalFreeze(ledger.root, alternate.root);
+  const freeze = await __test.buildTestOnlyFinalApprovalFreeze(ledger.root, results.root);
+  const alternateFreeze = await __test.buildTestOnlyFinalApprovalFreeze(ledger.root, alternate.root);
   assert.notEqual(freeze.final_freeze_sha256, alternateFreeze.final_freeze_sha256);
   await expectCode(() => recordRc7GateCOperatorApproval(ledger.root, {
     exact_approval_text: freeze.exact_approval_text,
     final_freeze_sha256: freeze.final_freeze_sha256,
     future_activation_sha256: freeze.future_activation_sha256,
     results_root: alternate.root,
-  }), "NUMERIC_APPROVAL_REQUIRED");
+    proof_ledger_root: ledger.root,
+    proof_results_root: results.root,
+    proof_rlm_root: alternate.root,
+  }), "MATRIX_PROOF_REQUIRED");
   assert.deepEqual(await readdir(ledger.root), []);
 
   const approval = await __test.buildTestOnlyOperatorApprovalRecord(ledger.root, results.root);
@@ -251,7 +263,7 @@ test("same-path ledger recreation and alternate-root approval replay cannot reus
 test("final approval freeze is deterministic, digest-bound, and still grants no activation", async () => {
   const ledger = await freshRoot("freeze-ledger");
   const results = await freshRoot("freeze-results");
-  const freeze = await buildRc7GateCFinalApprovalFreeze(ledger.root, results.root);
+  const freeze = await __test.buildTestOnlyFinalApprovalFreeze(ledger.root, results.root);
   assert.equal(freeze.state, "provider-free-frozen-awaiting-explicit-user-approval");
   assert.equal(freeze.terminal_decision, "AWAITING_EXACT_DIGEST_BOUND_NUMERIC_APPROVAL");
   assert.match(freeze.exact_approval_text, new RegExp(freeze.closure_sha256, "u"));
@@ -260,13 +272,18 @@ test("final approval freeze is deterministic, digest-bound, and still grants no 
   assert.equal(freeze.closure.approved_oauth_refresh_https_post_ceiling, 72);
   assert.equal(freeze.closure.approved_total_https_post_ceiling, 144);
   assert.equal(freeze.closure.approved_input_utf8_bytes_per_request, 32_768);
-  assert.equal(freeze.closure.approved_provider_active_timeout_seconds_per_request, 120);
-  assert.equal(freeze.closure.approved_maximum_sequential_provider_active_seconds, 8_640);
-  assert.equal(freeze.closure.approved_output_plus_reasoning_token_ceiling, 589_824);
-  assert.match(freeze.exact_approval_text, /36 top-level generation reservations.*36 recursive child.*72 maximum generation HTTPS POSTs.*72 OAuth refresh.*144 maximum total HTTPS POSTs.*120 provider-active seconds per request.*8,640 maximum sequential/u);
+  assert.equal(freeze.closure.approved_provider_active_timeout_seconds_per_request, 300);
+  assert.equal(freeze.closure.approved_maximum_sequential_provider_active_seconds, 15_120);
+  assert.equal(freeze.closure.approved_output_plus_reasoning_acceptance_tokens_per_request, 128_000);
+  assert.equal(freeze.closure.approved_output_plus_reasoning_acceptance_token_ceiling, 9_216_000);
+  assert.equal(freeze.closure.approved_output_plus_reasoning_tokens_per_request, 128_000);
+  assert.equal(freeze.closure.approved_output_plus_reasoning_token_ceiling, 9_216_000);
+  assert.equal(freeze.closure.approved_credit_ceiling, 4_843.93);
+  assert.equal(freeze.closure.approved_provider_equivalent_usd_ceiling, 193.76);
+  assert.match(freeze.exact_approval_text, /36-attempt matrix.*36 top-level and 36 recursive-child reservations.*72 generation HTTPS POSTs.*72 OAuth-refresh HTTPS POSTs.*144 total HTTPS POSTs.*300 provider-active seconds per top-level request.*120 seconds per recursive child.*15,120 sequential provider-active seconds/u);
   assert.equal(freeze.closure.execution_closure.operational_timeouts_ms.host_ack, 30_000);
-  assert.equal(freeze.closure.execution_closure.operational_timeouts_ms.host_process, 165_000);
-  assert.equal(freeze.closure.supersession_lineage.schema_version, "rc7-gate-c-supersession-lineage-v4");
+  assert.equal(freeze.closure.execution_closure.operational_timeouts_ms.host_process, 345_000);
+  assert.equal(freeze.closure.supersession_lineage.schema_version, "rc7-gate-c-supersession-lineage-v12");
   assert.equal(freeze.closure.supersession_lineage.superseded_activations.length, 3);
   assert.equal(freeze.closure.supersession_lineage.prior_smoke_attempts.length, 5);
   assert.equal(freeze.closure.supersession_lineage.superseded_activations[0].activation.activation_sha256, "8ac19650d78b7be57e77b454e396d26344e1af7080b155457e077fca4d5f4633");
@@ -290,42 +307,99 @@ test("final approval freeze is deterministic, digest-bound, and still grants no 
   assert.equal(freeze.closure.supersession_lineage.provider_path_diagnostic.retained_result.sha256, "8e589a2b37e4772c5414e9fe1653b180c594af176d2a8abbbe772c13a984910e");
   assert.equal(freeze.closure.supersession_lineage.provider_path_diagnostic.live_execution.generation_https_posts, 1);
   assert.equal(freeze.closure.supersession_lineage.provider_path_diagnostic.live_execution.oauth_refresh_https_posts, 0);
+  assert.equal(freeze.closure.supersession_lineage.abandoned_partial_matrix_v18.activation_sha256, "735091b636f0a3668854d0d59bec50b660ca044df746023d81f8315eb4eab5ce");
+  assert.equal(freeze.closure.supersession_lineage.abandoned_partial_matrix_v18.retained_shape.attempts, 7);
+  assert.equal(freeze.closure.supersession_lineage.abandoned_partial_matrix_v18.conservative_consumed_accounting.generation_https_posts, 7);
+  assert.equal(freeze.closure.supersession_lineage.abandoned_partial_matrix_v18.retained_tree_evidence.ledger.tree_sha256, "d7bab1448423cd00d8195a2f47fe6769dcf978be57d829656462c27e11227eac");
+  assert.equal(freeze.closure.supersession_lineage.abandoned_partial_matrix_v18.retained_tree_evidence.results.tree_sha256, "97a8c917fbaa44c71496298e62a7e1bbc119414cce75e9f0d1b0a986d58ec282");
+  assert.equal(freeze.closure.supersession_lineage.abandoned_partial_matrix_v19.activation_sha256, "0924cac12dc57913fc7b12144dc7c693e3c02a80ac1d8b40fd748be6b9ff36fd");
+  assert.equal(freeze.closure.supersession_lineage.abandoned_partial_matrix_v19.retained_shape.attempts, 11);
+  assert.equal(freeze.closure.supersession_lineage.abandoned_partial_matrix_v19.retained_shape.broker_terminals, 23);
+  assert.equal(freeze.closure.supersession_lineage.abandoned_partial_matrix_v19.retained_rlm_roots.length, 4);
+  assert.equal(freeze.closure.supersession_lineage.abandoned_partial_matrix_v19.retained_ledger_accounting_sha256, "4218f1863b6b78f21b21bf4ef7f72e1adccd5812a2e6475a3e88d5100b5020a1");
   assert.deepEqual(freeze.closure.supersession_lineage.cumulative_authority_ceiling, {
-    generation_https_posts: 81,
-    oauth_refresh_https_posts: 80,
-    total_https_posts: 161,
-    input_tokens: 2_621_513,
-    output_plus_reasoning_tokens: 655_616,
-    provider_active_seconds: 9_720,
-    planning_credits: 597.22,
-    api_equivalent_planning_usd: 23.91,
+    generation_https_posts: 384,
+    oauth_refresh_https_posts: 383,
+    total_https_posts: 767,
+    input_tokens: 12_550_217,
+    hard_output_plus_reasoning_tokens: 39_200_000,
+    provider_active_seconds: 69_300,
+    planning_credits: 20_862.42,
+    api_equivalent_planning_usd: 834.69,
     additional_credit_purchases: 0,
     incremental_cash_purchases: 0,
   });
-  assert.match(freeze.exact_approval_text, /supersession record .*prior matrix activations .*prior smoke activations .*direct provider-path diagnostic result .*81 generation HTTPS POSTs.*80 OAuth refresh HTTPS POSTs.*161 total HTTPS POSTs.*2,621,513 input tokens.*655,616 output-plus-reasoning tokens.*9,720 provider-active seconds.*597\.22 planning credits.*USD 23\.91/u);
+  assert.match(freeze.exact_approval_text, /128,000 output-plus-reasoning post-response acceptance ceiling per request.*9,216,000 accepted total.*same 128,000 hard provider-authority ceiling per request.*9,216,000 hard-authority total/u);
+  assert.match(freeze.exact_approval_text, /384 generation POSTs.*383 OAuth-refresh POSTs.*767 total POSTs.*12,550,217 input tokens.*39,200,000 hard output-plus-reasoning tokens.*69,300 provider-active seconds.*20,862\.42 planning credits.*USD 834\.69/u);
+  assert.throws(() => __test.assertFreshRootsAgainstAbandonedPartialMatrix(
+    freeze.closure.supersession_lineage.abandoned_partial_matrix_v18.ledger_root_identity,
+    freeze.closure.results_root_identity,
+    freeze.closure.supersession_lineage,
+  ), (error) => error instanceof Rc7GateCBrokerError && error.code === "SUPERSEDED_ROOT_REUSE");
   assert.equal(freeze.operator_approval_record_contract.governance_nonclaim, "same-host durable approval is governance evidence, not cryptographic proof of human authorship or intent");
   assert.equal(freeze.accounting.provider_calls, 0);
 
-  const first = await freshRoot("freeze-first");
-  const second = await freshRoot("freeze-second");
-  const left = await prepareRc7GateCFinalApprovalFreeze(first.root, ledger.root, results.root);
-  const right = await prepareRc7GateCFinalApprovalFreeze(second.root, ledger.root, results.root);
-  assert.equal(left.final_freeze_sha256, right.final_freeze_sha256);
-  assert.equal(left.future_activation_sha256, right.future_activation_sha256);
-  assert.deepEqual(await readFile(left.package_path), await readFile(right.package_path));
-  assert.deepEqual((await inspectRc7GateCFinalApprovalFreeze(first.root, ledger.root, results.root)).entries, [RC7_GATE_C_FINAL_FREEZE_PACKAGE_NAME]);
+  const duplicate = await __test.buildTestOnlyFinalApprovalFreeze(ledger.root, results.root);
+  assert.equal(freeze.final_freeze_sha256, duplicate.final_freeze_sha256);
+  assert.equal(freeze.future_activation_sha256, duplicate.future_activation_sha256);
+  const tamperedProof = structuredClone(freeze.closure.successful_treatment_proof);
+  tamperedProof.actual_accounting.generation_https_posts = 1;
+  assert.throws(() => __test.validateSuccessfulTreatmentProofPrerequisite(tamperedProof, true), (error) => error.code === "MATRIX_PROOF_REQUIRED");
+  const missingProof = await freshRoot("missing-proof");
+  await expectCode(() => prepareRc7GateCFinalApprovalFreeze(
+    missingProof.root, ledger.root, results.root, missingProof.parent, missingProof.parent, missingProof.parent,
+  ), "OVERLAPPING_OUTPUT_ROOT");
 });
 
-test("operator approval recording rejects any text or digest mismatch without leaving authority", async () => {
+test("historical physical-tree evidence fails closed on tamper, recreation, missing roots, and nested reuse", async () => {
+  const retained = await freshRoot("historical-ledger");
+  await mkdir(path.join(retained.root, "lane"));
+  await writeFile(path.join(retained.root, "lane", "record.json"), "{\"state\":\"retained\"}\n");
+  const identity = await __test.ledgerRootIdentity(retained.root, false);
+  const tree = await __test.retainedPhysicalTreeEvidence(retained.root);
+  await __test.assertRetainedHistoricalRoot(retained.root, identity, tree, "ledger");
+
+  await writeFile(path.join(retained.root, "lane", "record.json"), "{\"state\":\"tampered\"}\n");
+  await expectCode(() => __test.assertRetainedHistoricalRoot(retained.root, identity, tree, "ledger"), "SUPERSEDED_EVIDENCE_MISMATCH");
+
+  const moved = `${retained.root}-preserved`;
+  await rename(retained.root, moved);
+  await mkdir(retained.root);
+  await expectCode(() => __test.assertRetainedHistoricalRoot(retained.root, identity, tree, "ledger"), "SUPERSEDED_EVIDENCE_MISMATCH");
+  await rm(retained.root, { recursive: true });
+  await expectCode(() => __test.assertRetainedHistoricalRoot(retained.root, identity, tree, "ledger"), "MISSING_OUTPUT_ROOT");
+
+  const lineage = __test.gateCRepairSupersessionLineage();
+  const nested = structuredClone(lineage.abandoned_partial_matrix_v18.ledger_root_identity);
+  nested.normalized_physical_root = path.join(nested.normalized_physical_root, "docker-cli-config");
+  const freshResults = structuredClone(lineage.abandoned_partial_matrix_v18.results_root_identity);
+  freshResults.normalized_physical_root = path.join(retained.parent, "fresh-results");
+  freshResults.device_id = "1";
+  freshResults.file_id = "2";
+  freshResults.birthtime_ns = "3";
+  assert.throws(() => __test.assertFreshRootsAgainstAbandonedPartialMatrix(
+    nested,
+    freshResults,
+    lineage,
+  ), (error) => error instanceof Rc7GateCBrokerError && error.code === "SUPERSEDED_ROOT_REUSE");
+});
+
+test("operator approval recording requires the exact successful proof and leaves no authority on mismatch", async () => {
   const target = await freshRoot("operator-approval-mismatch");
   const results = await freshRoot("operator-approval-results");
-  const freeze = await buildRc7GateCFinalApprovalFreeze(target.root, results.root);
+  const freeze = await __test.buildTestOnlyFinalApprovalFreeze(target.root, results.root);
+  const proofLedger = await freshRoot("operator-proof-ledger");
+  const proofResults = await freshRoot("operator-proof-results");
+  const proofRlm = await freshRoot("operator-proof-rlm");
   await expectCode(() => recordRc7GateCOperatorApproval(target.root, {
     exact_approval_text: `${freeze.exact_approval_text} changed`,
     final_freeze_sha256: freeze.final_freeze_sha256,
     future_activation_sha256: freeze.future_activation_sha256,
     results_root: results.root,
-  }), "NUMERIC_APPROVAL_REQUIRED");
+    proof_ledger_root: proofLedger.root,
+    proof_results_root: proofResults.root,
+    proof_rlm_root: proofRlm.root,
+  }), "MATRIX_PROOF_REQUIRED");
   assert.deepEqual(await readdir(target.root), []);
 });
 
@@ -360,6 +434,107 @@ test("provider preflight durably consumes one handoff before reachability and de
   assert.equal(first.durable_handoff.handoff_nonce, fixture.input.handoff_nonce);
   assert.deepEqual(await readdir(path.join(root.root, __test.HANDOFFS_DIR)), [`${fixture.dispatch.reservation_key}.json`]);
   await expectCode(() => __test.preflightTestLiveDispatch(fixture.input), "DURABLE_HANDOFF_REPLAY");
+  await __test.recoverTestLedger(root.root);
+  const accounting = await __test.extractTestLedgerAccounting(root.root);
+  assert.equal(accounting.schema_version, "rc7-gate-c-ledger-accounting-v6");
+  assert.equal(accounting.entries.length, 1);
+  assert.equal(accounting.entries[0].accounting_basis, "conservative-upper-bound-after-indeterminate-handoff");
+  assert.equal(accounting.entries[0].accepted_output_plus_reasoning_tokens, 0);
+  assert.equal(accounting.entries[0].hard_output_plus_reasoning_token_accounting, 128_000);
+});
+
+test("host-launch lock recovery rejects live, malformed, and multiply-linked owners then removes one exact dead owner without replay", async () => {
+  const root = await testLedger("host-lock-recovery");
+  const fixture = await directPreflightFixture(root.root, root.resultsRoot);
+  const first = await __test.preflightTestLiveDispatch(fixture.input);
+  const target = path.join(root.root, __test.HOST_LAUNCH_LOCK);
+  const base = {
+    schema_version: "rc7-gate-c-host-launch-lock-v2",
+    state: "handoff-written-awaiting-ack",
+    normalized_ledger_root: root.root.toLowerCase(),
+    activation_sha256: first.expected_closure.activation_sha256,
+    run_id: fixture.input.sealed_request.intent.run_id,
+    dispatch_sha256: fixture.dispatch.dispatch_sha256,
+    durable_handoff_sha256: first.durable_handoff.durable_handoff_sha256,
+    handoff_sha256: "e".repeat(64),
+    nonce: first.durable_handoff.handoff_nonce,
+    parent_pid: process.pid,
+    child_pid: 99_999_999,
+  };
+  const writeLock = async (value) => writeFile(target, Buffer.from(`${canonicalJsonV1(withDigest(value, "host_lock_sha256"))}\n`, "utf8"));
+  await writeLock(base);
+  await expectCode(() => __test.recoverTestHostLaunchLock(root.root, base.run_id), "HOST_LAUNCH_CONCURRENT");
+
+  await writeFile(target, Buffer.from(`${canonicalJsonV1({ ...withDigest({ ...base, parent_pid: 99_999_999 }, "host_lock_sha256"), host_lock_sha256: "0".repeat(64) })}\n`, "utf8"));
+  await expectCode(() => __test.recoverTestHostLaunchLock(root.root, base.run_id), "HOST_LOCK_IDENTITY_MISMATCH");
+
+  await writeLock({ ...base, parent_pid: 99_999_999 });
+  const alias = path.join(root.parent, "host-lock-hardlink");
+  await link(target, alias);
+  await expectCode(() => __test.recoverTestHostLaunchLock(root.root, base.run_id), "HOST_LOCK_IDENTITY_MISMATCH");
+  await rm(alias);
+
+  const beforeWrongRunLock = await readFile(target);
+  const beforeWrongRunActive = await readFile(path.join(root.root, __test.ACTIVE_DISPATCH));
+  const otherRun = (await row("FACT-01", "rc-direct", 1)).run_id;
+  await expectCode(() => __test.recoverTestHostLaunchLock(root.root, otherRun), "RUN_IDENTITY_MISMATCH");
+  assert.deepEqual(await readFile(target), beforeWrongRunLock);
+  assert.deepEqual(await readFile(path.join(root.root, __test.ACTIVE_DISPATCH)), beforeWrongRunActive);
+
+  const recovered = await __test.recoverTestHostLaunchLock(root.root, base.run_id);
+  assert.equal(recovered.classification, "dead-host-launch-lock-removed-before-no-replay-settlement");
+  assert.equal(recovered.lifecycle_state, "handoff-written-awaiting-ack");
+  assert.equal(recovered.request_kind, "top-level");
+  assert.equal(recovered.child_sequence, 0);
+  assert.equal(recovered.provider_authority_permitted, false);
+  assert.deepEqual(await __test.recoverTestHostLaunchLock(root.root, base.run_id), {
+    root: root.root, classification: "no-host-launch-lock", changed: false, provider_authority_permitted: false,
+  });
+  await __test.recoverTestLedger(root.root);
+  assert.deepEqual((await __test.inspectTestLedger(root.root)).counts, { reservations: 1, terminals: 1, active_dispatches: 0, unterminated: 0 });
+});
+
+test("RLM-root qualification rejects exact historical reuse, nesting, aliasing, recreation, and physical identity reuse", async () => {
+  const root = await testLedger("rlm-root-lineage");
+  const treatment = await row("LAB-01", "rc-rlm", 1);
+  const lineage = __test.gateCRepairSupersessionLineage();
+  const historical = lineage.abandoned_partial_matrix_v19.retained_rlm_roots.find((item) => item.ordinal === 11).root_identity;
+  await expectCode(
+    () => __test.identifyTestRlmRootForAttempt(root.root, root.resultsRoot, treatment.run_id, historical.normalized_physical_root, true),
+    "SUPERSEDED_ROOT_REUSE",
+  );
+
+  const native = await freshRoot("fresh-rlm-native");
+  const accepted = await __test.identifyTestRlmRootForAttempt(root.root, root.resultsRoot, treatment.run_id, native.root, true);
+  assert.equal(accepted.normalized_physical_root, native.root.toLowerCase());
+  assert.deepEqual(await readdir(native.root), []);
+
+  const alias = path.join(native.parent, "fresh-rlm-alias");
+  await symlink(native.root, alias, "junction");
+  await expectCode(
+    () => __test.identifyTestRlmRootForAttempt(root.root, root.resultsRoot, treatment.run_id, alias, true),
+    "ALIASED_OUTPUT_ROOT",
+  );
+
+  const nested = path.join(native.root, "nested");
+  await mkdir(nested);
+  const nestedIdentity = await __test.rlmHistoricalRootIdentity(nested, true);
+  const parentPrior = { ...structuredClone(nestedIdentity), normalized_physical_root: native.root.toLowerCase(), file_id: "1", birthtime_ns: "1" };
+  assert.throws(
+    () => __test.assertFreshRlmRootIdentity(nestedIdentity, { ledger_root_identity: parentPrior, results_root_identity: null, successful_treatment_proof: null, supersession_lineage: null }),
+    (error) => error instanceof Rc7GateCBrokerError && error.code === "SUPERSEDED_ROOT_REUSE",
+  );
+
+  const recreatedPrior = { ...structuredClone(accepted), file_id: "2", birthtime_ns: "2" };
+  assert.throws(
+    () => __test.assertFreshRlmRootIdentity(accepted, { ledger_root_identity: recreatedPrior, results_root_identity: null, successful_treatment_proof: null, supersession_lineage: null }),
+    (error) => error instanceof Rc7GateCBrokerError && error.code === "SUPERSEDED_ROOT_REUSE",
+  );
+  const physicalAliasPrior = { ...structuredClone(accepted), normalized_physical_root: path.join(native.parent, "different-name").toLowerCase() };
+  assert.throws(
+    () => __test.assertFreshRlmRootIdentity(accepted, { ledger_root_identity: physicalAliasPrior, results_root_identity: null, successful_treatment_proof: null, supersession_lineage: null }),
+    (error) => error instanceof Rc7GateCBrokerError && error.code === "SUPERSEDED_ROOT_REUSE",
+  );
 });
 
 test("all 72 registered reservations fit exactly and a seventy-third is denied before reachability", async () => {
@@ -522,7 +697,7 @@ test("Gate B RLM evidence is derived from an exact synthetic Docker inspection w
     semantic_request_sha256: expected.semantic_request_sha256, semantic_request: expected.semantic_request,
   };
   const create = buildRc7GateCRlmCreateArguments(context);
-  const environment = [];
+  const environment = Object.entries(RC7_GATE_C_RLM_INHERITED_ENVIRONMENT).map(([name, value]) => `${name}=${value}`);
   for (let index = 0; index < create.args.length; index += 1) if (create.args[index] === "--env") environment.push(create.args[index + 1]);
   const inspection = [{
     Id: expected.container_id,
@@ -534,7 +709,7 @@ test("Gate B RLM evidence is derived from an exact synthetic Docker inspection w
       CapAdd: [], CapDrop: ["ALL"], SecurityOpt: ["no-new-privileges:true", seccomp], PidsLimit: 64,
       Memory: 805_306_368, MemorySwap: 805_306_368, NanoCpus: 1_000_000_000,
       Ulimits: [{ Name: "fsize", Soft: 1_048_576, Hard: 1_048_576 }, { Name: "nofile", Soft: 128, Hard: 128 }],
-      Init: true, LogConfig: { Type: "none", Config: {} }, Runtime: "runc", RestartPolicy: { Name: "", MaximumRetryCount: 0 },
+      Init: true, LogConfig: { Type: "none", Config: {} }, Runtime: "runc", RestartPolicy: { Name: "no", MaximumRetryCount: 0 },
       Binds: null, Devices: [], DeviceRequests: [], Links: null, VolumesFrom: null, PortBindings: {},
       Tmpfs: {
         "/rc7/state": `rw,nosuid,nodev,size=${RC7_GATE_C_RLM_LIMITS.state_bytes},nr_inodes=${RC7_GATE_C_RLM_LIMITS.state_inodes},uid=65532,gid=65532,mode=0700`,

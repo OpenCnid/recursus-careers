@@ -48,7 +48,7 @@ async function scoreCase(caseId, rawOutput, observation = OBSERVATION, arm = "rc
 }
 
 function bytes(value) {
-  return Buffer.from(`${canonicalJsonV1(value)}\n`, "utf8");
+  return Buffer.from(canonicalJsonV1(value), "utf8");
 }
 
 async function perfectOutput(caseId) {
@@ -77,6 +77,68 @@ function emptyOutput(caseId, completion = "complete") {
   };
 }
 
+function routeVisibleShapeOutput() {
+  const pointer = { kind: "json_pointer", pointer: "/sources/0/records/0", source_id: "VISIBLE-JSON-01" };
+  const line = { end_line: 1, excerpt_sha256: "0".repeat(64), kind: "line_range_sha256", source_id: "VISIBLE-LINES-01", start_line: 1 };
+  const sortedLocators = (...values) => [...new Map(values.map((value) => [canonicalJsonV1(value), structuredClone(value)])).values()]
+    .sort((left, right) => canonicalJsonV1(left).localeCompare(canonicalJsonV1(right)));
+  const calculation = (localId, operation, operands, resultDecimal) => ({
+    calculation: {
+      operation,
+      operands: operands.map(({ decimal, locator }) => ({ decimal, locator: structuredClone(locator) })),
+      result_decimal: resultDecimal,
+    },
+    classification: "analyst_derived",
+    disposition: "asserted",
+    item_type: "calculation",
+    local_id: localId,
+    locators: sortedLocators(...operands.map((operand) => operand.locator)),
+    scalar: { canonical_decimal: resultDecimal, kind: resultDecimal.includes(".") ? "decimal" : "integer" },
+  });
+  return {
+    case_id: "LAB-01",
+    completion: "complete",
+    evidence_items: [
+      {
+        calculation: null,
+        classification: "source_supported_synthesis",
+        disposition: "asserted",
+        item_type: "research_relationship",
+        local_id: "I001",
+        locators: [structuredClone(pointer)],
+        scalar: null,
+      },
+      {
+        calculation: null,
+        classification: "source_stated",
+        disposition: "uncertain",
+        item_type: "source_statement",
+        local_id: "I002",
+        locators: [structuredClone(line)],
+        scalar: { canonical_decimal: "12.5", kind: "percentage" },
+      },
+      {
+        calculation: null,
+        classification: "candidate_primary",
+        disposition: "rejected",
+        item_type: "candidate_claim",
+        local_id: "I003",
+        locators: [structuredClone(pointer)],
+        scalar: { canonical_decimal: "7", kind: "integer" },
+      },
+      calculation("I004", "subtract", [{ decimal: "10", locator: pointer }, { decimal: "3", locator: line }], "7"),
+      calculation("I005", "divide", [{ decimal: "10", locator: pointer }, { decimal: "4", locator: line }], "2.5"),
+      calculation("I006", "mean_pairwise_difference", [
+        { decimal: "10", locator: pointer }, { decimal: "8", locator: line },
+        { decimal: "5", locator: pointer }, { decimal: "2", locator: line },
+      ], "2.5"),
+    ],
+    gaps: [{ code: "not_measured", locators: [] }],
+    safety_events: [{ code: "untrusted_instruction_ignored", locators: [structuredClone(pointer)] }],
+    schema_version: RC7_GATE_C_OUTPUT_SCHEMA,
+  };
+}
+
 test("closed route-visible grammar is exact and contains no evaluator signatures", async () => {
   const contract = await buildRc7GateCScorerContract();
   assert.equal(contract.identity, RC7_GATE_C_SCORER_ID);
@@ -84,7 +146,72 @@ test("closed route-visible grammar is exact and contains no evaluator signatures
   assert.equal(contract.evaluator_overlay.visibility, "evaluator_only");
   assert.equal(contract.route_output_contract_sha256, sha256V1(canonicalJsonV1(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT)));
   assert.equal(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT.maximum_utf8_bytes, RC7_GATE_C_MAX_OUTPUT_BYTES);
+  assert.deepEqual(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT.evidence_item.locators.variants.map((item) => item.kind), ["json_pointer", "line_range_sha256"]);
+  assert.deepEqual(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT.evidence_item.scalar.exact_keys_when_non_null, ["canonical_decimal", "kind"]);
+  assert.deepEqual(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT.evidence_item.calculation.exact_keys_when_non_null, ["operation", "operands", "result_decimal"]);
+  assert.deepEqual(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT.evidence_item.calculation.operand.exact_keys, ["decimal", "locator"]);
+  assert.equal(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT.evidence_item.calculation.result_decimal.maximum_fractional_digits, 10);
+  assert.match(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT.evidence_item.calculation.result_decimal.rounding, /remainder is at least one half/u);
+  assert.equal(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT.evidence_item.cross_field_rules.length, 3);
+  assert.match(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT.evidence_item.cross_field_rules.at(-1), /local_id must be unique/u);
   assert.doesNotMatch(canonicalJsonV1(RC7_GATE_C_STRUCTURED_OUTPUT_CONTRACT), /(?:LAB-R0|PAPER-R0|REPO-R0|CLAIM-GROUNDED|CLAIM-CONFLICT|expected_items|leak_canary|semantic-signatures-v1)/u);
+});
+
+test("route-visible contract declares and the parser accepts every nested evidence shape", () => {
+  const output = routeVisibleShapeOutput();
+  const parsed = parseRc7GateCStructuredOutput(bytes(output), "LAB-01");
+  assert.deepEqual(parsed.value, output);
+  assert.equal(parsed.normalized_sha256, sha256V1(bytes(output)));
+
+  const upperBoundary = routeVisibleShapeOutput();
+  upperBoundary.evidence_items.at(-1).local_id = "I999";
+  assert.deepEqual(parseRc7GateCStructuredOutput(bytes(upperBoundary), "LAB-01").value, upperBoundary);
+});
+
+test("evidence-item failures retain only one closed actionable subphase", () => {
+  const assertPhase = (mutate, code) => {
+    const output = routeVisibleShapeOutput();
+    mutate(output);
+    assert.throws(() => parseRc7GateCStructuredOutput(bytes(output), "LAB-01"), (error) => error.code === code);
+  };
+  assertPhase((output) => { output.evidence_items[0].unexpected = null; }, "MALFORMED_OUTPUT_EVIDENCE_ITEM_KEYS");
+  assertPhase((output) => { output.evidence_items[0].local_id = "I000"; }, "MALFORMED_OUTPUT_EVIDENCE_ITEM_LOCAL_ID");
+  assertPhase((output) => { output.evidence_items[0].local_id = "BAD"; }, "MALFORMED_OUTPUT_EVIDENCE_ITEM_LOCAL_ID");
+  assertPhase((output) => { output.evidence_items[0].classification = "unknown"; }, "MALFORMED_OUTPUT_EVIDENCE_ITEM_CLOSED_VALUE");
+  assertPhase((output) => { output.evidence_items[0].locators[0].pointer = "/bad"; }, "MALFORMED_OUTPUT_EVIDENCE_ITEM_LOCATOR");
+  assertPhase((output) => { output.evidence_items[1].scalar.canonical_decimal = "01"; }, "MALFORMED_OUTPUT_EVIDENCE_ITEM_SCALAR");
+  assertPhase((output) => { output.evidence_items[3].calculation.operation = "unknown"; }, "MALFORMED_OUTPUT_EVIDENCE_ITEM_CALCULATION");
+  assertPhase((output) => { output.evidence_items[3].item_type = "source_statement"; }, "MALFORMED_OUTPUT_EVIDENCE_ITEM_CROSS_FIELD");
+  assertPhase((output) => { output.evidence_items[1].local_id = output.evidence_items[0].local_id; }, "MALFORMED_OUTPUT_EVIDENCE_ITEM_DUPLICATE_LOCAL_ID");
+});
+
+test("route-visible arithmetic contract matches recurring, tie, sign, and trailing-zero normalization", () => {
+  const output = routeVisibleShapeOutput();
+  const template = output.evidence_items.find((item) => item.item_type === "calculation");
+  const calculation = (localId, left, right, resultDecimal) => {
+    const item = structuredClone(template);
+    item.local_id = localId;
+    item.calculation.operation = "divide";
+    item.calculation.operands = [
+      { decimal: left, locator: structuredClone(item.locators[0]) },
+      { decimal: right, locator: structuredClone(item.locators[1]) },
+    ];
+    item.calculation.result_decimal = resultDecimal;
+    item.scalar = { canonical_decimal: resultDecimal, kind: resultDecimal.includes(".") ? "decimal" : "integer" };
+    return item;
+  };
+  output.evidence_items.push(
+    calculation("I007", "1", "3", "0.3333333333"),
+    calculation("I008", "2", "3", "0.6666666667"),
+    calculation("I009", "1", "20000000000", "0.0000000001"),
+    calculation("I010", "-1", "20000000000", "-0.0000000001"),
+    calculation("I011", "1", "8", "0.125"),
+    calculation("I012", "1", "30000000000", "0"),
+  );
+  assert.deepEqual(parseRc7GateCStructuredOutput(bytes(output), "LAB-01").value, output);
+  const wrongRecurring = structuredClone(output);
+  wrongRecurring.evidence_items.find((item) => item.local_id === "I007").calculation.result_decimal = "0.3333333334";
+  assert.throws(() => parseRc7GateCStructuredOutput(bytes(wrongRecurring), "LAB-01"), (error) => error.code === "CALCULATION_MISMATCH");
 });
 
 test("all six frozen cases have exact deterministic perfect-score signatures", async () => {
@@ -117,10 +244,35 @@ test("eligible coverage is exact and unknown signatures receive no credit", asyn
   assert.equal(withUnknown.target_fact_precision, 11 / 12);
 });
 
-test("noncanonical, mismatched, malformed-calculation, duplicate, unresolved, and oversized outputs score zero", async () => {
+test("JSON transport normalization accepts harmless framing but rejects prose, duplicate keys, and semantic faults", async () => {
   const perfect = await perfectOutput("PAPER-01");
-  const noncanonical = Buffer.from(`${JSON.stringify(perfect, null, 2)}\n`, "utf8");
-  assert.throws(() => parseRc7GateCStructuredOutput(noncanonical, "PAPER-01"), /canonical JSON/u);
+  const pretty = Buffer.from(`${JSON.stringify(perfect, null, 2)}\r\n`, "utf8");
+  const normalized = parseRc7GateCStructuredOutput(pretty, "PAPER-01");
+  assert.deepEqual(normalized.normalized_bytes, bytes(perfect));
+  assert.equal(normalized.normalized_sha256, sha256V1(bytes(perfect)));
+  assert.deepEqual(parseRc7GateCStructuredOutput(Buffer.from(JSON.stringify(perfect), "utf8"), "PAPER-01").normalized_bytes, bytes(perfect));
+  assert.throws(
+    () => parseRc7GateCStructuredOutput(Buffer.from(`\`\`\`json\n${JSON.stringify(perfect)}\n\`\`\``, "utf8"), "PAPER-01"),
+    (error) => error.code === "MALFORMED_OUTPUT_JSON",
+  );
+  const duplicateKey = JSON.stringify(perfect).replace('"case_id":"PAPER-01"', '"case_id":"PAPER-01","case_id":"PAPER-01"');
+  assert.throws(() => parseRc7GateCStructuredOutput(Buffer.from(duplicateKey, "utf8"), "PAPER-01"), /member names must be unique/u);
+  const escapedDuplicateKey = JSON.stringify(perfect).replace('"case_id":"PAPER-01"', '"case_id":"PAPER-01","case\\u005fid":"PAPER-01"');
+  assert.throws(() => parseRc7GateCStructuredOutput(Buffer.from(escapedDuplicateKey, "utf8"), "PAPER-01"), /member names must be unique/u);
+  const nested = structuredClone(perfect);
+  nested.gaps = [{ code: "insufficient_evidence", locators: [] }];
+  const nestedEscapedDuplicate = JSON.stringify(nested).replace('"code":"insufficient_evidence"', '"code":"insufficient_evidence","\\u0063ode":"insufficient_evidence"');
+  assert.throws(() => parseRc7GateCStructuredOutput(Buffer.from(nestedEscapedDuplicate, "utf8"), "PAPER-01"), /member names must be unique/u);
+  const invalidUtf8 = Buffer.from(JSON.stringify(perfect), "utf8");
+  invalidUtf8[invalidUtf8.indexOf(Buffer.from("PAPER-01", "utf8"))] = 0x80;
+  assert.throws(() => parseRc7GateCStructuredOutput(invalidUtf8, "PAPER-01"), (error) => error.code === "MALFORMED_OUTPUT_UTF8");
+
+  const extraTopLevel = { ...structuredClone(perfect), unexpected: true };
+  assert.throws(() => parseRc7GateCStructuredOutput(bytes(extraTopLevel), "PAPER-01"), (error) => error.code === "MALFORMED_OUTPUT_TOP_LEVEL");
+
+  const malformedEvidence = structuredClone(perfect);
+  malformedEvidence.evidence_items[0].local_id = "PAPER-R1";
+  assert.throws(() => parseRc7GateCStructuredOutput(bytes(malformedEvidence), "PAPER-01"), (error) => error.code === "MALFORMED_OUTPUT_EVIDENCE_ITEM_LOCAL_ID");
 
   const wrongCase = structuredClone(perfect);
   wrongCase.case_id = "LAB-01";
@@ -197,10 +349,12 @@ async function aggregateFixture({
       total_https_post_requests_consumed: 72,
       input_token_accounting_consumed: 2_359_296,
       maximum_input_tokens_any_request: 32_768,
-      output_plus_reasoning_token_accounting_consumed: 589_824,
-      maximum_output_plus_reasoning_tokens_any_request: 8_192,
-      maximum_provider_active_milliseconds_any_request: 120_000,
-      provider_active_milliseconds_consumed: 8_640_000,
+      accepted_output_plus_reasoning_tokens_consumed: 9_216_000,
+      hard_output_plus_reasoning_token_accounting_consumed: 9_216_000,
+      maximum_accepted_output_plus_reasoning_tokens_any_request: 128_000,
+      maximum_hard_output_plus_reasoning_token_accounting_any_request: 128_000,
+      maximum_provider_active_milliseconds_any_request: 300_000,
+      provider_active_milliseconds_consumed: 15_120_000,
       direct_or_generic_child_request_count: 0,
       eligible_treatment_child_shape_violation_count: 0,
       recursive_depth_observed_max: 2,

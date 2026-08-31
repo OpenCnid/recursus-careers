@@ -104,16 +104,19 @@ test("prompt and output bytes are exact while evaluator bytes remain outside the
 test("request, token, time, credit, and provider-equivalent arithmetic is exact and not promoted to billing authority", async () => {
   const value = await buildRc7GateCPreregistrationPackage();
   assert.equal(value.budget.cumulative.conservative_input_token_accounting_ceiling, 72 * 32_768);
-  assert.equal(value.budget.cumulative.requested_output_plus_reasoning_token_target, 72 * 8_192);
-  assert.equal(value.budget.cumulative.hard_output_plus_reasoning_token_accounting_ceiling, 72 * 8_192);
-  assert.equal(value.budget.cumulative.maximum_sequential_provider_active_seconds, 72 * 120);
+  assert.equal(value.budget.cumulative.requested_output_plus_reasoning_token_target, 72 * 128_000);
+  assert.equal(value.budget.cumulative.hard_output_plus_reasoning_token_accounting_ceiling, 72 * 128_000);
+  assert.equal(value.budget.per_request.maximum_provider_active_timeout_seconds, 300);
+  assert.equal(value.budget.per_request.top_level_provider_active_timeout_seconds, 300);
+  assert.equal(value.budget.per_request.recursive_child_provider_active_timeout_seconds, 120);
+  assert.equal(value.budget.cumulative.maximum_sequential_provider_active_seconds, (36 * 300) + (36 * 120));
   assert.equal(value.approval_request.proposed_numeric_ceilings.maximum_generation_https_post_requests, 72);
   assert.equal(value.approval_request.proposed_numeric_ceilings.maximum_oauth_refresh_https_post_requests, 72);
   assert.equal(value.approval_request.proposed_numeric_ceilings.maximum_total_https_post_requests, 144);
-  assert.equal(value.pricing.published_codex_credit_reference.calculated_worst_case_credits, 530.8416);
-  assert.equal(value.pricing.published_codex_credit_reference.proposed_approval_ceiling_credits, 530.85);
-  assert.equal(value.pricing.published_api_equivalent_reference.calculated_provider_equivalent_usd, 21.233664);
-  assert.equal(value.pricing.published_api_equivalent_reference.proposed_provider_equivalent_ceiling_usd, 21.24);
+  assert.equal(value.pricing.published_codex_credit_reference.calculated_worst_case_credits, 4843.9296);
+  assert.equal(value.pricing.published_codex_credit_reference.proposed_approval_ceiling_credits, 4843.93);
+  assert.equal(value.pricing.published_api_equivalent_reference.calculated_provider_equivalent_usd, 193.757184);
+  assert.equal(value.pricing.published_api_equivalent_reference.proposed_provider_equivalent_ceiling_usd, 193.76);
   assert.equal(value.pricing.additional_credit_purchase_authority, 0);
   assert.equal(value.pricing.incremental_cash_purchase_authority_usd, 0);
   assert.equal(value.pricing.comparable_cost_result_until_applicability_is_proven, null);
