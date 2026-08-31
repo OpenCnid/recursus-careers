@@ -1,102 +1,63 @@
-# Recursus Careers design documentation
+# Recursus Careers documentation
 
-This directory defines how Recursus Careers will extend the Career Ops workflow, how those differences will be tested, and which claims the evidence may support.
+This directory documents the experimental Recursus execution path for Career Ops: what has been demonstrated, what remains unavailable, and which evidence may support each claim. Recursus Careers and the external Recursus runtime remain separate projects.
 
 ## Current status
 
-The Career Ops application and execution routes remain unchanged from commit `bde5de661afbb72977a190e543ded24a72c9c86e`. RC-1, the offline [Benchmark Foundation v1](../../evals/recursus/README.md), is accepted through PR #1 with the root [structural verifier](../../verify-recursus-benchmark.mjs). RC-2 [v4 reference capture](../../evals/recursus/rc2-claude-code-reference-v4/registration.json) is accepted through PR #2 from merged RC-1 revision `d2f2ad66133fa749e3b9b427b0de3dcad68d1295`. Its evidence contains one completed provider-free dry run and twelve actual attempts captured on Windows, exactly three for each registered scenario. Under preregistered deviations `RC2-DEV-CONTENT-ONLY` and `RC2-DEV-HOST-PREFLIGHT`, all twelve actual attempts have terminal status `completed` and termination reason `none`; provider identity is `not_reported`, and the trusted runner envelope explicitly reported model `claude-sonnet-5`. Exact reviewed implementation head `e50e787149e7e15aac373e1bc7981a1fbcd65795` passed the full repository suite on Ubuntu, macOS, and Windows, together with the required security and regression checks. Complete-set validation passes on the capture host. The V4 evidence-root README is a hash-bound preregistration snapshot and retains its pre-attempt status text; the append-only ledger and this overview state the current result. Historical v1 through v3 evidence remains sealed. RC-3 adds a separate evaluation route beside the unchanged product workflow. It is not a Career Ops product integration or feature-parity claim. The [feature registry](features/REGISTRY.md) is the canonical current-status record.
-
-The primary reference is **Career Ops through the Claude Code CLI**. Career Ops through the OpenAI Codex CLI is an existing compatibility route. The preferred future Recursus Careers configuration uses the Recursus and DSH runtime with the direct `openai-codex` provider adapter. It does not use the Codex CLI runner. The exact model is recorded separately, and the product is not defined by one runner, provider, or model.
-
-RC-3 is `accepted` through PR #4. Exact implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency CI. The active versioned [`recursus-direct-v17` contract](../../evals/recursus/rc3-recursus-direct-v17/README.md) registers Recursus, DSH, the direct `openai-codex` adapter, `gpt-5.6-sol`, configured-catalog snapshot identity, and `xhigh` reasoning for one `FACT-01` attempt. Its offline path starts from the accepted RC-1 seed, constructs the registered bridge input, captures a bounded synthetic artifact, normalizes it, emits a content-safe trace and runner manifest, and independently validates external evidence. Two independent V17 dry checks match exactly. The official external evidence contains one completed dry run and one completed fresh-seed actual attempt with termination reason `none`.
-
-The actual route ran only through the explicit V17 capture command. It used a content-addressed read-only container, a fresh read-only seed, a dedicated writable credential mount managed by the configured runtime, a networkless worker namespace, and a host-owned CONNECT allowlist for `auth.openai.com:443` and `chatgpt.com:443`. The validated manifest records one DSH request, one direct-adapter invocation, one registered application fetch, one trusted terminal event, one 390-byte text artifact, strict successful cleanup checks, no denied or unregistered access, and no unexpected mutation. The configured runtime read and used the OAuth grant; host and runner code did not inspect credential values, and no credential value entered evidence. V1 through V16 remain preserved historical contract records. V1 had no materialized executable source closure to archive. The existing V2 through V15 executable sources and V4 through V15 focused tests were placed in an operator-verified local archive and pruned from the current checkout, so their recorded commands are not runnable here. The [archive record](RC3_ARCHIVE_RECORD.md) qualifies exactly what was verified. V10 and V12 through V15 were rejected after review; V11 stopped before runtime or provider invocation. V16 remains an independently valid historical execution record pinned to the superseded Recursus revision. The selected V17 Recursus revision passed exact post-merge Ubuntu and Windows CI. Separately, Recursus Milestone 1 and current-pin Linux double-build, profile, smoke, and clean-machine acceptance evidence remain incomplete. Exact Careers implementation commit `7fe377863dc8b6b5cc584fe5225fb8a6f837b695` passed the required Windows and supported CI in PR #4, so RC-3 is `accepted`. RC-4 is `accepted` through PR #6. Exact implementation head `f086626ef344b59fa466e13eeeb3eccc1acd97fd` passed the required Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency checks. RC-4 remains a provider-free compiler-boundary result, not product integration or comparative evidence.
-
-RC-5 is `kept` through PR #15. Exact implementation head `287aeb08a83a132d20858bdd4dfd5e77f2ea2a9f` merged as `70e3058fee51e74a4cd6ee31a7869245d417cff5` after the required Ubuntu, macOS, Windows, security, regression, visual, guard, and dependency checks passed. Its bounded anomaly-disclosure comparison completed three trusted one-request cases with zero retries or external mutations, two wins, one tie, and no factual or safety correction. This is a product-learning result, not a supported-path or production-readiness claim. RC-6 is `accepted` within its registered provider-free retained-surface boundary: PR #20 reviewed head `49224f231e3cdf5cedb526af00eab4feddd618b9` passed all 12 required checks and merged as `7db74cfc59537c8a9b08d3ea7e0dd38079b15cb5`. The original RC-5 image was not recovered or executed on the replacement host, so that exact-image gate remains blocked and RC-6 does not establish production or live-provider recovery. RC-7 is closed with terminal `STOP`: Gate A returned `QUALIFIED_FOR_ABLATION`, Gate B returned `CONTAINMENT_CONFORMANT`, and v25 sealed the complete 36-attempt Gate C comparison. The comparison retained 29 verified completions, seven zero-score RLM-treatment failures, and one direct-route `fabricated-candidate-fact` critical failure. The current RLM route is off and unintegrated; `STOP` is neither `KEEP_RLM_CANDIDATE` nor `NO_RLM`.
-
-## Documentation map
-
-| Area | Purpose | Start here |
+| Milestone | Status | What it establishes |
 | --- | --- | --- |
-| Delivery | Records the stopped RC-7 investigation and preserves predecessor decisions | [Closed RC-7 specification](RC7_SPEC.md), [operational slice card](RC7_SLICE_CARD.md), and [postmortem](RC7_POSTMORTEM.md); the [RC-6 specification](SPEC.md) and [closure card](RC6_SLICE_CARD.md) are historical |
-| Benchmarks | Defines the comparison routes, scenarios, metrics, controls, and advancement rules | [Benchmark overview](benchmarks/README.md) |
-| Architecture | Defines ownership, runtime boundaries, intended differences, and prompt compilation | [Architecture overview](architecture/README.md) |
-| Features | Records feature ownership, maturity, evidence, limitations, and advancement criteria | [Feature documentation](features/README.md) |
+| RC-0 through RC-4 | `accepted` | Documentation boundaries, an offline benchmark foundation, reference capture, one bounded execution bridge, and an offline prompt/context compiler boundary. |
+| RC-5 | `kept` | A bounded three-case `oferta` learning comparison completed with two wins and one tie and no factual or safety correction. This is not production readiness. |
+| RC-6 | `accepted` | The registered provider-free validation executor passed its corrected fault matrix and exact-head CI. The original retained-image gate remains explicitly blocked. |
+| RC-7 | `stopped` | The complete v25 comparison triggered a terminal safety stop after one direct `FACT-01` fabricated-candidate-fact critical failure. It produced no keep, rebuild, `NO_RLM`, integration, or promotion decision. |
+| RC-8 through RC-12 | `conditional` | Possible follow-ups only when a new bounded milestone justifies their authority, cost, and complexity. |
 
-## Reading paths
+The [feature registry](features/REGISTRY.md) is the canonical availability and evidence record. The [roadmap](ROADMAP.md) tracks sequencing and decisions; it does not establish feature availability.
 
-| If you are... | Study... |
-| --- | --- |
-| A director or product leader | [Current feature registry](features/REGISTRY.md), then [intended differences](architecture/INTENDED_DIFFERENCES.md) |
-| A recruiter or hiring leader | [Measured quality and claim limits](benchmarks/METRICS_AND_PROMOTION.md), then the [scenario catalog](benchmarks/SCENARIO_CATALOG.md) |
-| An engineer or researcher | [Architecture](architecture/README.md), [prompt contract](architecture/PROMPT_CONTEXT_CONTRACT.md), and [benchmark protocol](benchmarks/PROTOCOL.md) |
+## Start here
 
-Supporting documents:
+| Area | Purpose | Document |
+| --- | --- | --- |
+| Latest result | RC-7 closure, evidence limits, and lessons | [RC-7 specification](RC7_SPEC.md) and [postmortem](RC7_POSTMORTEM.md) |
+| Roadmap | Current status and conditional follow-ups | [ROADMAP.md](ROADMAP.md) |
+| Features | Ownership, maturity, evidence, and limitations | [features/REGISTRY.md](features/REGISTRY.md) |
+| Architecture | Runtime boundaries and intended differences | [architecture/README.md](architecture/README.md) |
+| Benchmarks | Routes, scenarios, metrics, and promotion rules | [benchmarks/README.md](benchmarks/README.md) |
 
-- [Recursus Careers roadmap](ROADMAP.md)
-- [Closed RC-7 selective RLM research specification](RC7_SPEC.md)
-- [RC-7 selective RLM research slice card](RC7_SLICE_CARD.md)
-- [RC-7 selective RLM research postmortem](RC7_POSTMORTEM.md)
-- [Proposed orchestrator-guided RLM follow-up](ORCHESTRATED_RLM_PROPOSAL.md)
-- [Historical Codex kickoff prompt for RC-7 Gate A](RC7_NEXT_TASK_PROMPT.md)
-- [Closed RC-6 retained-surface promotion hardening specification](SPEC.md)
-- [RC-6 closure slice card](RC6_SLICE_CARD.md)
-- [Historical Codex kickoff prompt for RC-6](RC6_NEXT_TASK_PROMPT.md)
-- [RC-5 disposable `oferta` slice card](RC5_SLICE_CARD.md)
-- [Historical initial Codex kickoff prompt for RC-5](RC5_NEXT_TASK_PROMPT.md)
-- [Accepted historical RC-4 compiled prompt and context parity specification](RC4_SPEC.md)
-- [Historical Codex kickoff prompt for RC-4](RC4_NEXT_TASK_PROMPT.md)
-- [RC-3 source and component selection](RC3_SOURCE_SELECTION.md)
-- [Historical Codex kickoff prompt for RC-3](NEXT_TASK_PROMPT.md)
-- [Benchmark protocol](benchmarks/PROTOCOL.md)
-- [Scenario catalog](benchmarks/SCENARIO_CATALOG.md)
-- [Metrics and advancement rules](benchmarks/METRICS_AND_PROMOTION.md)
-- [Intended Recursus differences](architecture/INTENDED_DIFFERENCES.md)
-- [Compiled prompt and context contract](architecture/PROMPT_CONTEXT_CONTRACT.md)
-- [Initial feature registry](features/REGISTRY.md)
+## Preserved evidence and contracts
 
-## Delivery approach
+These documents remain because they contain unique evidence, provenance, or source-bound accepted/stopped contracts:
 
-Starting with RC-5, delivery uses bounded vertical slices. Define the smallest useful user path and its blast radius, build it, test it immediately on the three registered representative jobs against ordinary Career Ops, and then choose `KEEP`, `REBUILD`, or `DELETE`. A disposable learning slice needs only enough specification to bound authority, cost, writes, and the decision signal. It does not need release-grade preregistration or a full evidence matrix.
+- [RC-3 source and component selection](RC3_SOURCE_SELECTION.md) and [archive record](RC3_ARCHIVE_RECORD.md)
+- [Accepted RC-4 specification](RC4_SPEC.md)
+- [Retained RC-5 slice and decision record](RC5_SLICE_CARD.md)
+- [Closed RC-6 specification](SPEC.md), [closure card](RC6_SLICE_CARD.md), and source-bound historical handoff
+- [Stopped RC-7 specification](RC7_SPEC.md), [slice record](RC7_SLICE_CARD.md), [postmortem](RC7_POSTMORTEM.md), and source-bound Gate A handoff
+- [Benchmark Foundation and versioned evidence packages](../../evals/recursus/README.md)
 
-The closed normative record is [RC7_SPEC.md](RC7_SPEC.md), the [RC-7 slice card](RC7_SLICE_CARD.md) is its compact execution summary, and the [postmortem](RC7_POSTMORTEM.md) records the resulting architectural and process lessons. The [orchestrator-guided RLM proposal](ORCHESTRATED_RLM_PROPOSAL.md) records a non-normative candidate for a separately bounded future slice; it does not reopen RC-7 or grant execution authority. The [Gate A kickoff prompt](RC7_NEXT_TASK_PROMPT.md) is retained as historical session authority. Gate C completed with `STOP`; its RLM route remains off and its evidence grants no repair, rerun, integration, publication, or deployment authority. The closed RC-6 contract remains at [SPEC.md](SPEC.md), while the accepted RC-4 contract and kept RC-5 decision remain preserved historical records.
+The obsolete RC-3, RC-4, and initial RC-5 kickoff prompts were removed after their work completed or their handoff was superseded. Source-bound RC-6 and RC-7 records remain immutable even when their prose is historical.
 
-For RC-6 and future slices, the primary agent must study every binding instruction and required source completely before delegating architectural judgment. Each active specification, slice card, and kickoff prompt should direct the session to study and apply the `subagent-composition` skill when available, then spawn bounded multi-agents in parallel for independent audits, disjoint implementation work, and final red-team review. If the skill is unavailable, the agent should report that fact and use equivalent built-in multi-agent composition. Subagents need exact scopes and non-overlapping ownership; the primary agent remains responsible for reconciliation, shared-file integration, preservation, and the final diff. Handoffs should record each subagent's task and model or inherited model setting when that metadata is available.
+## Product and evidence boundary
 
-Full freezing, repeat matrices, cross-platform evidence, and formal promotion thresholds return before a successful slice is promoted into a supported path, before a public comparative claim or release, or when work crosses a sensitive data, action, or security boundary. A learning slice may not submit an application, send a message, or perform another external mutation without separate explicit authorization.
+Career Ops remains the domain source of truth for evaluation, research, CV generation, tracking, scanning, interviews, and the human submission gate. Recursus Careers owns only the integration and evidence surfaces implemented in this repository. Recursus, DSH, RLM, Honcho, Dovetail, provider adapters, runners, and exact models remain separately identified components.
+
+Current evidence supports only the scoped statements recorded in the registry:
+
+- RC-1 validates corpus structure and fixture integrity; it does not execute a model.
+- RC-2 records reference-route process and artifacts; it is not an oracle or comparison result.
+- RC-3 establishes one pinned execution-route conformance result; it does not establish feature parity or product integration.
+- RC-4 establishes registered offline prompt/context structural semantics; it does not establish provider behavior or output quality.
+- RC-5 is a bounded product-learning result, not a supported path or universal superiority claim.
+- RC-6 establishes only its registered provider-free validation-executor result, not live-provider recovery, production readiness, or provider-neutral behavior.
+- RC-7 ended at `STOP`; its evidence grants no repair, rerun, integration, publication, or deployment authority.
+
+Hashes establish byte identity only. A model statement is not runner attestation, and documentation is not implementation or acceptance evidence.
 
 ## Governing sources
 
-- Current Career Ops runner behavior: [Claude wrapper](../../CLAUDE.md), [Codex guide](../CODEX.md), and [shared Career Ops router](../../.agents/skills/career-ops/SKILL.md)
-- RC-3 runtime and component source decision: [RC-3 source selection](RC3_SOURCE_SELECTION.md)
-- Recursus runtime status: [pinned Recursus README](https://github.com/OpenCnid/recursus/blob/d6d25dda3951e46fe1b03ec3cecc3f348bfe2346/README.md)
-- Recursus runtime contract: [pinned Recursus specification](https://github.com/OpenCnid/recursus/blob/d6d25dda3951e46fe1b03ec3cecc3f348bfe2346/SPEC.md)
+- Career Ops behavior and safety rules: root [AGENTS.md](../../AGENTS.md) and the active mode files
+- Prompt and context contract: [architecture/PROMPT_CONTEXT_CONTRACT.md](architecture/PROMPT_CONTEXT_CONTRACT.md)
+- Comparison and advancement rules: [benchmarks/METRICS_AND_PROMOTION.md](benchmarks/METRICS_AND_PROMOTION.md)
+- Pinned runtime selection: [RC3_SOURCE_SELECTION.md](RC3_SOURCE_SELECTION.md)
 
-## Documentation rules
-
-Every capability is described with three independent fields:
-
-1. **Owner:** Career Ops, Recursus Careers, Recursus runtime, DSH, RLM, Honcho, Dovetail, or a provider adapter.
-2. **Implementation:** one value from the canonical [implementation vocabulary](features/README.md#implementation-status).
-3. **Evidence:** one value from the canonical [evidence vocabulary](features/README.md#evidence-status).
-
-An implementation label never substitutes for evidence. A component capability is not a Recursus Careers feature until the Career Ops workflow can reach it through a tested path.
-
-## Claim boundary
-
-After the stopped RC-7 comparison, use language such as:
-
-- "the current RLM implementation is shelved and not integrated"
-- "RC-7 ended at a critical safety stop"
-- "the comparison did not establish a promotable RLM benefit"
-- "the result does not prove that all recursive research is ineffective"
-
-Do not describe Recursus Careers as better, safer, provider-neutral in behavior, or more efficient without the named evidence required by [Metrics and advancement](benchmarks/METRICS_AND_PROMOTION.md).
-
-RC-1 validates structure and fixture integrity only. No model or harness was executed. Oracle isolation was proven for the seeded file set, not for a future process with broader filesystem authority. No candidate-claim factuality or action safety was evaluated. No comparison with Career Ops through Claude Code or Codex was performed. No result supports a claim that Recursus Careers is better, safer, faster, cheaper, or feature complete.
-
-RC-2 records single-route process and artifact facts only. No output was compared with evaluator-only oracle material. No candidate-claim factuality, action safety, application quality, CAQ, human-review score, feature parity, advancement, comparative performance, or hiring outcome was calculated. Provider or model identity is never inferred from the Claude Code runner name. A provider response, process exit, or model statement is not verified completion. Hashes establish byte identity only. Dry-run determinism covers the local capture pipeline, not provider behavior. Raw Claude stream envelopes are not retained, so the independent validator cannot later reparse terminal, model, or usage observations. `workspace_unchanged` covers only the monitored isolated workspace. Provider-only egress is a configured policy, not packet-level proof, and `provider_request: not_observed` is not proof that no provider request occurred.
-
-RC-3 evidence establishes local execution-route conformance for one pinned `FACT-01` seed and one pinned direct-adapter configuration. It includes deterministic local bridge construction and one independently validated actual runner attestation. It does not compare output with the oracle or another route. No oracle evaluation, human review, scoring, prompt parity, feature parity, factuality, safety, quality, advancement, comparison, application, or hiring outcome is part of RC-3. Hashes establish byte identity only.
-
-These pages explain product behavior and evaluation. Binding agent rules still belong in `AGENTS.md`, the selected mode files, or another instruction surface the active harness loads automatically.
+Binding agent rules belong in an `AGENTS.md` or mode file loaded by the active harness. Descriptive pages in this directory must not silently become operating instructions.
