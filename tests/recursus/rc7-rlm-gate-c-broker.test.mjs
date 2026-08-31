@@ -70,6 +70,11 @@ function withDigest(value, field) {
   return { ...value, [field]: sha256V1(canonicalJsonV1(value)) };
 }
 
+function normalizedPath(target) {
+  const resolved = path.resolve(target);
+  return process.platform === "win32" ? resolved.toLowerCase() : resolved;
+}
+
 async function row(caseId, arm = "rc-direct", repeat = 1) {
   const preregistration = await buildRc7GateCPreregistrationPackage();
   return preregistration.ablation.schedule.find((item) => item.case_id === caseId && item.arm === arm && item.repeat_index === repeat);
@@ -454,7 +459,7 @@ test("host-launch lock recovery rejects live, malformed, and multiply-linked own
   const base = {
     schema_version: "rc7-gate-c-host-launch-lock-v2",
     state: "handoff-written-awaiting-ack",
-    normalized_ledger_root: root.root.toLowerCase(),
+    normalized_ledger_root: normalizedPath(root.root),
     activation_sha256: first.expected_closure.activation_sha256,
     run_id: fixture.input.sealed_request.intent.run_id,
     dispatch_sha256: fixture.dispatch.dispatch_sha256,
@@ -502,14 +507,19 @@ test("RLM-root qualification rejects exact historical reuse, nesting, aliasing, 
   const treatment = await row("LAB-01", "rc-rlm", 1);
   const lineage = __test.gateCRepairSupersessionLineage();
   const historical = lineage.abandoned_partial_matrix_v19.retained_rlm_roots.find((item) => item.ordinal === 11).root_identity;
-  await expectCode(
-    () => __test.identifyTestRlmRootForAttempt(root.root, root.resultsRoot, treatment.run_id, historical.normalized_physical_root, true),
-    process.platform === "win32" ? "SUPERSEDED_ROOT_REUSE" : "UNSAFE_OUTPUT_ROOT",
+  assert.throws(
+    () => __test.assertFreshRlmRootIdentity(historical, {
+      ledger_root_identity: null,
+      results_root_identity: null,
+      successful_treatment_proof: null,
+      supersession_lineage: lineage,
+    }),
+    (error) => error instanceof Rc7GateCBrokerError && error.code === "SUPERSEDED_ROOT_REUSE",
   );
 
   const native = await freshRoot("fresh-rlm-native");
   const accepted = await __test.identifyTestRlmRootForAttempt(root.root, root.resultsRoot, treatment.run_id, native.root, true);
-  assert.equal(accepted.normalized_physical_root, native.root.toLowerCase());
+  assert.equal(accepted.normalized_physical_root, normalizedPath(native.root));
   assert.deepEqual(await readdir(native.root), []);
 
   const alias = path.join(native.parent, "fresh-rlm-alias");
@@ -522,7 +532,7 @@ test("RLM-root qualification rejects exact historical reuse, nesting, aliasing, 
   const nested = path.join(native.root, "nested");
   await mkdir(nested);
   const nestedIdentity = await __test.rlmHistoricalRootIdentity(nested, true);
-  const parentPrior = { ...structuredClone(nestedIdentity), normalized_physical_root: native.root.toLowerCase(), file_id: "1", birthtime_ns: "1" };
+  const parentPrior = { ...structuredClone(nestedIdentity), normalized_physical_root: normalizedPath(native.root), file_id: "1", birthtime_ns: "1" };
   assert.throws(
     () => __test.assertFreshRlmRootIdentity(nestedIdentity, { ledger_root_identity: parentPrior, results_root_identity: null, successful_treatment_proof: null, supersession_lineage: null }),
     (error) => error instanceof Rc7GateCBrokerError && error.code === "SUPERSEDED_ROOT_REUSE",
@@ -533,7 +543,7 @@ test("RLM-root qualification rejects exact historical reuse, nesting, aliasing, 
     () => __test.assertFreshRlmRootIdentity(accepted, { ledger_root_identity: recreatedPrior, results_root_identity: null, successful_treatment_proof: null, supersession_lineage: null }),
     (error) => error instanceof Rc7GateCBrokerError && error.code === "SUPERSEDED_ROOT_REUSE",
   );
-  const physicalAliasPrior = { ...structuredClone(accepted), normalized_physical_root: path.join(native.parent, "different-name").toLowerCase() };
+  const physicalAliasPrior = { ...structuredClone(accepted), normalized_physical_root: normalizedPath(path.join(native.parent, "different-name")) };
   assert.throws(
     () => __test.assertFreshRlmRootIdentity(accepted, { ledger_root_identity: physicalAliasPrior, results_root_identity: null, successful_treatment_proof: null, supersession_lineage: null }),
     (error) => error instanceof Rc7GateCBrokerError && error.code === "SUPERSEDED_ROOT_REUSE",

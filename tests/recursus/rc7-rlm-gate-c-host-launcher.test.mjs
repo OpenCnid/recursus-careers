@@ -323,7 +323,7 @@ test("contract and source keep provider, credential, network, Docker, and live c
       sha256: "3602f2bb1a10f2cbab4c36886218a33c1ab3db87290e73b033c46c77147d0237",
     });
   }
-  const source = await readFile(path.join(path.dirname(new URL(import.meta.url).pathname.slice(1)), "../../lib/recursus/rc7-rlm-gate-c-host-launcher.mjs"), "utf8");
+  const source = await readFile(path.join(REPOSITORY_ROOT, "lib", "recursus", "rc7-rlm-gate-c-host-launcher.mjs"), "utf8");
   for (const denied of ["globalThis.fetch", "node:http", "node:https", ".credentials.yaml", "docker.exe", "dsh-credentials-local"]) assert.equal(source.includes(denied), false, denied);
   assert.equal(source.includes("OPENAI_CODEX_OAUTH"), true);
   assert.equal(source.includes('import { spawn } from "node:child_process"'), true);
