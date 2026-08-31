@@ -19,6 +19,7 @@ The [feature registry](features/REGISTRY.md) is the canonical availability and e
 | Area | Purpose | Document |
 | --- | --- | --- |
 | Latest result | RC-7 closure, evidence limits, and lessons | [RC-7 specification](RC7_SPEC.md) and [postmortem](RC7_POSTMORTEM.md) |
+| Future RLM investigation | Inactive orchestrator-guided successor contract and its design rationale | [successor specification](ORCHESTRATED_RLM_SPEC.md) and [proposal](ORCHESTRATED_RLM_PROPOSAL.md) |
 | Roadmap | Current status and conditional follow-ups | [ROADMAP.md](ROADMAP.md) |
 | Features | Ownership, maturity, evidence, and limitations | [features/REGISTRY.md](features/REGISTRY.md) |
 | Architecture | Runtime boundaries and intended differences | [architecture/README.md](architecture/README.md) |
@@ -50,6 +51,7 @@ Current evidence supports only the scoped statements recorded in the registry:
 - RC-5 is a bounded product-learning result, not a supported path or universal superiority claim.
 - RC-6 establishes only its registered provider-free validation-executor result, not live-provider recovery, production readiness, or provider-neutral behavior.
 - RC-7 ended at `STOP`; its evidence grants no repair, rerun, integration, publication, or deployment authority.
+- The orchestrator-guided successor specification is an inactive future contract. It does not schedule a milestone or authorize implementation or execution.
 
 Hashes establish byte identity only. A model statement is not runner attestation, and documentation is not implementation or acceptance evidence.
 

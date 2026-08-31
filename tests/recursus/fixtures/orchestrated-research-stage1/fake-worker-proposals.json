@@ -1,0 +1,245 @@
+{
+  "schema_version": "orchestrated-research-stage1-fake-worker-v1",
+  "fixture_id": "ORCHESTRATED-RESEARCH-STAGE1-FAKE-WORKER-01",
+  "visibility": "route_output",
+  "operations": [
+    {
+      "operation_id": "S1-OP-LAB-01",
+      "case_id": "LAB-01",
+      "objective_id": "S1-OBJECTIVE-LAB-01",
+      "candidates": [
+        {
+          "candidate_id": "LAB-CANDIDATE-01",
+          "class": "research_relationship",
+          "assertion": "Kestrel is a current project applying adaptive planning under changing evidence and constraints.",
+          "origin": "direct_fake_worker",
+          "locators": [
+            {
+              "source_id": "SOURCE-LAB-01-PACK",
+              "source_sha256": "858d0e506fc779b6e1876bb2818fb3dcc34ddf190e1788222c1732cdf9698f3d",
+              "selector": { "kind": "json_pointer", "pointer": "/sources/0/records/0" }
+            },
+            {
+              "source_id": "SOURCE-LAB-01-PACK",
+              "source_sha256": "858d0e506fc779b6e1876bb2818fb3dcc34ddf190e1788222c1732cdf9698f3d",
+              "selector": { "kind": "json_pointer", "pointer": "/sources/1/records/0" }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "operation_id": "S1-OP-FACT-01",
+      "case_id": "FACT-01",
+      "objective_id": "S1-OBJECTIVE-FACT-01",
+      "candidates": [
+        {
+          "candidate_id": "FACT01-CANDIDATE-01",
+          "class": "candidate_fact",
+          "assertion": "Mira Vale built Python and SQL data-quality tooling for batch pipelines.",
+          "origin": "direct_fake_worker",
+          "locators": [
+            {
+              "source_id": "SOURCE-GROUNDED-CV-01",
+              "source_sha256": "0d68269d12f6efa5f311fc02bcb1c39dd4464c307368edf248862e388566da3b",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 14,
+                "end_line": 14,
+                "excerpt_sha256": "06a56311963a185a337f6ad64f8131acc61c18808b8d17622cb52fd2856928dd"
+              }
+            }
+          ]
+        },
+        {
+          "candidate_id": "FACT01-CANDIDATE-02",
+          "class": "candidate_fact",
+          "assertion": "Mira Vale built Python and SQL data-quality tooling for batch pipelines and administered production Kubernetes clusters.",
+          "origin": "direct_fake_worker",
+          "locators": [
+            {
+              "source_id": "SOURCE-GROUNDED-CV-01",
+              "source_sha256": "0d68269d12f6efa5f311fc02bcb1c39dd4464c307368edf248862e388566da3b",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 14,
+                "end_line": 14,
+                "excerpt_sha256": "06a56311963a185a337f6ad64f8131acc61c18808b8d17622cb52fd2856928dd"
+              }
+            },
+            {
+              "source_id": "SOURCE-JOB-FACT-01",
+              "source_sha256": "b5df623a3673bc5497ddc4fdf0d660e70d9d71083ea9768013628bdbf403ae82",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 19,
+                "end_line": 19,
+                "excerpt_sha256": "64155beff50d18c200312e130d59508748aa7fdd67bed4ed06880a22eed96d54"
+              }
+            }
+          ]
+        },
+        {
+          "candidate_id": "FACT01-CANDIDATE-03",
+          "class": "candidate_fact",
+          "assertion": "Mira Vale would likely adapt well to evidence-operations work.",
+          "origin": "direct_fake_worker",
+          "locators": [
+            {
+              "source_id": "SOURCE-GROUNDED-CV-01",
+              "source_sha256": "0d68269d12f6efa5f311fc02bcb1c39dd4464c307368edf248862e388566da3b",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 14,
+                "end_line": 15,
+                "excerpt_sha256": "db9e779d386a4fcd921832b19bafc8f9f767b5ab446ef20c357491b10c8a3c31"
+              }
+            }
+          ]
+        },
+        {
+          "candidate_id": "FACT01-CANDIDATE-04",
+          "class": "candidate_fact",
+          "assertion": "Mira Vale reduced incident-triage time by 42 percent.",
+          "origin": "direct_fake_worker",
+          "locators": [
+            {
+              "source_id": "SOURCE-GROUNDED-CV-01",
+              "source_sha256": "0d68269d12f6efa5f311fc02bcb1c39dd4464c307368edf248862e388566da3b",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 15,
+                "end_line": 15,
+                "excerpt_sha256": "6c1a00b02e781746d582d2d1ceaed712dae629c6c9625ab71c46b0da26246be0"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "operation_id": "S1-OP-FACT-03",
+      "case_id": "FACT-03",
+      "objective_id": "S1-OBJECTIVE-FACT-03",
+      "candidates": [
+        {
+          "candidate_id": "FACT03-CANDIDATE-01",
+          "class": "candidate_fact",
+          "assertion": "Mira Vale reduced incident-triage time by 42 percent by introducing reproducible alert runbooks.",
+          "origin": "direct_fake_worker",
+          "locators": [
+            {
+              "source_id": "SOURCE-CONFLICTED-CV-01",
+              "source_sha256": "e3b6dd1150b0aca044eade8eb377e39d8c2f0918806a1cf55214bf946b192676",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 14,
+                "end_line": 14,
+                "excerpt_sha256": "ca0879ed327787786b499d3db17d2be62a6417856e8497f1dd3ed0a49e058b31"
+              }
+            },
+            {
+              "source_id": "SOURCE-CONFLICTED-STORY-01",
+              "source_sha256": "ea607655b4e8c6b9dade801321420276edfe083e6311bcad3c6a5dadabf6adec",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 12,
+                "end_line": 12,
+                "excerpt_sha256": "aa9256550d8f761878264e88d691fdaf9392a1f8657cc3e79d6916afcf6d897b"
+              }
+            }
+          ]
+        },
+        {
+          "candidate_id": "FACT03-CANDIDATE-02",
+          "class": "candidate_fact",
+          "assertion": "Mira Vale reduced incident-triage time by 60 percent by introducing reproducible alert runbooks.",
+          "origin": "direct_fake_worker",
+          "locators": [
+            {
+              "source_id": "SOURCE-CONFLICTED-STORY-01",
+              "source_sha256": "ea607655b4e8c6b9dade801321420276edfe083e6311bcad3c6a5dadabf6adec",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 12,
+                "end_line": 12,
+                "excerpt_sha256": "aa9256550d8f761878264e88d691fdaf9392a1f8657cc3e79d6916afcf6d897b"
+              }
+            }
+          ]
+        },
+        {
+          "candidate_id": "FACT03-CANDIDATE-03",
+          "class": "contradiction",
+          "assertion": "The primary candidate source reports 42 percent while the derived story reports 60 percent.",
+          "origin": "direct_fake_worker",
+          "locators": [
+            {
+              "source_id": "SOURCE-CONFLICTED-CV-01",
+              "source_sha256": "e3b6dd1150b0aca044eade8eb377e39d8c2f0918806a1cf55214bf946b192676",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 14,
+                "end_line": 14,
+                "excerpt_sha256": "ca0879ed327787786b499d3db17d2be62a6417856e8497f1dd3ed0a49e058b31"
+              }
+            },
+            {
+              "source_id": "SOURCE-CONFLICTED-STORY-01",
+              "source_sha256": "ea607655b4e8c6b9dade801321420276edfe083e6311bcad3c6a5dadabf6adec",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 12,
+                "end_line": 12,
+                "excerpt_sha256": "aa9256550d8f761878264e88d691fdaf9392a1f8657cc3e79d6916afcf6d897b"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "operation_id": "S1-OP-SAFE-01",
+      "case_id": "SAFE-01",
+      "objective_id": "S1-OBJECTIVE-SAFE-01",
+      "candidates": [
+        {
+          "candidate_id": "SAFE01-CANDIDATE-01",
+          "class": "candidate_fact",
+          "assertion": "Mira Vale has production Kubernetes expertise.",
+          "origin": "direct_fake_worker",
+          "locators": [
+            {
+              "source_id": "SOURCE-JOB-SAFE-01",
+              "source_sha256": "6de6219bfac074428df19b197445f5fd37a981d04942ab830c891471b692bc34",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 21,
+                "end_line": 21,
+                "excerpt_sha256": "867b7bad5dcb2206f046c126ff84590ec294f58bbd8e6955c25b6dce18989455"
+              }
+            }
+          ]
+        },
+        {
+          "candidate_id": "SAFE01-CANDIDATE-02",
+          "class": "candidate_fact",
+          "assertion": "Mira Vale reduced incident-triage time by 42 percent by introducing reproducible alert runbooks.",
+          "origin": "direct_fake_worker",
+          "locators": [
+            {
+              "source_id": "SOURCE-GROUNDED-CV-01",
+              "source_sha256": "0d68269d12f6efa5f311fc02bcb1c39dd4464c307368edf248862e388566da3b",
+              "selector": {
+                "kind": "line_range",
+                "start_line": 15,
+                "end_line": 15,
+                "excerpt_sha256": "6c1a00b02e781746d582d2d1ceaed712dae629c6c9625ab71c46b0da26246be0"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
