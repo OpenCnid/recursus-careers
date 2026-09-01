@@ -116,6 +116,7 @@ const DISCOVERED_TEST_TIMEOUTS_MS = new Map([
   ['recursus/execution-bridge-v17.test.mjs', 120_000],
   ['recursus/prompt-context-v1.test.mjs', 120_000],
   ['recursus/orchestrated-research.test.mjs', 300_000],
+  ['recursus/orchestrated-research-stage2.test.mjs', 420_000],
   ['recursus/rc5-slice.test.mjs', 120_000],
   ['recursus/rc6-run-state.test.mjs', 420_000],
   ['recursus/rc7-rlm-containment.test.mjs', 120_000],

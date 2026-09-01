@@ -1,0 +1,163 @@
+{
+  "schema_version": "orchestrated-research-stage2-fake-orchestrator-v1",
+  "fixture_id": "ORCHESTRATED-RESEARCH-STAGE2-FAKE-ORCHESTRATOR-01",
+  "visibility": "route_output",
+  "actions": [
+    {
+      "schema_version": "orchestrated-research-action-v1",
+      "action_id": "S2-A01",
+      "run_id": "ORCHESTRATED-RESEARCH-STAGE2-PREPARATION-01",
+      "checkpoint_id": "S2-CHECKPOINT-0000",
+      "kind": "REQUEST_DIRECT_EXTRACTION",
+      "case_id": "FACT-01",
+      "objective_id": "S2-OBJECTIVE-FACT-01",
+      "source_partition_id": "S2-PARTITION-FACT-01",
+      "operation_id": "S2-OP-DIRECT-FACT-01",
+      "limits": {
+        "provider_requests": 0,
+        "rlm_executions": 0,
+        "max_candidates": 8,
+        "max_artifact_bytes": 262144,
+        "max_wall_ms": 1000,
+        "worker_kind": "deterministic-fake-direct"
+      }
+    },
+    {
+      "schema_version": "orchestrated-research-action-v1",
+      "action_id": "S2-A02",
+      "run_id": "ORCHESTRATED-RESEARCH-STAGE2-PREPARATION-01",
+      "checkpoint_id": "S2-CHECKPOINT-0001",
+      "kind": "RECORD_GAP",
+      "case_id": "LAB-01",
+      "objective_id": "S2-OBJECTIVE-LAB-RELATIONSHIP",
+      "source_partition_id": "S2-PARTITION-LAB-01",
+      "gap_key": "LAB-RELATIONSHIP",
+      "importance": "required",
+      "description": "A source-grounded lab relationship remains unresolved."
+    },
+    {
+      "schema_version": "orchestrated-research-action-v1",
+      "action_id": "S2-A03",
+      "run_id": "ORCHESTRATED-RESEARCH-STAGE2-PREPARATION-01",
+      "checkpoint_id": "S2-CHECKPOINT-0002",
+      "kind": "REQUEST_RLM_OPERATION",
+      "case_id": "SAFE-01",
+      "objective_id": "S2-OBJECTIVE-SAFE-01-RLM-DENIAL",
+      "source_partition_id": "S2-PARTITION-SAFE-01",
+      "gap_id": "S2-GAP-LAB-01",
+      "operation_id": "S2-OP-RLM-SAFE-DENIED",
+      "recursive_depth": 1,
+      "limits": {
+        "provider_requests": 0,
+        "rlm_executions": 0,
+        "max_candidates": 4,
+        "max_artifact_bytes": 262144,
+        "max_wall_ms": 1000,
+        "worker_kind": "deterministic-fake-rlm"
+      }
+    },
+    {
+      "schema_version": "orchestrated-research-action-v1",
+      "action_id": "S2-A04",
+      "run_id": "ORCHESTRATED-RESEARCH-STAGE2-PREPARATION-01",
+      "checkpoint_id": "S2-CHECKPOINT-0003",
+      "kind": "REQUEST_RLM_OPERATION",
+      "case_id": "LAB-01",
+      "objective_id": "S2-OBJECTIVE-LAB-RELATIONSHIP",
+      "source_partition_id": "S2-PARTITION-LAB-01",
+      "gap_id": "S2-GAP-LAB-01",
+      "operation_id": "S2-OP-RLM-LAB-01",
+      "recursive_depth": 1,
+      "limits": {
+        "provider_requests": 0,
+        "rlm_executions": 0,
+        "max_candidates": 4,
+        "max_artifact_bytes": 262144,
+        "max_wall_ms": 1000,
+        "worker_kind": "deterministic-fake-rlm"
+      }
+    },
+    {
+      "schema_version": "orchestrated-research-action-v1",
+      "action_id": "S2-A05",
+      "run_id": "ORCHESTRATED-RESEARCH-STAGE2-PREPARATION-01",
+      "checkpoint_id": "S2-CHECKPOINT-0004",
+      "kind": "REQUEST_RLM_OPERATION",
+      "case_id": "LAB-01",
+      "objective_id": "S2-OBJECTIVE-LAB-RELATIONSHIP",
+      "source_partition_id": "S2-PARTITION-LAB-01",
+      "gap_id": "S2-GAP-LAB-01",
+      "operation_id": "S2-OP-RLM-LAB-02",
+      "recursive_depth": 1,
+      "limits": {
+        "provider_requests": 0,
+        "rlm_executions": 0,
+        "max_candidates": 4,
+        "max_artifact_bytes": 262144,
+        "max_wall_ms": 1000,
+        "worker_kind": "deterministic-fake-rlm"
+      }
+    },
+    {
+      "schema_version": "orchestrated-research-action-v1",
+      "action_id": "S2-A06",
+      "run_id": "ORCHESTRATED-RESEARCH-STAGE2-PREPARATION-01",
+      "checkpoint_id": "S2-CHECKPOINT-0005",
+      "kind": "REQUEST_RLM_OPERATION",
+      "case_id": "LAB-01",
+      "objective_id": "S2-OBJECTIVE-LAB-RELATIONSHIP",
+      "source_partition_id": "S2-PARTITION-LAB-01",
+      "gap_id": "S2-GAP-LAB-01",
+      "operation_id": "S2-OP-RLM-LAB-CIRCUIT-DENIED",
+      "recursive_depth": 1,
+      "limits": {
+        "provider_requests": 0,
+        "rlm_executions": 0,
+        "max_candidates": 4,
+        "max_artifact_bytes": 262144,
+        "max_wall_ms": 1000,
+        "worker_kind": "deterministic-fake-rlm"
+      }
+    },
+    {
+      "schema_version": "orchestrated-research-action-v1",
+      "action_id": "S2-A07",
+      "run_id": "ORCHESTRATED-RESEARCH-STAGE2-PREPARATION-01",
+      "checkpoint_id": "S2-CHECKPOINT-0006",
+      "kind": "REQUEST_DIRECT_GAP_FILL",
+      "case_id": "LAB-01",
+      "objective_id": "S2-OBJECTIVE-LAB-RELATIONSHIP",
+      "source_partition_id": "S2-PARTITION-LAB-01",
+      "gap_id": "S2-GAP-LAB-01",
+      "operation_id": "S2-OP-DIRECT-LAB-FALLBACK",
+      "limits": {
+        "provider_requests": 0,
+        "rlm_executions": 0,
+        "max_candidates": 8,
+        "max_artifact_bytes": 262144,
+        "max_wall_ms": 1000,
+        "worker_kind": "deterministic-fake-direct"
+      }
+    },
+    {
+      "schema_version": "orchestrated-research-action-v1",
+      "action_id": "S2-A08",
+      "run_id": "ORCHESTRATED-RESEARCH-STAGE2-PREPARATION-01",
+      "checkpoint_id": "S2-CHECKPOINT-0007",
+      "kind": "PROPOSE_SYNTHESIS",
+      "accepted_evidence_ids": [
+        "EVIDENCE-FACT01-CANDIDATE-01",
+        "EVIDENCE-LAB-CANDIDATE-01"
+      ],
+      "required_gap_ids": ["S2-GAP-LAB-01"]
+    },
+    {
+      "schema_version": "orchestrated-research-action-v1",
+      "action_id": "S2-A09",
+      "run_id": "ORCHESTRATED-RESEARCH-STAGE2-PREPARATION-01",
+      "checkpoint_id": "S2-CHECKPOINT-0008",
+      "kind": "STOP",
+      "reason": "synthesis-complete-and-no-registered-gap-remains"
+    }
+  ]
+}

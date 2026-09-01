@@ -1,0 +1,43 @@
+{
+  "schema_version": "orchestrated-research-stage2-fake-operation-results-v1",
+  "fixture_id": "ORCHESTRATED-RESEARCH-STAGE2-FAKE-OPERATIONS-01",
+  "visibility": "route_output",
+  "results": [
+    {
+      "operation_id": "S2-OP-DIRECT-FACT-01",
+      "case_id": "FACT-01",
+      "status": "success",
+      "candidates": ["FACT01-CANDIDATE-01", "FACT01-CANDIDATE-02"],
+      "usage": { "fake_worker_requests": 1, "fake_compute_units": 1, "provider_requests": 0, "rlm_executions": 0 }
+    },
+    {
+      "operation_id": "S2-OP-RLM-LAB-01",
+      "case_id": "LAB-01",
+      "status": "timeout",
+      "candidates": [],
+      "usage": { "fake_worker_requests": 1, "fake_compute_units": 1, "provider_requests": 0, "rlm_executions": 0 }
+    },
+    {
+      "operation_id": "S2-OP-RLM-LAB-02",
+      "case_id": "LAB-01",
+      "status": "unavailable",
+      "candidates": [],
+      "usage": { "fake_worker_requests": 1, "fake_compute_units": 1, "provider_requests": 0, "rlm_executions": 0 }
+    },
+    {
+      "operation_id": "S2-OP-DIRECT-LAB-FALLBACK",
+      "case_id": "LAB-01",
+      "status": "success",
+      "candidates": ["LAB-CANDIDATE-01"],
+      "usage": { "fake_worker_requests": 1, "fake_compute_units": 1, "provider_requests": 0, "rlm_executions": 0 }
+    }
+  ],
+  "fault_results": {
+    "rlm-failed": { "status": "failed", "candidates": [], "usage": { "fake_worker_requests": 1, "fake_compute_units": 1, "provider_requests": 0, "rlm_executions": 0 } },
+    "rlm-timeout": { "status": "timeout", "candidates": [], "usage": { "fake_worker_requests": 1, "fake_compute_units": 1, "provider_requests": 0, "rlm_executions": 0 } },
+    "rlm-malformed": { "status": "malformed", "candidates": [], "usage": { "fake_worker_requests": 1, "fake_compute_units": 1, "provider_requests": 0, "rlm_executions": 0 } },
+    "rlm-unsafe": { "status": "unsafe", "candidates": ["SAFE01-CANDIDATE-01"], "usage": { "fake_worker_requests": 1, "fake_compute_units": 1, "provider_requests": 0, "rlm_executions": 0 } },
+    "rlm-over-budget": { "status": "over-budget", "candidates": [], "usage": { "fake_worker_requests": 1, "fake_compute_units": 2, "provider_requests": 0, "rlm_executions": 0 } },
+    "rlm-unavailable": { "status": "unavailable", "candidates": [], "usage": { "fake_worker_requests": 1, "fake_compute_units": 1, "provider_requests": 0, "rlm_executions": 0 } }
+  }
+}

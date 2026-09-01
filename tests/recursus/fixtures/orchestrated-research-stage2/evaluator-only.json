@@ -1,0 +1,12 @@
+{
+  "schema_version": "orchestrated-research-stage2-evaluator-v1",
+  "fixture_id": "ORCHESTRATED-RESEARCH-STAGE2-EVALUATOR-01",
+  "visibility": "evaluator_only",
+  "leak_canary": "ORCHESTRATED-STAGE2-EVALUATOR-CANARY-7Q2N",
+  "alternate_route_canary": "ORCHESTRATED-STAGE2-ALTERNATE-ROUTE-OUTPUT-4M8K",
+  "rlm_eligible_case_ids": ["LAB-01"],
+  "expected_synthesis_evidence_ids": [
+    "EVIDENCE-FACT01-CANDIDATE-01",
+    "EVIDENCE-LAB-CANDIDATE-01"
+  ]
+}
